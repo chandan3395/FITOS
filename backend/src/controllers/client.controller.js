@@ -12,4 +12,22 @@ async function createClient(req, res, next) {
   }
 }
 
-module.exports = { createClient };
+async function listClients(req, res, next) {
+  try {
+    const clients = await clientService.listClientsForTrainer(req.user);
+    return ApiResponse.ok(res, "Clients fetched successfully", { clients });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getClient(req, res, next) {
+  try {
+    const client = await clientService.getClientForTrainer(req.params.id, req.user);
+    return ApiResponse.ok(res, "Client fetched successfully", { client });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { createClient, listClients, getClient };

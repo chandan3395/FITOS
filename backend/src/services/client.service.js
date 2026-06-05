@@ -59,4 +59,30 @@ async function createClient(user, body) {
   return client;
 }
 
-module.exports = { createClient };
+// Phase 5 — Privacy rule:
+// Admins are platform operators and MUST NOT access individual client records.
+// Only the owning TRAINER may list or retrieve clients. CLIENT role is forbidden.
+
+async function listClientsForTrainer(trainerUser) {
+  return Client.find({ trainerId: trainerUser._id }).sort({ createdAt: -1 });
+}
+
+async function getClientForTrainer(clientId, trainerUser) {
+  if (!mongoose.isValidObjectId(clientId)) {
+    throw new ApiError(400, "Invalid client id");
+  }
+
+  const client = await Client.findById(clientId);
+  if (!client) {
+    throw new ApiError(404, "Client not found");
+  }
+
+  // Ownership check — trainer can only see their own clients.
+  if (String(client.trainerId) !== String(trainerUser._id)) {
+    throw new ApiError(403, "Forbidden");
+  }
+
+  return client;
+}
+
+module.exports = { createClient, listClientsForTrainer, getClientForTrainer };
