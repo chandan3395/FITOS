@@ -1,24 +1,77 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { ROUTES } from "../constants/routes";
 
-import HomePage         from "../pages/HomePage";
-import LoginPage        from "../pages/auth/LoginPage";
-import AdminPage        from "../pages/admin/AdminPage";
-import TrainerPage      from "../pages/trainer/TrainerPage";
-import ClientPage       from "../pages/client/ClientPage";
-import DesignSystemPage from "../pages/DesignSystemPage";
-import NotFound         from "../pages/NotFound";
+import LoginPage          from "../pages/auth/LoginPage";
+import GoogleCallbackPage from "../pages/auth/GoogleCallbackPage";
+import ActivatePage       from "../pages/auth/ActivatePage";
+import DesignSystemPage   from "../pages/DesignSystemPage";
+import NotFound           from "../pages/NotFound";
+
+// Layouts
+import AdminLayout   from "../components/layouts/AdminLayout";
+import TrainerLayout from "../components/layouts/TrainerLayout";
+import ClientLayout  from "../components/layouts/ClientLayout";
+
+// Admin pages
+import AdminDashboard    from "../pages/admin/AdminDashboard";
+import AdminTrainersPage from "../pages/admin/AdminTrainersPage";
+
+// Trainer pages
+import TrainerDashboard         from "../pages/trainer/TrainerDashboard";
+import TrainerClientsPage       from "../pages/trainer/TrainerClientsPage";
+import TrainerAddClientPage     from "../pages/trainer/TrainerAddClientPage";
+import TrainerClientDetailPage  from "../pages/trainer/TrainerClientDetailPage";
+import TrainerCheckinsPage      from "../pages/trainer/TrainerCheckinsPage";
+import TrainerStubPage          from "../pages/trainer/TrainerStubPage";
+
+// Client pages
+import ClientDashboard      from "../pages/client/ClientDashboard";
+import ClientNutritionPage  from "../pages/client/ClientNutritionPage";
+import ClientProgressPage   from "../pages/client/ClientProgressPage";
+import ClientWorkoutPage    from "../pages/client/ClientWorkoutPage";
+
+// Auth guard
+import { RequireAuth } from "../contexts/AuthContext";
 
 const AppRoutes = () => (
   <Routes>
-    <Route path={ROUTES.HOME}          element={<HomePage />} />
-    <Route path={ROUTES.LOGIN}         element={<LoginPage />} />
-    <Route path={ROUTES.ADMIN}         element={<AdminPage />} />
-    <Route path={ROUTES.TRAINER}       element={<TrainerPage />} />
-    <Route path={ROUTES.CLIENT}        element={<ClientPage />} />
-    <Route path={ROUTES.DESIGN_SYSTEM} element={<DesignSystemPage />} />
-    <Route path={ROUTES.NOT_FOUND}     element={<NotFound />} />
-    <Route path="*"                    element={<Navigate to={ROUTES.NOT_FOUND} replace />} />
+    {/* The root is the unified login page. */}
+    <Route path={ROUTES.HOME}            element={<LoginPage />} />
+    <Route path={ROUTES.LOGIN}           element={<LoginPage />} />
+    <Route path={ROUTES.GOOGLE_CALLBACK} element={<GoogleCallbackPage />} />
+    <Route path={ROUTES.ACTIVATE}        element={<ActivatePage />} />
+    <Route path={ROUTES.DESIGN_SYSTEM}   element={<DesignSystemPage />} />
+
+    {/* Admin */}
+    <Route path="/admin" element={<RequireAuth roles={["ADMIN"]}><AdminLayout /></RequireAuth>}>
+      <Route index             element={<Navigate to={ROUTES.ADMIN_DASHBOARD} replace />} />
+      <Route path="dashboard"  element={<AdminDashboard />} />
+      <Route path="trainers"   element={<AdminTrainersPage />} />
+    </Route>
+
+    {/* Trainer */}
+    <Route path="/trainer" element={<RequireAuth roles={["TRAINER", "ADMIN"]}><TrainerLayout /></RequireAuth>}>
+      <Route index               element={<Navigate to={ROUTES.TRAINER_DASHBOARD} replace />} />
+      <Route path="dashboard"    element={<TrainerDashboard />} />
+      <Route path="clients"      element={<TrainerClientsPage />} />
+      <Route path="clients/new"  element={<TrainerAddClientPage />} />
+      <Route path="client/:id"   element={<TrainerClientDetailPage />} />
+      <Route path="check-ins"    element={<TrainerCheckinsPage />} />
+      <Route path="schedule"     element={<TrainerStubPage title="Schedule" description="Session calendar — coming in a later pass." />} />
+    </Route>
+
+    {/* Client */}
+    <Route path="/client" element={<RequireAuth roles={["CLIENT"]}><ClientLayout /></RequireAuth>}>
+      <Route index            element={<Navigate to={ROUTES.CLIENT_DASHBOARD} replace />} />
+      <Route path="dashboard" element={<ClientDashboard />} />
+      <Route path="nutrition" element={<ClientNutritionPage />} />
+      <Route path="progress"  element={<ClientProgressPage />} />
+      <Route path="workout"   element={<ClientWorkoutPage />} />
+    </Route>
+
+    {/* 404 */}
+    <Route path={ROUTES.NOT_FOUND} element={<NotFound />} />
+    <Route path="*"                element={<Navigate to={ROUTES.NOT_FOUND} replace />} />
   </Routes>
 );
 

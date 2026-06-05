@@ -11,10 +11,13 @@ const notFound = require("./middleware/notFound");
 const errorHandler = require("./middleware/errorHandler");
 const apiRouter = require("./routes/index");
 const passport = require("./config/passport");
+const { UPLOAD_ROOT } = require("./middleware/upload");
 
 const app = express();
 
-app.use(helmet());
+// helmet's default crossOriginResourcePolicy blocks images served from
+// /uploads when the frontend lives on a different origin during dev.
+app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -23,6 +26,9 @@ app.use(requestLogger);
 app.use(passport.initialize());
 
 app.use("/api", apiRouter);
+
+// Serve uploaded files. Path is also configured in upload middleware.
+app.use("/uploads", express.static(UPLOAD_ROOT, { fallthrough: true }));
 
 app.use(notFound);
 app.use(errorHandler);

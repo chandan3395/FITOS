@@ -52,6 +52,20 @@ const clientSchema = new mongoose.Schema(
       enum: CLIENT_STATUSES,
       default: "ACTIVE",
     },
+    // Email is captured on creation so we can issue an invite. Optional —
+    // a trainer may create a placeholder client without an email.
+    email: {
+      type: String,
+      lowercase: true,
+      trim: true,
+      sparse: true,
+    },
+    // Set after the client activates their invite — points to the User doc.
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
   },
   { timestamps: true }
 );

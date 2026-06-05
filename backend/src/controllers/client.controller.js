@@ -5,8 +5,8 @@ const ApiResponse = require("../utils/ApiResponse");
 
 async function createClient(req, res, next) {
   try {
-    const client = await clientService.createClient(req.user, req.body);
-    return ApiResponse.created(res, "Client created successfully", client);
+    const { client, invite } = await clientService.createClient(req.user, req.body);
+    return ApiResponse.created(res, "Client created successfully", { client, invite });
   } catch (err) {
     next(err);
   }
@@ -30,4 +30,13 @@ async function getClient(req, res, next) {
   }
 }
 
-module.exports = { createClient, listClients, getClient };
+async function updateClient(req, res, next) {
+  try {
+    const client = await clientService.updateClient(req.params.id, req.user, req.body);
+    return ApiResponse.ok(res, "Client updated successfully", { client });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { createClient, listClients, getClient, updateClient };

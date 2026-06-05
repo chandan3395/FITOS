@@ -7,6 +7,7 @@ const {
   createClient,
   listClients,
   getClient,
+  updateClient,
 } = require("../controllers/client.controller");
 
 const router = Router();
@@ -22,5 +23,8 @@ router.post("/", authenticate, allowRoles("ADMIN", "TRAINER"), createClient);
 // CLIENT is forbidden.
 router.get("/", authenticate, allowRoles("TRAINER"), listClients);
 router.get("/:id", authenticate, allowRoles("TRAINER"), getClient);
+
+// PATCH — update editable fields (incl. status="ARCHIVED" for archive flow).
+router.patch("/:id", authenticate, allowRoles("ADMIN", "TRAINER"), updateClient);
 
 module.exports = router;
