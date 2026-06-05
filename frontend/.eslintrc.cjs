@@ -20,7 +20,10 @@ module.exports = {
   },
   plugins: ["react-refresh"],
   rules: {
-    "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
+    // prop-types is not enforced — no TypeScript in Phase 1
+    "react/prop-types": "off",
+    // context files intentionally export multiple values
+    "react-refresh/only-export-components": "off",
     "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
   },
 };
