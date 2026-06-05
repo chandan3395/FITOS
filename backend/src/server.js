@@ -1,11 +1,12 @@
 "use strict";
 
-require("dotenv").config();
+const { validateEnv, env } = require("./config/env");
+
+validateEnv();
 
 const app = require("./app");
+const logger = require("./config/logger");
 
-const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-  console.log(`FITOS backend running on http://localhost:${PORT}`);
+app.listen(env.PORT, () => {
+  logger.info(`FITOS backend running on http://localhost:${env.PORT}`);
 });

@@ -1,10 +1,9 @@
 "use strict";
 
+const ApiResponse = require("../utils/ApiResponse");
+
 const getHealth = (_req, res) => {
-  res.status(200).json({
-    success: true,
-    message: "FITOS backend running",
-  });
+  ApiResponse.ok(res, "FITOS backend running");
 };
 
 module.exports = { getHealth };
