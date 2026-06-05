@@ -6,7 +6,13 @@ validateEnv();
 
 const app = require("./app");
 const logger = require("./config/logger");
+const connectDB = require("./config/database");
 
-app.listen(env.PORT, () => {
-  logger.info(`FITOS backend running on http://localhost:${env.PORT}`);
-});
+async function start() {
+  await connectDB();
+  app.listen(env.PORT, () => {
+    logger.info(`FITOS backend running on http://localhost:${env.PORT}`);
+  });
+}
+
+start();
