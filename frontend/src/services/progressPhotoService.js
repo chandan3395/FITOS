@@ -5,9 +5,17 @@ async function listForClient(clientId) {
   return res.data?.data?.photos ?? [];
 }
 
+/** CLIENT role — own photo sets newest week first. */
+async function listMine() {
+  const res = await api.get("/progress-photos/me");
+  return res.data?.data?.photos ?? [];
+}
+
 async function upload({ clientId, weekNumber, front, side, back }) {
   const fd = new FormData();
-  fd.append("clientId",   clientId);
+  // clientId is only sent for trainer/admin path. Client portal omits it
+  // and the backend resolves the caller's own Client from auth.
+  if (clientId) fd.append("clientId", clientId);
   fd.append("weekNumber", weekNumber);
   if (front) fd.append("front", front);
   if (side)  fd.append("side",  side);
@@ -35,5 +43,5 @@ async function remove(id) {
   return res.data?.data ?? null;
 }
 
-const progressPhotoService = { listForClient, upload, comment, setStatus, remove };
+const progressPhotoService = { listForClient, listMine, upload, comment, setStatus, remove };
 export default progressPhotoService;

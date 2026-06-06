@@ -4,6 +4,7 @@ import Button from "../../components/ui/Button";
 import { SkeletonDetail, ErrorState, Toast } from "../../components/feedback/States";
 import nutritionService from "../../services/nutritionService";
 import clientService from "../../services/clientService";
+import nutritionTemplateService from "../../services/nutritionTemplateService";
 
 const inputClass = "w-full h-9 px-3 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-[#333]";
 const textareaClass = "w-full min-h-[84px] px-3 py-2 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-[#333]";
@@ -81,6 +82,47 @@ const PlanBadge = ({ status }) => {
   );
 };
 
+/**
+ * Inline picker for "Use Nutrition Template". Lazy-loads the trainer's
+ * ACTIVE templates; confirming snapshots the chosen template into a
+ * fresh DRAFT plan for the current client.
+ */
+const TemplatePicker = ({ onCancel, onConfirm, busy }) => {
+  const [options, setOptions] = useState([]);
+  const [target, setTarget]   = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    nutritionTemplateService.list({ status: "ACTIVE" })
+      .then((items) => { if (!cancelled) setOptions(items || []); })
+      .catch(() => setOptions([]))
+      .finally(() => !cancelled && setLoading(false));
+    return () => { cancelled = true; };
+  }, []);
+
+  return (
+    <div className="mt-3 rounded-lg border border-border bg-surface-elevated p-3 flex items-center gap-2 flex-wrap">
+      <span className="text-[11px] uppercase tracking-wider text-text-muted">Use template</span>
+      <select
+        value={target}
+        onChange={(e) => setTarget(e.target.value)}
+        disabled={loading || options.length === 0 || busy}
+        className="h-9 px-2 rounded-lg bg-surface border border-border text-sm text-text-primary focus:outline-none focus:border-[#333]"
+      >
+        <option value="">{loading ? "Loading…" : options.length === 0 ? "No active templates" : "Pick a template"}</option>
+        {options.map((t) => (
+          <option key={t._id} value={t._id}>{t.name}</option>
+        ))}
+      </select>
+      <Button size="sm" variant="ghost" onClick={onCancel} disabled={busy}>Cancel</Button>
+      <Button size="sm" onClick={() => target && onConfirm(target)} disabled={!target || busy} loading={busy}>
+        Assign Template
+      </Button>
+    </div>
+  );
+};
+
 const ReassignPicker = ({ currentClientId, onCancel, onConfirm, busy }) => {
   const [options, setOptions] = useState([]);
   const [target, setTarget]   = useState("");
@@ -137,6 +179,8 @@ const NutritionPlanTab = ({ clientId }) => {
   const [toast, setToast] = useState(null);
   const [reassignPlanId, setReassignPlanId] = useState(null);
   const [actionBusy, setActionBusy] = useState(null);
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
+  const [assigning, setAssigning] = useState(false);
   // Increments on every Create or Edit click so the scroll + focus effect
   // re-runs even when re-opening the same draft, but stays quiet during
   // saves and incidental draft mutations.
@@ -279,6 +323,24 @@ const NutritionPlanTab = ({ clientId }) => {
     }
   };
 
+  const assignTemplate = async (templateId) => {
+    setAssigning(true);
+    try {
+      const created = await nutritionTemplateService.assign(templateId, clientId);
+      setToast({ kind: "success", message: "Template assigned (DRAFT plan created)" });
+      setShowTemplatePicker(false);
+      await loadPlans();
+      if (created?._id) {
+        setSelectedPlanId(created._id);
+        setDraft(draftFromPlan(created));
+      }
+    } catch (err) {
+      setToast({ kind: "error", message: err?.response?.data?.message || "Failed to assign template" });
+    } finally {
+      setAssigning(false);
+    }
+  };
+
   const reassignPlan = async (plan, targetClientId) => {
     setActionBusy(plan._id);
     try {
@@ -304,8 +366,20 @@ const NutritionPlanTab = ({ clientId }) => {
               <Card.Title>Nutrition Plans</Card.Title>
               <Card.Description>Draft, publish, edit, archive, delete, or reassign client nutrition plans.</Card.Description>
             </div>
-            <Button size="sm" onClick={startCreate}>Create Plan</Button>
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="secondary" onClick={() => setShowTemplatePicker((v) => !v)}>
+                {showTemplatePicker ? "Close" : "Use Nutrition Template"}
+              </Button>
+              <Button size="sm" onClick={startCreate}>Create New Plan</Button>
+            </div>
           </div>
+          {showTemplatePicker && (
+            <TemplatePicker
+              busy={assigning}
+              onCancel={() => setShowTemplatePicker(false)}
+              onConfirm={assignTemplate}
+            />
+          )}
         </Card.Header>
         <Card.Body>
           {plans.length === 0 ? (

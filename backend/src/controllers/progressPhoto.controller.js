@@ -17,6 +17,13 @@ async function listForClient(req, res, next) {
   } catch (e) { next(e); }
 }
 
+async function listForCurrentClient(req, res, next) {
+  try {
+    const docs = await progressPhotoService.listForCurrentClient(req.user);
+    return ApiResponse.ok(res, "Photos fetched", { photos: docs });
+  } catch (e) { next(e); }
+}
+
 async function comment(req, res, next) {
   try {
     const doc = await progressPhotoService.comment(req.params.id, req.user, req.body);
@@ -38,4 +45,4 @@ async function remove(req, res, next) {
   } catch (e) { next(e); }
 }
 
-module.exports = { create, listForClient, comment, setStatus, remove };
+module.exports = { create, listForClient, listForCurrentClient, comment, setStatus, remove };

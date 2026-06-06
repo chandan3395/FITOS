@@ -123,4 +123,16 @@ async function review(id, user, body) {
   return doc;
 }
 
-module.exports = { create, list, getById, review };
+/**
+ * GET /api/checkins/me — own check-ins for the CLIENT role. Newest first.
+ */
+async function listForCurrentClient(user, { limit = 50 } = {}) {
+  if (user.role !== "CLIENT") throw new ApiError(403, "Forbidden");
+  const client = await Client.findOne({ userId: user._id });
+  if (!client) throw new ApiError(404, "Client record not found");
+  return CheckIn.find({ clientId: client._id })
+    .sort({ createdAt: -1 })
+    .limit(Math.min(limit, 200));
+}
+
+module.exports = { create, list, listForCurrentClient, getById, review };

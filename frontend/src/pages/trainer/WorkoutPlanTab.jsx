@@ -4,6 +4,7 @@ import Button from "../../components/ui/Button";
 import { SkeletonDetail, ErrorState, Toast } from "../../components/feedback/States";
 import workoutService from "../../services/workoutService";
 import clientService from "../../services/clientService";
+import workoutTemplateService from "../../services/workoutTemplateService";
 
 const inputClass = "w-full h-9 px-3 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-[#333]";
 const textareaClass = "w-full min-h-[84px] px-3 py-2 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-[#333]";
@@ -141,6 +142,47 @@ const ExerciseEditor = ({ exercise, displayNumber, globalIndex, canMoveUp, canMo
 );
 
 /**
+ * Inline picker for "Use Workout Template". Lazy-loads the trainer's
+ * ACTIVE templates. Confirming snapshots the chosen template into a
+ * fresh DRAFT plan for the current client.
+ */
+const TemplatePicker = ({ onCancel, onConfirm, busy }) => {
+  const [options, setOptions] = useState([]);
+  const [target, setTarget]   = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    workoutTemplateService.list({ status: "ACTIVE" })
+      .then((items) => { if (!cancelled) setOptions(items || []); })
+      .catch(() => setOptions([]))
+      .finally(() => !cancelled && setLoading(false));
+    return () => { cancelled = true; };
+  }, []);
+
+  return (
+    <div className="mt-3 rounded-lg border border-border bg-surface-elevated p-3 flex items-center gap-2 flex-wrap">
+      <span className="text-[11px] uppercase tracking-wider text-text-muted">Use template</span>
+      <select
+        value={target}
+        onChange={(e) => setTarget(e.target.value)}
+        disabled={loading || options.length === 0 || busy}
+        className="h-9 px-2 rounded-lg bg-surface border border-border text-sm text-text-primary focus:outline-none focus:border-[#333]"
+      >
+        <option value="">{loading ? "Loading…" : options.length === 0 ? "No active templates" : "Pick a template"}</option>
+        {options.map((t) => (
+          <option key={t._id} value={t._id}>{t.name}</option>
+        ))}
+      </select>
+      <Button size="sm" variant="ghost" onClick={onCancel} disabled={busy}>Cancel</Button>
+      <Button size="sm" onClick={() => target && onConfirm(target)} disabled={!target || busy} loading={busy}>
+        Assign Template
+      </Button>
+    </div>
+  );
+};
+
+/**
  * Inline picker for the Reassign action. Lazy-loads the trainer's clients
  * and excludes the current owner so reassign cannot no-op.
  */
@@ -198,6 +240,8 @@ const WorkoutPlanTab = ({ clientId }) => {
   const [completionLoading, setCompletionLoading] = useState(false);
   const [reassignPlanId, setReassignPlanId] = useState(null);
   const [actionBusy, setActionBusy] = useState(null); // planId currently mutating
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
+  const [assigning, setAssigning] = useState(false);
   // `builderSeq` increments on every Create or Edit click so the scroll +
   // focus effect re-runs even when the user re-opens the same draft, but
   // *not* on incidental draft mutations (saves, status flips, field edits).
@@ -427,6 +471,24 @@ const WorkoutPlanTab = ({ clientId }) => {
     }
   };
 
+  const assignTemplate = async (templateId) => {
+    setAssigning(true);
+    try {
+      const created = await workoutTemplateService.assign(templateId, clientId);
+      setToast({ kind: "success", message: "Template assigned (DRAFT plan created)" });
+      setShowTemplatePicker(false);
+      await loadPlans();
+      if (created?._id) {
+        setSelectedPlanId(created._id);
+        setDraft(draftFromPlan(created));
+      }
+    } catch (err) {
+      setToast({ kind: "error", message: err?.response?.data?.message || "Failed to assign template" });
+    } finally {
+      setAssigning(false);
+    }
+  };
+
   const reassignPlan = async (plan, targetClientId) => {
     setActionBusy(plan._id);
     try {
@@ -457,8 +519,20 @@ const WorkoutPlanTab = ({ clientId }) => {
               <Card.Title>Workout Plans</Card.Title>
               <Card.Description>Draft, publish, edit, archive, delete, or reassign client workout plans.</Card.Description>
             </div>
-            <Button size="sm" onClick={startCreate}>Create Plan</Button>
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="secondary" onClick={() => setShowTemplatePicker((v) => !v)}>
+                {showTemplatePicker ? "Close" : "Use Workout Template"}
+              </Button>
+              <Button size="sm" onClick={startCreate}>Create New Plan</Button>
+            </div>
           </div>
+          {showTemplatePicker && (
+            <TemplatePicker
+              busy={assigning}
+              onCancel={() => setShowTemplatePicker(false)}
+              onConfirm={assignTemplate}
+            />
+          )}
         </Card.Header>
         <Card.Body>
           {plans.length === 0 ? (

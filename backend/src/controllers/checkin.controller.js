@@ -21,6 +21,15 @@ async function list(req, res, next) {
   } catch (e) { next(e); }
 }
 
+async function listMine(req, res, next) {
+  try {
+    const docs = await checkinService.listForCurrentClient(req.user, {
+      limit: Number(req.query.limit) || undefined,
+    });
+    return ApiResponse.ok(res, "Check-ins fetched", { checkins: docs });
+  } catch (e) { next(e); }
+}
+
 async function getOne(req, res, next) {
   try {
     const doc = await checkinService.getById(req.params.id, req.user);
@@ -35,4 +44,4 @@ async function review(req, res, next) {
   } catch (e) { next(e); }
 }
 
-module.exports = { create, list, getOne, review };
+module.exports = { create, list, listMine, getOne, review };
