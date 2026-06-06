@@ -17,6 +17,7 @@ const mongoose = require("mongoose");
 const ACTIVITY_TYPES = [
   "CLIENT_CREATED",
   "INVITE_SENT",
+  "WHATSAPP_INVITE_SENT",
   "INVITE_ACTIVATED",
   "WORKOUT_PUBLISHED",
   "NUTRITION_PUBLISHED",

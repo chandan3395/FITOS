@@ -8,6 +8,7 @@ const {
   listClients,
   getClient,
   updateClient,
+  sendInvite,
 } = require("../controllers/client.controller");
 
 const router = Router();
@@ -26,5 +27,8 @@ router.get("/:id", authenticate, allowRoles("TRAINER"), getClient);
 
 // PATCH — update editable fields (incl. status="ARCHIVED" for archive flow).
 router.patch("/:id", authenticate, allowRoles("ADMIN", "TRAINER"), updateClient);
+
+// POST /api/clients/:id/invite — (re)send the activation invite via WhatsApp.
+router.post("/:id/invite", authenticate, allowRoles("ADMIN", "TRAINER"), sendInvite);
 
 module.exports = router;

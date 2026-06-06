@@ -74,6 +74,10 @@ const clientSchema = new mongoose.Schema(
     // ── Lifecycle ────────────────────────────────────────────
     status: { type: String, enum: CLIENT_STATUSES, default: "ACTIVE" },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+
+    // Timestamp of the most recent successful WhatsApp activation invite.
+    // Drives the "Invite Sent: <date>" display in the client overview.
+    lastInviteSentAt: { type: Date },
   },
   { timestamps: true }
 );

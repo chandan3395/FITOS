@@ -40,6 +40,13 @@ const env = {
   CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
+
+  // WhatsApp Cloud API (Meta). Optional — when unset, the WhatsApp service
+  // reports "not configured" instead of failing startup, so the rest of the
+  // app keeps working without WhatsApp credentials in dev/test.
+  WHATSAPP_ACCESS_TOKEN: process.env.WHATSAPP_ACCESS_TOKEN,
+  WHATSAPP_PHONE_NUMBER_ID: process.env.WHATSAPP_PHONE_NUMBER_ID,
+  WHATSAPP_VERIFY_TOKEN: process.env.WHATSAPP_VERIFY_TOKEN,
 };
 
 module.exports = { validateEnv, env };

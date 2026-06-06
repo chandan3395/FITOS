@@ -660,6 +660,7 @@ const TrainerAddClientPage = () => {
   const [submitting, setSubmit]     = useState(false);
   const [submitError, setSubmitErr] = useState(null);
   const [activation, setActivation] = useState(null);
+  const [inviteBusy, setInviteBusy] = useState(false);
   const [toast, setToast]           = useState(null);
 
   const cardRef = useRef(null);
@@ -740,10 +741,12 @@ const TrainerAddClientPage = () => {
     try {
       const result = await clientService.create(toApiPayload(form));
       setActivation({
+        id:         result?.client?._id,
         clientName: result?.client?.name || "Client",
         firstName:  form.firstName,
         url:        result?.invite?.activationUrl,
         expiresAt:  result?.invite?.expiresAt,
+        hasPhone:   Boolean(form.phone),
       });
       setToast({ kind: "success", message: "Client created — share the activation link" });
     } catch (e) {
@@ -754,6 +757,19 @@ const TrainerAddClientPage = () => {
       else setSubmitErr(msg);
     } finally {
       setSubmit(false);
+    }
+  };
+
+  const sendWhatsAppInvite = async () => {
+    if (!activation?.id) return;
+    setInviteBusy(true);
+    try {
+      await clientService.sendInvite(activation.id);
+      setToast({ kind: "success", message: "WhatsApp invite sent" });
+    } catch (e) {
+      setToast({ kind: "error", message: e?.response?.data?.message || "Couldn't send invite" });
+    } finally {
+      setInviteBusy(false);
     }
   };
 
@@ -825,7 +841,16 @@ const TrainerAddClientPage = () => {
                   value={whatsappMessage}
                   className="w-full h-28 p-3 rounded-lg bg-surface-elevated border border-border text-[12.5px] text-text-primary font-mono resize-none"
                 />
-                <div className="mt-2 flex items-center gap-2">
+                <div className="mt-2 flex items-center gap-2 flex-wrap">
+                  <Button
+                    size="sm"
+                    loading={inviteBusy}
+                    onClick={sendWhatsAppInvite}
+                    disabled={!activation.hasPhone}
+                    title={activation.hasPhone ? "" : "Add a phone number to send via WhatsApp"}
+                  >
+                    Send WhatsApp Invite
+                  </Button>
                   <Button
                     size="sm"
                     variant="secondary"
@@ -836,7 +861,7 @@ const TrainerAddClientPage = () => {
                   >
                     Copy WhatsApp message
                   </Button>
-                  <Button size="sm" onClick={() => navigate(ROUTES.TRAINER_CLIENTS)}>Done</Button>
+                  <Button size="sm" variant="ghost" onClick={() => navigate(ROUTES.TRAINER_CLIENTS)}>Done</Button>
                 </div>
               </div>
             </div>

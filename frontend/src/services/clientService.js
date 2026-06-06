@@ -29,6 +29,12 @@ async function archive(id) {
   return update(id, { status: "ARCHIVED" });
 }
 
-const clientService = { list, getById, create, update, archive };
+/** POST /api/clients/:id/invite — (re)send the activation invite via WhatsApp */
+async function sendInvite(id) {
+  const res = await api.post(`/clients/${id}/invite`);
+  return res.data?.data ?? null;
+}
+
+const clientService = { list, getById, create, update, archive, sendInvite };
 
 export default clientService;

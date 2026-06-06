@@ -8,6 +8,9 @@ const Modal = ({
   footer,
   size = "md",
   className = "",
+  // Optional override for the backdrop (e.g. a stronger blur). Defaults to
+  // the standard backdrop so existing modals are unchanged.
+  backdropClassName = "bg-black/70 backdrop-blur-sm",
 }) => {
   // Close on Escape
   useEffect(() => {
@@ -40,7 +43,7 @@ const Modal = ({
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        className={`absolute inset-0 ${backdropClassName}`}
         onClick={onClose}
         aria-hidden="true"
       />

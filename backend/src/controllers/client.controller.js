@@ -39,4 +39,13 @@ async function updateClient(req, res, next) {
   }
 }
 
-module.exports = { createClient, listClients, getClient, updateClient };
+async function sendInvite(req, res, next) {
+  try {
+    const result = await clientService.sendWhatsAppInvite(req.params.id, req.user);
+    return ApiResponse.ok(res, "WhatsApp invite sent", result);
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { createClient, listClients, getClient, updateClient, sendInvite };

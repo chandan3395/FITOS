@@ -4,6 +4,7 @@ import Button from "../../components/ui/Button";
 import { EmptyState, ErrorState, SkeletonDetail, Toast } from "../../components/feedback/States";
 import checkinService from "../../services/checkinService";
 import progressPhotoService from "../../services/progressPhotoService";
+import ComparePhotos from "../../components/progress/ComparePhotos";
 
 /**
  * ClientProgressPage — reads:
@@ -162,8 +163,13 @@ const ClientProgressPage = () => {
       {/* Photos grouped by week */}
       <Card>
         <Card.Header>
-          <Card.Title>Progress Photos</Card.Title>
-          <Card.Description>Newest week first.</Card.Description>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <Card.Title>Progress Photos</Card.Title>
+              <Card.Description>Newest week first.</Card.Description>
+            </div>
+            <ComparePhotos photos={photos} />
+          </div>
         </Card.Header>
         <Card.Body>
           {photos.length === 0 ? (

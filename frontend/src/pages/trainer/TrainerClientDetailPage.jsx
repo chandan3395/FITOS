@@ -12,6 +12,7 @@ import { SkeletonDetail, ErrorState, EmptyState, Toast } from "../../components/
 import clientService from "../../services/clientService";
 import checkinService from "../../services/checkinService";
 import progressPhotoService from "../../services/progressPhotoService";
+import ComparePhotos from "../../components/progress/ComparePhotos";
 import WorkoutPlanTab from "./WorkoutPlanTab";
 import NutritionPlanTab from "./NutritionPlanTab";
 
@@ -127,6 +128,7 @@ const OverviewTab = ({ client, lastCheckIn }) => {
             <KV label="Occupation"  value={client.occupation} />
             <KV label="Gender"      value={client.gender} />
             <KV label="Date of birth" value={dob} />
+            <KV label="Invite Sent" value={client.lastInviteSentAt ? fmtDate(client.lastInviteSentAt) : null} />
           </div>
         </Card.Body>
       </Card>
@@ -329,7 +331,12 @@ const PhotosTab = ({ clientId, items, loading, error, onReload }) => {
   return (
     <div className="space-y-4">
       <Card>
-        <Card.Header><Card.Title>Upload Photos</Card.Title></Card.Header>
+        <Card.Header>
+          <div className="flex items-center justify-between gap-3">
+            <Card.Title>Upload Photos</Card.Title>
+            <ComparePhotos photos={items} />
+          </div>
+        </Card.Header>
         <Card.Body>
           <form ref={fileRef} onSubmit={upload} className="space-y-3">
             <input
@@ -468,6 +475,7 @@ const TrainerClientDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(null);
   const [archiveBusy, setArc] = useState(false);
+  const [inviteBusy, setInviteBusy] = useState(false);
   const [toast, setToast]     = useState(null);
 
   const reload = useCallback(async () => {
@@ -502,6 +510,19 @@ const TrainerClientDetailPage = () => {
   const reloadPhotos = useCallback(async () => {
     setPhotos(await progressPhotoService.listForClient(id).catch(() => []));
   }, [id]);
+
+  const resendInvite = async () => {
+    setInviteBusy(true);
+    try {
+      const result = await clientService.sendInvite(id);
+      if (result?.client) setClient(result.client);
+      setToast({ kind: "success", message: "WhatsApp invite sent" });
+    } catch (e) {
+      setToast({ kind: "error", message: e?.response?.data?.message || "Couldn't send invite" });
+    } finally {
+      setInviteBusy(false);
+    }
+  };
 
   const archive = async () => {
     if (!confirm("Archive this client?")) return;
@@ -573,6 +594,14 @@ const TrainerClientDetailPage = () => {
               {client.status === "ARCHIVED" ? <WarningIcon size={12} /> : <CheckCircleIcon size={12} />}
               {statusLabel}
             </span>
+            <div className="flex flex-col items-end">
+              <Button size="sm" variant="secondary" loading={inviteBusy} onClick={resendInvite}>
+                {client.lastInviteSentAt ? "Resend Invite" : "Send WhatsApp Invite"}
+              </Button>
+              {client.lastInviteSentAt && (
+                <span className="text-[11px] text-text-muted mt-1">Invite Sent: {fmtDate(client.lastInviteSentAt)}</span>
+              )}
+            </div>
             {client.status !== "ARCHIVED" && (
               <Button size="sm" variant="danger" loading={archiveBusy} onClick={archive}>Archive</Button>
             )}
