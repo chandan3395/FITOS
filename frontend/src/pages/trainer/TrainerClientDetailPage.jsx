@@ -13,6 +13,7 @@ import clientService from "../../services/clientService";
 import checkinService from "../../services/checkinService";
 import progressPhotoService from "../../services/progressPhotoService";
 import WorkoutPlanTab from "./WorkoutPlanTab";
+import NutritionPlanTab from "./NutritionPlanTab";
 
 const TABS = [
   { id: "overview",  label: "Overview" },
@@ -352,56 +353,6 @@ const PhotosTab = ({ clientId, items, loading, error, onReload }) => {
   );
 };
 
-// ── Nutrition tab — real persisted onboarding data + future plan actions.
-const NutritionPlanTab = ({ client, onAction }) => {
-  const macros = [
-    { label: "Calories",     value: client.calories != null ? `${client.calories} kcal` : null },
-    { label: "Protein",      value: client.protein  != null ? `${client.protein} g`     : null },
-    { label: "Carbs",        value: client.carbs    != null ? `${client.carbs} g`       : null },
-    { label: "Fats",         value: client.fats     != null ? `${client.fats} g`        : null },
-    { label: "Meals / day",  value: client.mealsPerDay != null ? String(client.mealsPerDay) : null },
-    { label: "Water target", value: client.waterTarget != null ? `${client.waterTarget} L/day` : null },
-    { label: "Cheat meals",  value: client.cheatMeals  != null ? `${client.cheatMeals} / wk`    : null },
-    { label: "Diet type",    value: client.diet },
-  ];
-
-  return (
-    <div className="space-y-4">
-      <Card>
-        <Card.Header>
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div>
-              <Card.Title>Nutrition Targets</Card.Title>
-              <Card.Description>Captured during onboarding. Edit Plan opens the future plan editor.</Card.Description>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button size="sm" variant="secondary" onClick={() => onAction("Edit Nutrition plan")}>Edit Nutrition Plan</Button>
-              <Button size="sm" onClick={() => onAction("Reassign Nutrition plan")}>Reassign Nutrition Plan</Button>
-            </div>
-          </div>
-        </Card.Header>
-        <Card.Body>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-            {macros.map((m) => <KV key={m.label} label={m.label} value={m.value} />)}
-          </div>
-        </Card.Body>
-      </Card>
-
-      {(client.foodDislikes || client.eatingHabits) && (
-        <Card>
-          <Card.Header><Card.Title>Preferences & Habits</Card.Title></Card.Header>
-          <Card.Body>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <KV label="Foods to avoid"        value={client.foodDislikes} />
-              <KV label="Current eating habits" value={client.eatingHabits} />
-            </div>
-          </Card.Body>
-        </Card>
-      )}
-    </div>
-  );
-};
-
 // ── Notes tab — renders the trainer-private notes captured at onboarding.
 const NotesPlanTab = ({ client }) => (
   <Card>
@@ -505,7 +456,7 @@ const TrainerClientDetailPage = () => {
     checkins:  <CheckinsTab clientId={id} items={checkins} loading={false} error={null} onReload={reloadCheckins} />,
     photos:    <PhotosTab   clientId={id} items={photos}   loading={false} error={null} onReload={reloadPhotos}   />,
     workout:   <WorkoutPlanTab clientId={id} />,
-    nutrition: <NutritionPlanTab client={client} onAction={(label) => setToast({ kind: "success", message: `${label} — coming in a later phase` })} />,
+    nutrition: <NutritionPlanTab clientId={id} />,
     notes:     <NotesPlanTab     client={client} />,
   };
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
 import { SkeletonDetail, ErrorState, Toast } from "../../components/feedback/States";
@@ -198,6 +198,11 @@ const WorkoutPlanTab = ({ clientId }) => {
   const [completionLoading, setCompletionLoading] = useState(false);
   const [reassignPlanId, setReassignPlanId] = useState(null);
   const [actionBusy, setActionBusy] = useState(null); // planId currently mutating
+  // `builderSeq` increments on every Create or Edit click so the scroll +
+  // focus effect re-runs even when the user re-opens the same draft, but
+  // *not* on incidental draft mutations (saves, status flips, field edits).
+  const [builderSeq, setBuilderSeq] = useState(0);
+  const builderRef = useRef(null);
 
   const loadPlans = useCallback(async () => {
     setLoading(true);
@@ -235,12 +240,35 @@ const WorkoutPlanTab = ({ clientId }) => {
     return () => { cancelled = true; };
   }, [selectedPlan?._id]);
 
-  const startCreate = () => setDraft(emptyDraft());
+  const startCreate = () => {
+    setDraft(emptyDraft());
+    setBuilderSeq((n) => n + 1);
+  };
 
   const startEdit = (plan) => {
     setSelectedPlanId(plan._id);
     setDraft(draftFromPlan(plan));
+    setBuilderSeq((n) => n + 1);
   };
+
+  // Smooth-scroll to the builder and focus its first editable field whenever
+  // the user explicitly opens it. We key on `builderSeq` so saves and
+  // status flips don't yank the page around.
+  useEffect(() => {
+    if (builderSeq === 0) return;
+    const node = builderRef.current;
+    if (!node) return;
+    const frame = requestAnimationFrame(() => {
+      const HEADER_OFFSET = 16; // breathing room from the top edge
+      const top = node.getBoundingClientRect().top + window.scrollY - HEADER_OFFSET;
+      window.scrollTo({ top, behavior: "smooth" });
+      const firstField = node.querySelector("input, textarea, select");
+      // preventScroll keeps focus from re-scrolling and fighting the smooth
+      // scroll above.
+      firstField?.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [builderSeq]);
 
   const changeDraft = (field, value) => {
     setDraft((current) => ({ ...current, [field]: value }));
@@ -520,6 +548,7 @@ const WorkoutPlanTab = ({ clientId }) => {
       )}
 
       {draft && (
+        <div ref={builderRef}>
         <Card>
           <Card.Header>
             <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -595,6 +624,7 @@ const WorkoutPlanTab = ({ clientId }) => {
             </div>
           </Card.Body>
         </Card>
+        </div>
       )}
 
       <Toast {...(toast || {})} onDismiss={() => setToast(null)} />
