@@ -280,9 +280,41 @@ const PhotosTab = ({ clientId, items, loading, error, onReload }) => {
   );
 };
 
-// ── Stub tabs (workout/nutrition/notes — out of scope for this pass) ──
+// ── Stub tabs (notes — out of scope for this pass) ──
 const StubTab = ({ title, description }) => (
   <Card><Card.Body><EmptyState title={title} description={description} /></Card.Body></Card>
+);
+
+// ── Plan tabs — surface Edit / Reassign actions so trainers know they
+// can modify the plan later. The actual editor UI lives in a future pass;
+// these buttons emit a toast for now so the affordance is discoverable.
+const PlanTab = ({ planName, kind, onAction }) => (
+  <Card>
+    <Card.Header>
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div>
+          <Card.Title>{planName}</Card.Title>
+          <Card.Description>
+            No plan assigned yet. You can assign one now, or reuse a template later.
+          </Card.Description>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="secondary" onClick={() => onAction(`Edit ${kind} plan`)}>
+            Edit {kind} Plan
+          </Button>
+          <Button size="sm" onClick={() => onAction(`Reassign ${kind} plan`)}>
+            Reassign {kind} Plan
+          </Button>
+        </div>
+      </div>
+    </Card.Header>
+    <Card.Body>
+      <div className="text-sm text-text-secondary py-6 text-center border border-dashed border-border rounded-xl">
+        Plan editor arrives in a later phase. Use <span className="text-text-primary font-medium">Edit</span> to draft a fresh
+        plan or <span className="text-text-primary font-medium">Reassign</span> to swap from a template.
+      </div>
+    </Card.Body>
+  </Card>
 );
 
 // ── PAGE ────────────────────────────────────────────────────────
@@ -371,8 +403,8 @@ const TrainerClientDetailPage = () => {
     overview:  <OverviewTab client={client} lastCheckIn={lastCheckIn} />,
     checkins:  <CheckinsTab clientId={id} items={checkins} loading={false} error={null} onReload={reloadCheckins} />,
     photos:    <PhotosTab   clientId={id} items={photos}   loading={false} error={null} onReload={reloadPhotos}   />,
-    workout:   <StubTab title="Workout plan" description="Workout plan API arrives in a later phase." />,
-    nutrition: <StubTab title="Nutrition plan" description="Nutrition plan API arrives in a later phase." />,
+    workout:   <PlanTab planName="Workout Plan"   kind="Workout"   onAction={(label) => setToast({ kind: "success", message: `${label} — coming in a later phase` })} />,
+    nutrition: <PlanTab planName="Nutrition Plan" kind="Nutrition" onAction={(label) => setToast({ kind: "success", message: `${label} — coming in a later phase` })} />,
     notes:     <StubTab title="Private notes" description="Notes API arrives in a later phase." />,
   };
 
