@@ -45,11 +45,10 @@ api.interceptors.request.use((config) => {
   }
   if (DEV_BYPASS) {
     const role = getDevRole();
+    const cid  = role === "CLIENT" ? getDevClientId() : null;
     if (role) config.headers["x-dev-role"] = role;
-    if (role === "CLIENT") {
-      const cid = getDevClientId();
-      if (cid) config.headers["x-dev-client-id"] = cid;
-    }
+    if (cid)  config.headers["x-dev-client-id"] = cid;
+    console.log("[api req]", config.method?.toUpperCase(), config.url, { role, cid });
   }
   return config;
 });

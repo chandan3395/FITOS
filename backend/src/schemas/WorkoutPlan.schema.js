@@ -13,7 +13,7 @@ const EXERCISE_FIELDS = {
   notes: { type: String, trim: true, maxlength: 1000 }
 };
 
-const WORKOUT_STATUSES = ["ACTIVE", "ARCHIVED"];
+const WORKOUT_STATUSES = ["DRAFT", "ACTIVE", "ARCHIVED"];
 
 /**
  * Workout plan assigned to a client.
@@ -52,10 +52,13 @@ const workoutPlanSchema = new mongoose.Schema(
       trim: true,
       maxlength: 2000
     },
+    // New plans start as DRAFT so trainers can iterate before the client sees
+    // them. Promote to ACTIVE via the explicit publish endpoint; archive
+    // moves to ARCHIVED; the hard-delete endpoint removes the document.
     status: {
       type: String,
       enum: WORKOUT_STATUSES,
-      default: "ACTIVE"
+      default: "DRAFT"
     },
 
     // ── Exercises ────────────────────────────────────────────

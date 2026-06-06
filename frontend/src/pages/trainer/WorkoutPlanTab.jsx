@@ -3,6 +3,7 @@ import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
 import { SkeletonDetail, ErrorState, Toast } from "../../components/feedback/States";
 import workoutService from "../../services/workoutService";
+import clientService from "../../services/clientService";
 
 const inputClass = "w-full h-9 px-3 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-[#333]";
 const textareaClass = "w-full min-h-[84px] px-3 py-2 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-[#333]";
@@ -14,7 +15,7 @@ const emptyDraft = () => ({
   goal: "",
   durationWeeks: 4,
   notes: "",
-  status: "ARCHIVED",
+  status: "DRAFT",
   exercises: []
 });
 
@@ -24,7 +25,7 @@ const draftFromPlan = (plan) => ({
   goal: plan.goal || "",
   durationWeeks: plan.durationWeeks || 4,
   notes: plan.notes || "",
-  status: plan.status || "ARCHIVED",
+  status: plan.status || "DRAFT",
   exercises: (plan.exercises || []).map((exercise, index) => ({
     _id: exercise._id,
     name: exercise.name || "",
@@ -43,24 +44,38 @@ const toNumber = (value) => {
   return Number(value);
 };
 
-const preparePayload = (draft, status) => ({
-  planName: draft.planName,
-  goal: draft.goal || undefined,
-  durationWeeks: toNumber(draft.durationWeeks),
-  notes: draft.notes || undefined,
-  status,
-  exercises: draft.exercises.map((exercise, index) => ({
-    _id: exercise._id,
-    name: exercise.name,
-    sets: toNumber(exercise.sets),
-    reps: toNumber(exercise.reps),
-    weight: toNumber(exercise.weight),
-    restSeconds: toNumber(exercise.restSeconds),
-    dayNumber: toNumber(exercise.dayNumber) || 1,
-    order: index + 1,
-    notes: exercise.notes || undefined
-  }))
-});
+/**
+ * Build the persistence payload. Order is regenerated per-day from the
+ * exercise's position within its day's filtered list, so numbering is
+ * always derived from array index — never a stale stored value, never a
+ * duplicate across days.
+ */
+const preparePayload = (draft, status) => {
+  const perDayCounter = new Map();
+  return {
+    planName: draft.planName,
+    goal: draft.goal || undefined,
+    durationWeeks: toNumber(draft.durationWeeks),
+    notes: draft.notes || undefined,
+    status,
+    exercises: draft.exercises.map((exercise) => {
+      const day = toNumber(exercise.dayNumber) || 1;
+      const nextOrder = (perDayCounter.get(day) || 0) + 1;
+      perDayCounter.set(day, nextOrder);
+      return {
+        _id: exercise._id,
+        name: exercise.name,
+        sets: toNumber(exercise.sets),
+        reps: toNumber(exercise.reps),
+        weight: toNumber(exercise.weight),
+        restSeconds: toNumber(exercise.restSeconds),
+        dayNumber: day,
+        order: nextOrder,
+        notes: exercise.notes || undefined
+      };
+    })
+  };
+};
 
 const fmtDate = (iso) => iso
   ? new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
@@ -69,55 +84,107 @@ const fmtDate = (iso) => iso
 const groupByDay = (exercises) => DAYS.map((day) => ({
   day,
   exercises: exercises
-    .filter((exercise) => Number(exercise.dayNumber || 1) === day)
-    .sort((a, b) => Number(a.order || 0) - Number(b.order || 0))
+    .map((exercise, globalIndex) => ({ exercise, globalIndex }))
+    .filter(({ exercise }) => Number(exercise.dayNumber || 1) === day)
 }));
 
-const PlanBadge = ({ status }) => (
-  <span className={[
-    "inline-flex px-2.5 py-1 rounded-full text-[11px] font-semibold",
-    status === "ACTIVE" ? "bg-emerald-400/10 text-emerald-300" : "bg-zinc-800 text-zinc-400"
-  ].join(" ")}>
-    {status === "ACTIVE" ? "Published" : "Draft/Archived"}
-  </span>
-);
+const BADGE_STYLE = {
+  DRAFT:    { label: "Draft",     cls: "bg-zinc-800 text-zinc-300" },
+  ACTIVE:   { label: "Published", cls: "bg-emerald-400/10 text-emerald-300" },
+  ARCHIVED: { label: "Archived",  cls: "bg-zinc-900 text-zinc-500" },
+};
 
-const ExerciseEditor = ({ exercise, index, canMoveUp, canMoveDown, onChange, onRemove, onDuplicate, onMove }) => (
+const PlanBadge = ({ status }) => {
+  const meta = BADGE_STYLE[status] || BADGE_STYLE.DRAFT;
+  return (
+    <span className={`inline-flex px-2.5 py-1 rounded-full text-[11px] font-semibold ${meta.cls}`}>
+      {meta.label}
+    </span>
+  );
+};
+
+const ExerciseEditor = ({ exercise, displayNumber, globalIndex, canMoveUp, canMoveDown, onChange, onRemove, onDuplicate, onMove }) => (
   <div className="rounded-lg border border-border bg-surface p-4 space-y-3">
     <div className="flex items-center justify-between gap-3">
-      <p className="text-sm font-semibold text-text-primary">Exercise {index + 1}</p>
+      <p className="text-sm font-semibold text-text-primary">Exercise {displayNumber}</p>
       <div className="flex items-center gap-1">
-        <Button size="sm" variant="ghost" disabled={!canMoveUp} onClick={() => onMove(index, -1)}>Up</Button>
-        <Button size="sm" variant="ghost" disabled={!canMoveDown} onClick={() => onMove(index, 1)}>Down</Button>
-        <Button size="sm" variant="secondary" onClick={() => onDuplicate(index)}>Duplicate</Button>
-        <Button size="sm" variant="danger" onClick={() => onRemove(index)}>Remove</Button>
+        <Button size="sm" variant="ghost" disabled={!canMoveUp} onClick={() => onMove(globalIndex, -1)}>Up</Button>
+        <Button size="sm" variant="ghost" disabled={!canMoveDown} onClick={() => onMove(globalIndex, 1)}>Down</Button>
+        <Button size="sm" variant="secondary" onClick={() => onDuplicate(globalIndex)}>Duplicate</Button>
+        <Button size="sm" variant="danger" onClick={() => onRemove(globalIndex)}>Remove</Button>
       </div>
     </div>
     <div className="grid grid-cols-1 sm:grid-cols-6 gap-3">
       <label className="sm:col-span-2">
         <span className="text-[11px] uppercase tracking-wider text-text-muted">Name</span>
-        <input value={exercise.name} onChange={(e) => onChange(index, "name", e.target.value)} className={`${inputClass} mt-1`} placeholder="Bench press" />
+        <input value={exercise.name} onChange={(e) => onChange(globalIndex, "name", e.target.value)} className={`${inputClass} mt-1`} placeholder="Bench press" />
       </label>
       <label>
         <span className="text-[11px] uppercase tracking-wider text-text-muted">Sets</span>
-        <input type="number" min="1" max="20" value={exercise.sets} onChange={(e) => onChange(index, "sets", e.target.value)} className={`${inputClass} mt-1`} />
+        <input type="number" min="1" max="20" value={exercise.sets} onChange={(e) => onChange(globalIndex, "sets", e.target.value)} className={`${inputClass} mt-1`} />
       </label>
       <label>
         <span className="text-[11px] uppercase tracking-wider text-text-muted">Reps</span>
-        <input type="number" min="1" max="100" value={exercise.reps} onChange={(e) => onChange(index, "reps", e.target.value)} className={`${inputClass} mt-1`} />
+        <input type="number" min="1" max="100" value={exercise.reps} onChange={(e) => onChange(globalIndex, "reps", e.target.value)} className={`${inputClass} mt-1`} />
       </label>
       <label>
         <span className="text-[11px] uppercase tracking-wider text-text-muted">Weight</span>
-        <input type="number" min="0" step="0.5" value={exercise.weight} onChange={(e) => onChange(index, "weight", e.target.value)} className={`${inputClass} mt-1`} />
+        <input type="number" min="0" step="0.5" value={exercise.weight} onChange={(e) => onChange(globalIndex, "weight", e.target.value)} className={`${inputClass} mt-1`} />
       </label>
       <label>
         <span className="text-[11px] uppercase tracking-wider text-text-muted">Rest sec</span>
-        <input type="number" min="0" max="600" value={exercise.restSeconds} onChange={(e) => onChange(index, "restSeconds", e.target.value)} className={`${inputClass} mt-1`} />
+        <input type="number" min="0" max="600" value={exercise.restSeconds} onChange={(e) => onChange(globalIndex, "restSeconds", e.target.value)} className={`${inputClass} mt-1`} />
       </label>
     </div>
-    <textarea value={exercise.notes} onChange={(e) => onChange(index, "notes", e.target.value)} className={textareaClass} placeholder="Coaching notes, tempo, substitutions" />
+    <textarea value={exercise.notes} onChange={(e) => onChange(globalIndex, "notes", e.target.value)} className={textareaClass} placeholder="Coaching notes, tempo, substitutions" />
   </div>
 );
+
+/**
+ * Inline picker for the Reassign action. Lazy-loads the trainer's clients
+ * and excludes the current owner so reassign cannot no-op.
+ */
+const ReassignPicker = ({ currentClientId, onCancel, onConfirm, busy }) => {
+  const [options, setOptions] = useState([]);
+  const [target, setTarget]   = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    clientService.list()
+      .then((items) => {
+        if (cancelled) return;
+        const filtered = (items || []).filter(
+          (c) => String(c._id) !== String(currentClientId) && c.status !== "ARCHIVED"
+        );
+        setOptions(filtered);
+      })
+      .catch(() => setOptions([]))
+      .finally(() => !cancelled && setLoading(false));
+    return () => { cancelled = true; };
+  }, [currentClientId]);
+
+  return (
+    <div className="mt-2 rounded-lg border border-border bg-surface p-3 flex items-center gap-2 flex-wrap">
+      <span className="text-[11px] uppercase tracking-wider text-text-muted">Reassign to</span>
+      <select
+        value={target}
+        onChange={(e) => setTarget(e.target.value)}
+        disabled={loading || options.length === 0 || busy}
+        className="h-9 px-2 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary focus:outline-none focus:border-[#333]"
+      >
+        <option value="">{loading ? "Loading…" : options.length === 0 ? "No other clients" : "Pick a client"}</option>
+        {options.map((c) => (
+          <option key={c._id} value={c._id}>{c.name}</option>
+        ))}
+      </select>
+      <Button size="sm" variant="ghost" onClick={onCancel} disabled={busy}>Cancel</Button>
+      <Button size="sm" onClick={() => target && onConfirm(target)} disabled={!target || busy} loading={busy}>
+        Reassign
+      </Button>
+    </div>
+  );
+};
 
 const WorkoutPlanTab = ({ clientId }) => {
   const [plans, setPlans] = useState([]);
@@ -129,6 +196,8 @@ const WorkoutPlanTab = ({ clientId }) => {
   const [toast, setToast] = useState(null);
   const [completions, setCompletions] = useState([]);
   const [completionLoading, setCompletionLoading] = useState(false);
+  const [reassignPlanId, setReassignPlanId] = useState(null);
+  const [actionBusy, setActionBusy] = useState(null); // planId currently mutating
 
   const loadPlans = useCallback(async () => {
     setLoading(true);
@@ -159,24 +228,14 @@ const WorkoutPlanTab = ({ clientId }) => {
 
     setCompletionLoading(true);
     workoutService.completions(selectedPlan._id)
-      .then((items) => {
-        if (!cancelled) setCompletions(items);
-      })
-      .catch(() => {
-        if (!cancelled) setCompletions([]);
-      })
-      .finally(() => {
-        if (!cancelled) setCompletionLoading(false);
-      });
+      .then((items) => { if (!cancelled) setCompletions(items); })
+      .catch(() => { if (!cancelled) setCompletions([]); })
+      .finally(() => { if (!cancelled) setCompletionLoading(false); });
 
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [selectedPlan?._id]);
 
-  const startCreate = () => {
-    setDraft(emptyDraft());
-  };
+  const startCreate = () => setDraft(emptyDraft());
 
   const startEdit = (plan) => {
     setSelectedPlanId(plan._id);
@@ -208,6 +267,8 @@ const WorkoutPlanTab = ({ clientId }) => {
           weight: 0,
           restSeconds: 60,
           dayNumber,
+          // Stored `order` is regenerated on save (preparePayload), so this
+          // placeholder is purely informational until the next save.
           order: current.exercises.filter((exercise) => Number(exercise.dayNumber) === dayNumber).length + 1,
           notes: ""
         }
@@ -250,13 +311,22 @@ const WorkoutPlanTab = ({ clientId }) => {
 
   const saveDraft = async (status) => {
     if (!draft) return;
+    if (status === "ACTIVE" && draft.exercises.length === 0) {
+      setToast({ kind: "error", message: "Add at least one exercise before publishing" });
+      return;
+    }
     setSaving(true);
     try {
       const payload = preparePayload(draft, status);
       const saved = draft._id
         ? await workoutService.update(draft._id, payload)
         : await workoutService.create(clientId, payload);
-      setToast({ kind: "success", message: status === "ACTIVE" ? "Workout plan published" : "Workout draft saved" });
+      setToast({
+        kind: "success",
+        message: status === "ACTIVE" ? "Workout plan published"
+               : status === "ARCHIVED" ? "Workout plan archived"
+               : "Workout draft saved"
+      });
       setDraft(draftFromPlan(saved));
       await loadPlans();
       setSelectedPlanId(saved._id);
@@ -269,8 +339,23 @@ const WorkoutPlanTab = ({ clientId }) => {
     }
   };
 
+  const publishPlan = async (plan) => {
+    setActionBusy(plan._id);
+    try {
+      const updated = await workoutService.publish(plan._id);
+      setToast({ kind: "success", message: "Workout plan published" });
+      if (draft?._id === plan._id) setDraft(draftFromPlan(updated));
+      await loadPlans();
+    } catch (err) {
+      setToast({ kind: "error", message: err?.response?.data?.message || "Failed to publish plan" });
+    } finally {
+      setActionBusy(null);
+    }
+  };
+
   const archivePlan = async (plan) => {
     if (!confirm(`Archive "${plan.planName}"?`)) return;
+    setActionBusy(plan._id);
     try {
       const archived = await workoutService.archive(plan._id);
       setToast({ kind: "success", message: "Workout plan archived" });
@@ -278,10 +363,29 @@ const WorkoutPlanTab = ({ clientId }) => {
       await loadPlans();
     } catch (err) {
       setToast({ kind: "error", message: err?.response?.data?.message || "Failed to archive plan" });
+    } finally {
+      setActionBusy(null);
+    }
+  };
+
+  const deletePlan = async (plan) => {
+    if (!confirm(`Permanently delete "${plan.planName}"? This cannot be undone.`)) return;
+    setActionBusy(plan._id);
+    try {
+      await workoutService.remove(plan._id);
+      setToast({ kind: "success", message: "Workout plan deleted" });
+      if (draft?._id === plan._id) setDraft(null);
+      if (selectedPlanId === plan._id) setSelectedPlanId(null);
+      await loadPlans();
+    } catch (err) {
+      setToast({ kind: "error", message: err?.response?.data?.message || "Failed to delete plan" });
+    } finally {
+      setActionBusy(null);
     }
   };
 
   const duplicatePlan = async (plan) => {
+    setActionBusy(plan._id);
     try {
       const copy = await workoutService.duplicate(clientId, plan);
       setToast({ kind: "success", message: "Workout plan duplicated" });
@@ -290,6 +394,21 @@ const WorkoutPlanTab = ({ clientId }) => {
       setDraft(draftFromPlan(copy));
     } catch (err) {
       setToast({ kind: "error", message: err?.response?.data?.message || "Failed to duplicate plan" });
+    } finally {
+      setActionBusy(null);
+    }
+  };
+
+  const reassignPlan = async (plan, targetClientId) => {
+    setActionBusy(plan._id);
+    try {
+      await workoutService.reassign(plan._id, targetClientId);
+      setToast({ kind: "success", message: "Plan reassigned (DRAFT created on the new client)" });
+      setReassignPlanId(null);
+    } catch (err) {
+      setToast({ kind: "error", message: err?.response?.data?.message || "Failed to reassign plan" });
+    } finally {
+      setActionBusy(null);
     }
   };
 
@@ -308,7 +427,7 @@ const WorkoutPlanTab = ({ clientId }) => {
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
               <Card.Title>Workout Plans</Card.Title>
-              <Card.Description>Create, publish, duplicate, and archive client workout plans.</Card.Description>
+              <Card.Description>Draft, publish, edit, archive, delete, or reassign client workout plans.</Card.Description>
             </div>
             <Button size="sm" onClick={startCreate}>Create Plan</Button>
           </div>
@@ -317,34 +436,54 @@ const WorkoutPlanTab = ({ clientId }) => {
           {plans.length === 0 ? (
             <div className="py-10 flex flex-col items-center text-center border border-dashed border-border rounded-xl">
               <p className="text-base font-semibold text-text-primary">No workout plans yet</p>
-              <p className="text-sm text-text-secondary mt-1 max-w-sm">Create the first plan to replace the old placeholder workflow.</p>
+              <p className="text-sm text-text-secondary mt-1 max-w-sm">Create the first plan to get started.</p>
               <Button size="sm" className="mt-4" onClick={startCreate}>Create Plan</Button>
             </div>
           ) : (
             <div className="space-y-3">
-              {plans.map((plan) => (
-                <div key={plan._id} className={[
-                  "rounded-lg border p-4 bg-surface-elevated",
-                  selectedPlan?._id === plan._id ? "border-primary/60" : "border-border"
-                ].join(" ")}>
-                  <div className="flex items-start justify-between gap-4 flex-wrap">
-                    <button type="button" onClick={() => setSelectedPlanId(plan._id)} className="text-left">
+              {plans.map((plan) => {
+                const busy = actionBusy === plan._id;
+                return (
+                  <div key={plan._id} className={[
+                    "rounded-lg border p-4 bg-surface-elevated",
+                    selectedPlan?._id === plan._id ? "border-primary/60" : "border-border"
+                  ].join(" ")}>
+                    <div className="flex items-start justify-between gap-4 flex-wrap">
+                      <button type="button" onClick={() => setSelectedPlanId(plan._id)} className="text-left">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-sm font-semibold text-text-primary">{plan.planName}</p>
+                          <PlanBadge status={plan.status} />
+                        </div>
+                        <p className="text-[12px] text-text-secondary mt-1">
+                          {plan.goal || "No goal set"} · {plan.durationWeeks || "-"} weeks · {(plan.exercises || []).length} exercises
+                        </p>
+                      </button>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-semibold text-text-primary">{plan.planName}</p>
-                        <PlanBadge status={plan.status} />
+                        <Button size="sm" variant="secondary" onClick={() => startEdit(plan)} disabled={busy}>Edit</Button>
+                        <Button size="sm" variant="secondary" onClick={() => duplicatePlan(plan)} disabled={busy}>Duplicate</Button>
+                        {plan.status !== "ACTIVE" && (
+                          <Button size="sm" onClick={() => publishPlan(plan)} disabled={busy || (plan.exercises || []).length === 0}>Publish</Button>
+                        )}
+                        {plan.status !== "ARCHIVED" && (
+                          <Button size="sm" variant="secondary" onClick={() => archivePlan(plan)} disabled={busy}>Archive</Button>
+                        )}
+                        <Button size="sm" variant="secondary" onClick={() => setReassignPlanId(reassignPlanId === plan._id ? null : plan._id)} disabled={busy}>
+                          {reassignPlanId === plan._id ? "Close" : "Reassign"}
+                        </Button>
+                        <Button size="sm" variant="danger" onClick={() => deletePlan(plan)} disabled={busy}>Delete</Button>
                       </div>
-                      <p className="text-[12px] text-text-secondary mt-1">
-                        {plan.goal || "No goal set"} · {plan.durationWeeks || "-"} weeks · {(plan.exercises || []).length} exercises
-                      </p>
-                    </button>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <Button size="sm" variant="secondary" onClick={() => startEdit(plan)}>Edit Plan</Button>
-                      <Button size="sm" variant="secondary" onClick={() => duplicatePlan(plan)}>Duplicate Plan</Button>
-                      <Button size="sm" variant="danger" disabled={plan.status === "ARCHIVED"} onClick={() => archivePlan(plan)}>Archive Plan</Button>
                     </div>
+                    {reassignPlanId === plan._id && (
+                      <ReassignPicker
+                        currentClientId={clientId}
+                        busy={busy}
+                        onCancel={() => setReassignPlanId(null)}
+                        onConfirm={(targetId) => reassignPlan(plan, targetId)}
+                      />
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </Card.Body>
@@ -386,7 +525,7 @@ const WorkoutPlanTab = ({ clientId }) => {
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <div>
                 <Card.Title>{draft._id ? "Edit Workout Plan" : "Create Workout Plan"}</Card.Title>
-                <Card.Description>Build the weekly structure by day, then save or publish.</Card.Description>
+                <Card.Description>Build the weekly structure by day, then save draft or publish.</Card.Description>
               </div>
               <Button size="sm" variant="ghost" onClick={() => setDraft(null)}>Close Builder</Button>
             </div>
@@ -426,22 +565,21 @@ const WorkoutPlanTab = ({ clientId }) => {
                     <p className="text-sm text-text-muted py-3">No exercises assigned for Day {day}.</p>
                   ) : (
                     <div className="space-y-3">
-                      {exercises.map((exercise) => {
-                        const globalIndex = draft.exercises.indexOf(exercise);
-                        return (
-                          <ExerciseEditor
-                            key={exercise._id || `${exercise.dayNumber}-${globalIndex}`}
-                            exercise={exercise}
-                            index={globalIndex}
-                            canMoveUp={exercises.indexOf(exercise) > 0}
-                            canMoveDown={exercises.indexOf(exercise) < exercises.length - 1}
-                            onChange={changeExercise}
-                            onRemove={removeExercise}
-                            onDuplicate={duplicateExercise}
-                            onMove={moveExercise}
-                          />
-                        );
-                      })}
+                      {exercises.map(({ exercise, globalIndex }, dayIndex) => (
+                        <ExerciseEditor
+                          key={exercise._id || `${day}-${globalIndex}`}
+                          exercise={exercise}
+                          /* Per-day numbering, restarting at 1 for each day */
+                          displayNumber={dayIndex + 1}
+                          globalIndex={globalIndex}
+                          canMoveUp={dayIndex > 0}
+                          canMoveDown={dayIndex < exercises.length - 1}
+                          onChange={changeExercise}
+                          onRemove={removeExercise}
+                          onDuplicate={duplicateExercise}
+                          onMove={moveExercise}
+                        />
+                      ))}
                     </div>
                   )}
                 </div>
@@ -449,7 +587,10 @@ const WorkoutPlanTab = ({ clientId }) => {
             </div>
 
             <div className="mt-5 flex items-center justify-end gap-2 flex-wrap">
-              <Button variant="secondary" loading={saving} onClick={() => saveDraft("ARCHIVED")}>Save Draft</Button>
+              {draft.status !== "ARCHIVED" && (
+                <Button variant="ghost" loading={saving} onClick={() => saveDraft("ARCHIVED")}>Archive</Button>
+              )}
+              <Button variant="secondary" loading={saving} onClick={() => saveDraft("DRAFT")}>Save Draft</Button>
               <Button loading={saving} onClick={() => saveDraft("ACTIVE")}>Publish Plan</Button>
             </div>
           </Card.Body>

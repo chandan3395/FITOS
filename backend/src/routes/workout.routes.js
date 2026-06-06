@@ -7,7 +7,10 @@ const {
   getCurrentClientWorkoutPlansHandler,
   getWorkoutPlanHandler,
   updateWorkoutPlanHandler,
+  publishWorkoutPlanHandler,
+  archiveWorkoutPlanHandler,
   deleteWorkoutPlanHandler,
+  reassignWorkoutPlanHandler,
   getWorkoutCompletionHandler,
   completeExerciseHandler
 } = require("../controllers/workoutPlan.controller");
@@ -24,8 +27,12 @@ router.get("/client/:clientId", getWorkoutPlansHandler);
 router.get("/:id/completions", getWorkoutCompletionHandler);
 router.post("/:id/exercises/:exerciseId/complete", completeExerciseHandler);
 
-router.get("/:id", getWorkoutPlanHandler);
-router.patch("/:id", updateWorkoutPlanHandler);
+router.post("/:id/publish",  publishWorkoutPlanHandler);
+router.post("/:id/archive",  archiveWorkoutPlanHandler);
+router.post("/:id/reassign", reassignWorkoutPlanHandler);
+
+router.get("/:id",    getWorkoutPlanHandler);
+router.patch("/:id",  updateWorkoutPlanHandler);
 router.delete("/:id", deleteWorkoutPlanHandler);
 
 module.exports = router;

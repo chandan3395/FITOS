@@ -35,8 +35,9 @@ export const AuthProvider = ({ children }) => {
   const [devRole, setDevRoleState] = useState(DEV_BYPASS ? getDevRole() : null);
 
   // ── Bootstrap ───────────────────────────────────────────────
-  // Dev bypass takes the hard short-circuit before any HTTP. In
-  // production this branch is dead code (DEV_BYPASS is a compile-time
+  // Dev bypass: sync the selected role/client to server cookies and then
+  // fetch /me so the UI reflects the BACKEND's truth, not just the mock.
+  // In production this branch is dead code (DEV_BYPASS is a compile-time
   // false) and the original /refresh + /me flow runs unchanged.
   useEffect(() => {
     let cancelled = false;
@@ -44,10 +45,24 @@ export const AuthProvider = ({ children }) => {
 
     if (DEV_BYPASS) {
       const role = getDevRole();
-      setUser(MOCK_USERS[role]);
+      const clientId = getDevClientId();
       setDevRoleState(role);
-      setStatus(STATUS.AUTHED);
-      return () => {};
+      (async () => {
+        try {
+          await api.post("/dev/session", { role, clientId });
+          const res = await api.get("/auth/me");
+          if (cancelled) return;
+          const live = res?.data?.user || MOCK_USERS[role];
+          console.log("[AuthContext] bootstrap /me ->", live);
+          setUser(live);
+          setStatus(STATUS.AUTHED);
+        } catch {
+          if (cancelled) return;
+          setUser(MOCK_USERS[role]);
+          setStatus(STATUS.AUTHED);
+        }
+      })();
+      return () => { cancelled = true; };
     }
 
     (async () => {
@@ -88,29 +103,31 @@ export const AuthProvider = ({ children }) => {
     return () => { cancelled = true; };
   }, []);
 
-  // ── Dev role change subscription ────────────────────────────
-  // Whenever the dev role switcher changes the persisted role, swap
-  // the active mock user. No-op in production.
+  // ── Dev role / client change subscription ───────────────────
+  // On any switcher change, push the new identity to the server (cookies)
+  // and re-fetch /me so the UI mirrors the backend's resolved user.
   useEffect(() => {
     if (!DEV_BYPASS) return undefined;
-    return subscribeDevRole((nextRole) => {
-      setDevRoleState(nextRole);
-      setUser(MOCK_USERS[nextRole]);
-      setStatus(STATUS.AUTHED);
-    });
-  }, []);
-
-  // ── Dev client impersonation subscription ───────────────────
-  // When the trainer picks a Client to view-as in the switcher we
-  // touch the user reference so React subtrees re-render and refetch.
-  // The real identity is resolved server-side via x-dev-client-id; this
-  // local touch just kicks consumers off the previously cached user.
-  useEffect(() => {
-    if (!DEV_BYPASS) return undefined;
-    return subscribeDevClientId(() => {
-      if (getDevRole() !== "CLIENT") return;
-      setUser({ ...MOCK_USERS.CLIENT, _devClientId: getDevClientId() || null });
-    });
+    const sync = async (reason) => {
+      const role = getDevRole();
+      const clientId = getDevClientId();
+      console.log("[AuthContext] dev sync", reason, { role, clientId });
+      setDevRoleState(role);
+      try {
+        await api.post("/dev/session", { role, clientId });
+        const res = await api.get("/auth/me");
+        const live = res?.data?.user || MOCK_USERS[role];
+        console.log("[AuthContext] /me after sync ->", live);
+        setUser(live);
+        setStatus(STATUS.AUTHED);
+      } catch {
+        setUser(MOCK_USERS[role]);
+        setStatus(STATUS.AUTHED);
+      }
+    };
+    const unsubRole   = subscribeDevRole(()     => sync("role"));
+    const unsubClient = subscribeDevClientId(() => sync("clientId"));
+    return () => { unsubRole(); unsubClient(); };
   }, []);
 
   // When the API interceptor gives up on refresh, drop session locally.

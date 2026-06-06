@@ -58,15 +58,15 @@ const DevRoleSwitcher = () => {
   if (!DEV_BYPASS || !devBypass) return null;
 
   const swap = (role) => {
+    console.log("[switcher] swap role ->", role);
     setDevRole(role);
     navigate(ROLE_META[role].dest, { replace: true });
   };
 
   const pickClient = (id) => {
+    console.log("[switcher] pick client ->", id || "(generic)");
     setDevClientId(id || null);
     setClientId(id || null);
-    // Re-land on the client dashboard so newly-selected identity takes
-    // effect on the first page they care about.
     navigate(ROUTES.CLIENT_DASHBOARD, { replace: true });
   };
 

@@ -15,7 +15,7 @@
  * should never decide "is this exercise name valid" on its own.
  */
 
-const STATUSES = new Set(["ACTIVE", "ARCHIVED"]);
+const STATUSES = new Set(["DRAFT", "ACTIVE", "ARCHIVED"]);
 const OBJECT_ID_RE = /^[a-f\d]{24}$/i;
 
 /** Field range table — single source of truth. */
@@ -188,7 +188,7 @@ function validateWorkoutPayload(body, opts = {}) {
   // ── status (optional enum — only used by PATCH) ───────────
   if (isPresent(body.status)) {
     const status = String(body.status).trim().toUpperCase();
-    if (!STATUSES.has(status)) errors.status = "Status must be ACTIVE or ARCHIVED.";
+    if (!STATUSES.has(status)) errors.status = "Status must be DRAFT, ACTIVE or ARCHIVED.";
     else                       value.status = status;
   }
 

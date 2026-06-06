@@ -6,7 +6,10 @@ const {
   getWorkoutPlansForCurrentClient,
   getWorkoutPlanById,
   updateWorkoutPlan,
+  publishWorkoutPlan,
+  archiveWorkoutPlan,
   deleteWorkoutPlan,
+  reassignWorkoutPlan,
   getWorkoutCompletionHistory,
   completeExercise
 } = require("../services/workoutPlan.service");
@@ -57,10 +60,41 @@ async function updateWorkoutPlanHandler(req, res, next) {
   }
 }
 
+async function publishWorkoutPlanHandler(req, res, next) {
+  try {
+    const workoutPlan = await publishWorkoutPlan(req.user, req.params.id);
+    return ApiResponse.ok(res, "Workout plan published", { workoutPlan });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function archiveWorkoutPlanHandler(req, res, next) {
+  try {
+    const workoutPlan = await archiveWorkoutPlan(req.user, req.params.id);
+    return ApiResponse.ok(res, "Workout plan archived", { workoutPlan });
+  } catch (err) {
+    return next(err);
+  }
+}
+
 async function deleteWorkoutPlanHandler(req, res, next) {
   try {
-    const workoutPlan = await deleteWorkoutPlan(req.user, req.params.id);
-    return ApiResponse.ok(res, "Workout plan archived", { workoutPlan });
+    const result = await deleteWorkoutPlan(req.user, req.params.id);
+    return ApiResponse.ok(res, "Workout plan deleted", result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
+async function reassignWorkoutPlanHandler(req, res, next) {
+  try {
+    const targetClientId = req.body?.clientId;
+    if (!targetClientId) {
+      return ApiResponse.send(res, 400, "Target clientId is required", { errors: { clientId: "Required." } });
+    }
+    const workoutPlan = await reassignWorkoutPlan(req.user, req.params.id, targetClientId);
+    return ApiResponse.created(res, "Workout plan reassigned", { workoutPlan });
   } catch (err) {
     return next(err);
   }
@@ -90,7 +124,10 @@ module.exports = {
   getCurrentClientWorkoutPlansHandler,
   getWorkoutPlanHandler,
   updateWorkoutPlanHandler,
+  publishWorkoutPlanHandler,
+  archiveWorkoutPlanHandler,
   deleteWorkoutPlanHandler,
+  reassignWorkoutPlanHandler,
   getWorkoutCompletionHandler,
   completeExerciseHandler
 };

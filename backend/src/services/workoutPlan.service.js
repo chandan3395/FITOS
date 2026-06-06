@@ -130,11 +130,67 @@ async function updateWorkoutPlan(user, workoutPlanId, body) {
   return workoutPlan;
 }
 
-async function deleteWorkoutPlan(user, workoutPlanId) {
+async function archiveWorkoutPlan(user, workoutPlanId) {
   const workoutPlan = await getWorkoutPlanWithAccess(user, workoutPlanId, { write: true });
   workoutPlan.status = "ARCHIVED";
   await workoutPlan.save();
   return workoutPlan;
+}
+
+async function publishWorkoutPlan(user, workoutPlanId) {
+  const workoutPlan = await getWorkoutPlanWithAccess(user, workoutPlanId, { write: true });
+  if (!workoutPlan.exercises || workoutPlan.exercises.length === 0) {
+    throw new ApiError(400, "Cannot publish a plan with no exercises");
+  }
+  workoutPlan.status = "ACTIVE";
+  await workoutPlan.save();
+  return workoutPlan;
+}
+
+/**
+ * Hard delete — removes the plan document and any completion records that
+ * referenced it. Use `archiveWorkoutPlan` instead if the trainer just
+ * wants to hide the plan but keep history.
+ */
+async function deleteWorkoutPlan(user, workoutPlanId) {
+  const workoutPlan = await getWorkoutPlanWithAccess(user, workoutPlanId, { write: true });
+  await WorkoutCompletion.deleteMany({ workoutPlanId: workoutPlan._id });
+  await WorkoutPlan.deleteOne({ _id: workoutPlan._id });
+  return { _id: workoutPlan._id, deleted: true };
+}
+
+/**
+ * Reassign — clones the plan's structure onto a different client owned by
+ * the same trainer. The new plan starts as DRAFT so the trainer can review
+ * before publishing; completions are NOT copied (those are per-client).
+ */
+async function reassignWorkoutPlan(user, workoutPlanId, targetClientId) {
+  const sourcePlan = await getWorkoutPlanWithAccess(user, workoutPlanId, { write: true });
+  if (String(sourcePlan.clientId) === String(targetClientId)) {
+    throw new ApiError(400, "Target client must be different from the current owner");
+  }
+  const targetClient = await resolveClientForUser(user, targetClientId);
+
+  const cloneExercises = (sourcePlan.exercises || []).map((ex) => ({
+    name: ex.name,
+    sets: ex.sets,
+    reps: ex.reps,
+    weight: ex.weight,
+    restSeconds: ex.restSeconds,
+    dayNumber: ex.dayNumber,
+    order: ex.order,
+    notes: ex.notes,
+  }));
+
+  return WorkoutPlan.create({
+    clientId: targetClient._id,
+    planName: sourcePlan.planName,
+    goal: sourcePlan.goal,
+    durationWeeks: sourcePlan.durationWeeks,
+    notes: sourcePlan.notes,
+    status: "DRAFT",
+    exercises: cloneExercises,
+  });
 }
 
 async function getWorkoutCompletionHistory(user, workoutPlanId) {
@@ -188,7 +244,10 @@ module.exports = {
   getWorkoutPlansForCurrentClient,
   getWorkoutPlanById,
   updateWorkoutPlan,
+  publishWorkoutPlan,
+  archiveWorkoutPlan,
   deleteWorkoutPlan,
+  reassignWorkoutPlan,
   getWorkoutCompletionHistory,
   completeExercise
 };
