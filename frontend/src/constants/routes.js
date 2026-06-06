@@ -18,6 +18,7 @@ export const ROUTES = {
   TRAINER_CLIENT:    "/trainer/client/:id",
   TRAINER_CHECKINS:  "/trainer/check-ins",
   TRAINER_SCHEDULE:  "/trainer/schedule",
+  TRAINER_TEMPLATES: "/trainer/templates",
 
   // Client
   CLIENT:           "/client",

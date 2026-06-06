@@ -10,6 +10,8 @@ const checkinRouter       = require("./checkin.routes");
 const progressPhotoRouter = require("./progressPhoto.routes");
 const workoutRouter       = require("./workout.routes");
 const nutritionRouter     = require("./nutrition.routes");
+const workoutTemplateRouter   = require("./workoutTemplate.routes");
+const nutritionTemplateRouter = require("./nutritionTemplate.routes");
 const activityRouter      = require("./activity.routes");
 const devRouter           = require("./dev.routes");
 
@@ -23,7 +25,9 @@ router.use("/admin",            adminRouter);
 router.use("/checkins",         checkinRouter);
 router.use("/progress-photos",  progressPhotoRouter);
 router.use("/workouts",         workoutRouter);
-router.use("/nutrition",        nutritionRouter);
+router.use("/nutrition",            nutritionRouter);
+router.use("/workout-templates",    workoutTemplateRouter);
+router.use("/nutrition-templates",  nutritionTemplateRouter);
 router.use("/activity",         activityRouter);
 router.use("/dev",              devRouter);
 

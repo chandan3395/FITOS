@@ -5,6 +5,7 @@ import {
   UsersIcon,
   CheckCircleIcon,
   CalendarIcon,
+  DumbbellIcon,
 } from "../design-system/Icons";
 import { useAuthContext } from "../../contexts/AuthContext";
 
@@ -13,6 +14,7 @@ const navItems = [
   { label: "Clients",    to: ROUTES.TRAINER_CLIENTS,   Icon: UsersIcon },
   { label: "Check-ins",  to: ROUTES.TRAINER_CHECKINS,  Icon: CheckCircleIcon },
   { label: "Schedule",   to: ROUTES.TRAINER_SCHEDULE,  Icon: CalendarIcon },
+  { label: "Templates",  to: ROUTES.TRAINER_TEMPLATES, Icon: DumbbellIcon },
 ];
 
 const initials = (name = "") => name.split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("") || "T";

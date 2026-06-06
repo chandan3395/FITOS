@@ -23,6 +23,7 @@ import TrainerClientsPage       from "../pages/trainer/TrainerClientsPage";
 import TrainerAddClientPage     from "../pages/trainer/TrainerAddClientPage";
 import TrainerClientDetailPage  from "../pages/trainer/TrainerClientDetailPage";
 import TrainerCheckinsPage      from "../pages/trainer/TrainerCheckinsPage";
+import TrainerTemplatesPage     from "../pages/trainer/TrainerTemplatesPage";
 import TrainerStubPage          from "../pages/trainer/TrainerStubPage";
 
 // Client pages
@@ -60,6 +61,7 @@ const AppRoutes = () => (
       <Route path="client/:id"   element={<TrainerClientDetailPage />} />
       <Route path="check-ins"    element={<TrainerCheckinsPage />} />
       <Route path="schedule"     element={<TrainerStubPage title="Schedule" description="Session calendar — coming in a later pass." />} />
+      <Route path="templates"    element={<TrainerTemplatesPage />} />
     </Route>
 
     {/* Client */}
