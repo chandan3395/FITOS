@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const { User } = require("../schemas/User.schema");
 const { Client } = require("../schemas/Client.schema");
 const { ClientInvite } = require("../schemas/ClientInvite.schema");
+const { validateActivationPayload } = require("../validators/activationPayload.validator");
 const generateAccessToken = require("../utils/generateAccessToken");
 const generateRefreshToken = require("../utils/generateRefreshToken");
 const ApiResponse = require("../utils/ApiResponse");
@@ -282,19 +283,26 @@ async function activateInvite(req, res, next) {
 
     let user;
     if (client.userId) {
-      // Already activated — just sign them in.
+      // Already activated — just sign them in. Password not re-required
+      // because the existing user already has credentials on file.
       user = await User.findById(client.userId);
       if (!user) throw new ApiError(500, "Client account record missing");
     } else {
+      // First-time activation — password is REQUIRED and validated here.
+      const result = validateActivationPayload(req.body);
+      if (!result.ok) {
+        throw ApiError.validation(result.errors);
+      }
+      const { name: providedName, password } = result.value;
+
       const email = (invite.email || `${invite.inviteToken.slice(0, 12)}@invite.fitos.local`).toLowerCase();
       const existing = await User.findOne({ email });
       if (existing) {
         user = existing;
       } else {
-        const password = req.body?.password;
-        const hashed = password ? await bcrypt.hash(password, 12) : undefined;
+        const hashed = await bcrypt.hash(password, 12);
         user = await User.create({
-          name:     req.body?.name || invite.clientName,
+          name:     providedName || invite.clientName,
           email,
           password: hashed,
           role:     "CLIENT",

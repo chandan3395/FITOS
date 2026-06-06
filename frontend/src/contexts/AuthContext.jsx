@@ -7,6 +7,13 @@ import api, {
   setUnauthorizedHandler,
 } from "../lib/api";
 import { ROUTES } from "../constants/routes";
+import {
+  DEV_BYPASS,
+  MOCK_USERS,
+  getDevRole,
+  setDevRole as setDevRoleStore,
+  subscribeDevRole,
+} from "../lib/devAuth";
 
 export const AuthContext = createContext(null);
 
@@ -21,15 +28,25 @@ export const AuthProvider = ({ children }) => {
   const [user,   setUser]   = useState(null);
   const [status, setStatus] = useState(STATUS.IDLE);
   const [error,  setError]  = useState(null);
+  // `devRole` is only meaningful when DEV_BYPASS is true; in production it
+  // stays null and Vite strips the surrounding branches at build time.
+  const [devRole, setDevRoleState] = useState(DEV_BYPASS ? getDevRole() : null);
 
-  // Restore session on first mount:
-  // 1) If we have an access token, try /me directly.
-  // 2) If /me returns 401, the api interceptor will attempt /refresh.
-  // 3) If no token at all, try /refresh once anyway — the cookie might
-  //    still be valid after a tab reload.
+  // ── Bootstrap ───────────────────────────────────────────────
+  // Dev bypass takes the hard short-circuit before any HTTP. In
+  // production this branch is dead code (DEV_BYPASS is a compile-time
+  // false) and the original /refresh + /me flow runs unchanged.
   useEffect(() => {
     let cancelled = false;
     setStatus(STATUS.LOADING);
+
+    if (DEV_BYPASS) {
+      const role = getDevRole();
+      setUser(MOCK_USERS[role]);
+      setDevRoleState(role);
+      setStatus(STATUS.AUTHED);
+      return () => {};
+    }
 
     (async () => {
       try {
@@ -69,8 +86,23 @@ export const AuthProvider = ({ children }) => {
     return () => { cancelled = true; };
   }, []);
 
-  // When the API interceptor gives up on refresh, drop session locally.
+  // ── Dev role change subscription ────────────────────────────
+  // Whenever the dev role switcher changes the persisted role, swap
+  // the active mock user. No-op in production.
   useEffect(() => {
+    if (!DEV_BYPASS) return undefined;
+    return subscribeDevRole((nextRole) => {
+      setDevRoleState(nextRole);
+      setUser(MOCK_USERS[nextRole]);
+      setStatus(STATUS.AUTHED);
+    });
+  }, []);
+
+  // When the API interceptor gives up on refresh, drop session locally.
+  // (Real auth path only. The bypass never makes authenticated requests
+  // through the interceptor because there's no real token.)
+  useEffect(() => {
+    if (DEV_BYPASS) return undefined;
     setUnauthorizedHandler(() => {
       setUser(null);
       setStatus(STATUS.GUEST);
@@ -127,9 +159,23 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const logout = useCallback(async () => {
+    // In dev bypass we still want a "signed out" view if the trainer
+    // clicks the sidebar logout button, so we drop to GUEST. The
+    // switcher remains visible and they can pick a role to re-enter.
+    if (DEV_BYPASS) {
+      setUser(null);
+      setStatus(STATUS.GUEST);
+      return;
+    }
     await authService.logout();
     setUser(null);
     setStatus(STATUS.GUEST);
+  }, []);
+
+  // Dev-only action — flips the current mock role. No-op in production.
+  const setDevRole = useCallback((role) => {
+    if (!DEV_BYPASS) return;
+    setDevRoleStore(role); // persistence + event fan-out
   }, []);
 
   const value = {
@@ -142,6 +188,10 @@ export const AuthProvider = ({ children }) => {
     trainerLogin,
     trainerSignup,
     logout,
+    // Dev-only — null in production (DEV_BYPASS is false at compile time).
+    devBypass: DEV_BYPASS,
+    devRole,
+    setDevRole,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

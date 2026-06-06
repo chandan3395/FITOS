@@ -7,8 +7,13 @@ const { ClientInvite } = require("../schemas/ClientInvite.schema");
 const { User } = require("../schemas/User.schema");
 const ApiError = require("../utils/ApiError");
 const { env } = require("../config/env");
+const { validateClientPayload } = require("../validators/clientPayload.validator");
 
-const CLIENT_FIELDS = [
+// Fields persisted on the Client schema. Anything else returned from the
+// validator (timeline, calories, etc.) is ignored at write-time today —
+// the validator still rejects bad values, so a malformed payload never
+// silently succeeds even before the schema grows.
+const PERSISTED_CLIENT_FIELDS = [
   "name",
   "phone",
   "gender",
@@ -39,25 +44,24 @@ async function resolveTrainerId(user, body) {
   return user._id;
 }
 
-function validateRequiredFields(body) {
-  const missing = ["name", "phone", "goal"].filter(
-    (field) => !body[field] || String(body[field]).trim() === ""
-  );
-  if (missing.length) {
-    throw new ApiError(400, `Missing required fields: ${missing.join(", ")}`);
-  }
-}
-
 async function createClient(user, body) {
-  validateRequiredFields(body);
+  // Authoritative validation — backend NEVER trusts the frontend.
+  const result = validateClientPayload(body);
+  if (!result.ok) {
+    throw ApiError.validation(result.errors);
+  }
+  const value = result.value;
 
+  // resolveTrainerId still consults the raw body for `trainerId` (admin
+  // case) — that field intentionally bypasses the client validator
+  // because it's an authorization concern, not a client-data concern.
   const trainerId = await resolveTrainerId(user, body);
 
   const data = { trainerId };
-  CLIENT_FIELDS.forEach((field) => {
-    if (body[field] !== undefined) data[field] = body[field];
+  PERSISTED_CLIENT_FIELDS.forEach((field) => {
+    if (value[field] !== undefined) data[field] = value[field];
   });
-  if (body.email) data.email = String(body.email).trim().toLowerCase();
+  if (value.email) data.email = value.email;
 
   const client = await Client.create(data);
 
@@ -112,10 +116,15 @@ async function getClientForTrainer(clientId, trainerUser) {
  * `trainerId` via this endpoint.
  */
 async function updateClient(id, user, body) {
+  // Partial validation — only fields present in the body are checked, but
+  // every field present must still satisfy its rules.
+  const result = validateClientPayload(body, { partial: true });
+  if (!result.ok) {
+    throw ApiError.validation(result.errors);
+  }
+  const value = result.value;
+
   const client = await getClientForTrainer(id, user).catch(async (err) => {
-    // Admin may not own the doc — getClientForTrainer would throw 403
-    // for non-admin trainers, but if user.role === "ADMIN" we want to
-    // bypass that check. Re-fetch directly for admin.
     if (user.role === "ADMIN") {
       if (!mongoose.isValidObjectId(id)) throw new ApiError(400, "Invalid client id");
       const c = await Client.findById(id);
@@ -127,15 +136,10 @@ async function updateClient(id, user, body) {
 
   const ALLOWED = [
     "name", "phone", "gender", "age", "city", "height",
-    "startingWeight", "targetWeight", "goal", "status",
+    "startingWeight", "targetWeight", "goal", "status", "email",
   ];
   for (const k of ALLOWED) {
-    if (body[k] !== undefined) client[k] = body[k];
-  }
-
-  // Validate status if provided
-  if (body.status && !["ACTIVE", "ARCHIVED"].includes(body.status)) {
-    throw new ApiError(400, "status must be ACTIVE or ARCHIVED");
+    if (value[k] !== undefined) client[k] = value[k];
   }
 
   await client.save();
