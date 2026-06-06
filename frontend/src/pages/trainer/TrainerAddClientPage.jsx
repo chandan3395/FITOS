@@ -590,24 +590,62 @@ const LivePreview = ({ form, step }) => {
 
 // ═════════════════════════════════════════════════════════════
 // Payload mapper — wizard form → POST /api/clients body
+//
+// Every wizard field is forwarded; the backend validator decides what's
+// accepted. We deliberately do NOT drop fields here, because dropping
+// at the wizard layer is exactly the silent-data-loss bug this audit
+// fixes. The only transformations are composition (name) and naming
+// (form.weight → startingWeight, form.notes → privateNotes).
 // ═════════════════════════════════════════════════════════════
 function toApiPayload(form) {
   const name = [form.firstName, form.lastName].filter(Boolean).join(" ").trim();
-  const age = form.dob
-    ? Math.max(0, Math.floor((Date.now() - new Date(form.dob).getTime()) / 31557600000))
-    : undefined;
   const num = (v) => (v === "" || v == null ? undefined : Number(v));
+  const str = (v) => (v === "" || v == null ? undefined : String(v));
   return {
+    // Identity
     name,
-    phone:          form.phone || undefined,
-    email:          form.email || undefined,
-    gender:         form.gender || undefined,
-    age,
-    city:           form.city || undefined,
+    phone:    str(form.phone),
+    email:    str(form.email),
+    gender:   str(form.gender),
+    dob:      str(form.dob),          // backend derives age from dob
+    city:     str(form.city),
+    occupation: str(form.occupation),
+
+    // Body
     height:         num(form.height),
     startingWeight: num(form.weight),
-    targetWeight:   num(form.targetWeight),
-    goal:           form.goal || undefined,
+    bodyFat:        num(form.bodyFat),
+
+    // Health
+    medicalConditions: str(form.medicalConditions),
+    medications:       str(form.medications),
+    pastInjuries:      str(form.pastInjuries),
+    allergies:         str(form.allergies),
+
+    // Goal & program
+    goal:            str(form.goal),
+    targetWeight:    num(form.targetWeight),
+    targetBodyFat:   num(form.targetBodyFat),
+    timeline:        str(form.timeline),
+    goalDescription: str(form.goalDescription),
+    startDate:       str(form.startDate),
+    duration:        str(form.duration),
+    sessionFrequency: str(form.sessionFrequency),
+
+    // Nutrition
+    diet:        str(form.diet),
+    calories:    num(form.calories),
+    protein:     num(form.protein),
+    carbs:       num(form.carbs),
+    fats:        num(form.fats),
+    mealsPerDay: num(form.mealsPerDay),
+    waterTarget: num(form.waterTarget),
+    cheatMeals:  num(form.cheatMeals),
+    foodDislikes: str(form.foodDislikes),
+    eatingHabits: str(form.eatingHabits),
+
+    // Trainer notes (wizard names it `notes` for UX; persisted as privateNotes)
+    privateNotes: str(form.notes),
   };
 }
 

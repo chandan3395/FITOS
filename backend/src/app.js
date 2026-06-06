@@ -10,7 +10,7 @@ const requestLogger = require("./middleware/requestLogger");
 const notFound = require("./middleware/notFound");
 const errorHandler = require("./middleware/errorHandler");
 const apiRouter = require("./routes/index");
-const passport = require("./config/passport");
+const { env } = require("./config/env");
 const { UPLOAD_ROOT } = require("./middleware/upload");
 
 const app = express();
@@ -23,7 +23,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(requestLogger);
-app.use(passport.initialize());
+if (env.ENABLE_GOOGLE_AUTH) {
+  // Only initialise passport when the feature is enabled — keeps the
+  // OAuth implementation in the tree but guarantees it's inert otherwise.
+  const passport = require("./config/passport");
+  app.use(passport.initialize());
+}
 
 app.use("/api", apiRouter);
 

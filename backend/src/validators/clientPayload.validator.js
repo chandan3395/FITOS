@@ -116,6 +116,29 @@ function validateClientPayload(body, opts = {}) {
     else                   value.city = city;
   }
 
+  // ── occupation (optional string) ──────────────────────────────
+  if (isPresent(body.occupation)) {
+    const occ = String(body.occupation).trim();
+    if (occ.length > 200) errors.occupation = "Occupation is too long.";
+    else                  value.occupation = occ;
+  }
+
+  // ── dob (optional date) — backend authoritatively derives age ─
+  if (isPresent(body.dob)) {
+    const d = new Date(body.dob);
+    if (isNaN(d.getTime()) || d > new Date()) {
+      errors.dob = "Date of birth must be a valid past date.";
+    } else {
+      value.dob = d;
+      // If the caller didn't send age, compute it from dob so the two
+      // are always consistent in the persisted document.
+      if (!isPresent(body.age)) {
+        const years = Math.floor((Date.now() - d.getTime()) / 31557600000);
+        if (years >= 1 && years <= 120) value.age = years;
+      }
+    }
+  }
+
   // ── height (required, range-checked) ──────────────────────────
   if (!isPresent(body.height)) {
     if (!partial) errors.height = "Height is required.";
@@ -212,6 +235,27 @@ function validateClientPayload(body, opts = {}) {
     const t = String(body.diet).trim();
     if (t.length === 0 || t.length > 60) errors.diet = "Diet type is invalid.";
     else                                  value.diet = t;
+  }
+
+  // ── Free-text fields with length caps ─────────────────────────
+  // Health, dietary preferences, and trainer-private notes.
+  const TEXT_LIMITS = {
+    medicalConditions: 1000,
+    medications:       1000,
+    pastInjuries:      1000,
+    allergies:         1000,
+    foodDislikes:      1000,
+    eatingHabits:      2000,
+    privateNotes:      4000,
+  };
+  for (const [field, max] of Object.entries(TEXT_LIMITS)) {
+    if (!isPresent(body[field])) continue;
+    const text = String(body[field]).trim();
+    if (text.length > max) {
+      errors[field] = `${field} must be ${max} characters or fewer.`;
+    } else if (text.length > 0) {
+      value[field] = text;
+    }
   }
 
   if (Object.keys(errors).length > 0) return { ok: false, errors };

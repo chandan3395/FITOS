@@ -4,7 +4,13 @@ const path = require("path");
 
 require("dotenv").config({ path: path.join(__dirname, "../../.env") });
 
-const REQUIRED = ["PORT", "MONGO_URI", "JWT_SECRET", "JWT_REFRESH_SECRET", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_CALLBACK_URL"];
+// Google OAuth credentials are only required when the feature is enabled.
+const ENABLE_GOOGLE_AUTH = process.env.ENABLE_GOOGLE_AUTH !== "false";
+
+const REQUIRED = ["PORT", "MONGO_URI", "JWT_SECRET", "JWT_REFRESH_SECRET"];
+if (ENABLE_GOOGLE_AUTH) {
+  REQUIRED.push("GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_CALLBACK_URL");
+}
 
 function validateEnv() {
   const missing = REQUIRED.filter((key) => !process.env[key]);
@@ -25,6 +31,7 @@ const env = {
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
   GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL,
+  ENABLE_GOOGLE_AUTH,
 };
 
 module.exports = { validateEnv, env };

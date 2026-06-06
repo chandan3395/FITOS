@@ -36,9 +36,14 @@ const KV = ({ label, value, accent = "text-text-primary" }) => (
 const OverviewTab = ({ client, lastCheckIn }) => {
   const current = lastCheckIn?.weight ?? client.startingWeight ?? null;
   const change  = current && client.startingWeight ? (current - client.startingWeight).toFixed(1) : null;
+  const dob     = client.dob ? new Date(client.dob).toLocaleDateString() : null;
+  const startDt = client.startDate ? new Date(client.startDate).toLocaleDateString() : null;
+
+  const hasHealth = client.medicalConditions || client.medications || client.pastInjuries || client.allergies;
 
   return (
     <div className="space-y-4">
+      {/* Goal snapshot */}
       <Card>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
           <KV label="Goal"     value={client.goal} />
@@ -48,6 +53,7 @@ const OverviewTab = ({ client, lastCheckIn }) => {
         </div>
       </Card>
 
+      {/* Quick metrics */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card>
           <Card.Header><Card.Title>Weight Change</Card.Title></Card.Header>
@@ -75,6 +81,71 @@ const OverviewTab = ({ client, lastCheckIn }) => {
           </Card.Body>
         </Card>
       </div>
+
+      {/* Body metrics */}
+      <Card>
+        <Card.Header><Card.Title>Body Metrics</Card.Title></Card.Header>
+        <Card.Body>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+            <KV label="Height"          value={client.height ? `${client.height} cm` : null} />
+            <KV label="Body Fat"        value={client.bodyFat != null ? `${client.bodyFat} %` : null} />
+            <KV label="Target Body Fat" value={client.targetBodyFat != null ? `${client.targetBodyFat} %` : null} />
+            <KV label="Age"             value={client.age ? `${client.age} yrs` : null} />
+          </div>
+        </Card.Body>
+      </Card>
+
+      {/* Program details */}
+      <Card>
+        <Card.Header><Card.Title>Program</Card.Title></Card.Header>
+        <Card.Body>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+            <KV label="Timeline"        value={client.timeline} />
+            <KV label="Duration"        value={client.duration} />
+            <KV label="Session Cadence" value={client.sessionFrequency} />
+            <KV label="Start Date"      value={startDt} />
+          </div>
+          {client.goalDescription && (
+            <div className="mt-5">
+              <p className="text-[11px] font-semibold tracking-[0.08em] text-text-muted uppercase mb-2">Goal Description</p>
+              <p className="text-sm text-text-secondary whitespace-pre-wrap leading-relaxed">{client.goalDescription}</p>
+            </div>
+          )}
+        </Card.Body>
+      </Card>
+
+      {/* Personal */}
+      <Card>
+        <Card.Header><Card.Title>Personal</Card.Title></Card.Header>
+        <Card.Body>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+            <KV label="Phone"       value={client.phone} />
+            <KV label="Email"       value={client.email} />
+            <KV label="City"        value={client.city} />
+            <KV label="Occupation"  value={client.occupation} />
+            <KV label="Gender"      value={client.gender} />
+            <KV label="Date of birth" value={dob} />
+          </div>
+        </Card.Body>
+      </Card>
+
+      {/* Health summary — only shown when at least one health field is set */}
+      {hasHealth && (
+        <Card>
+          <Card.Header>
+            <Card.Title>Health History</Card.Title>
+            <Card.Description>Captured at onboarding — critical for safe programming.</Card.Description>
+          </Card.Header>
+          <Card.Body>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <KV label="Medical Conditions" value={client.medicalConditions} />
+              <KV label="Current Medications" value={client.medications} />
+              <KV label="Past Injuries" value={client.pastInjuries} />
+              <KV label="Allergies / Dietary Restrictions" value={client.allergies} />
+            </div>
+          </Card.Body>
+        </Card>
+      )}
     </div>
   );
 };
@@ -280,31 +351,19 @@ const PhotosTab = ({ clientId, items, loading, error, onReload }) => {
   );
 };
 
-// ── Stub tabs (notes — out of scope for this pass) ──
-const StubTab = ({ title, description }) => (
-  <Card><Card.Body><EmptyState title={title} description={description} /></Card.Body></Card>
-);
-
-// ── Plan tabs — surface Edit / Reassign actions so trainers know they
-// can modify the plan later. The actual editor UI lives in a future pass;
-// these buttons emit a toast for now so the affordance is discoverable.
-const PlanTab = ({ planName, kind, onAction }) => (
+// ── Workout tab — placeholder for the future plan editor with the
+//    Edit / Reassign affordances visible.
+const WorkoutPlanTab = ({ onAction }) => (
   <Card>
     <Card.Header>
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <Card.Title>{planName}</Card.Title>
-          <Card.Description>
-            No plan assigned yet. You can assign one now, or reuse a template later.
-          </Card.Description>
+          <Card.Title>Workout Plan</Card.Title>
+          <Card.Description>No plan assigned yet. You can assign one now, or reuse a template later.</Card.Description>
         </div>
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="secondary" onClick={() => onAction(`Edit ${kind} plan`)}>
-            Edit {kind} Plan
-          </Button>
-          <Button size="sm" onClick={() => onAction(`Reassign ${kind} plan`)}>
-            Reassign {kind} Plan
-          </Button>
+          <Button size="sm" variant="secondary" onClick={() => onAction("Edit Workout plan")}>Edit Workout Plan</Button>
+          <Button size="sm" onClick={() => onAction("Reassign Workout plan")}>Reassign Workout Plan</Button>
         </div>
       </div>
     </Card.Header>
@@ -313,6 +372,72 @@ const PlanTab = ({ planName, kind, onAction }) => (
         Plan editor arrives in a later phase. Use <span className="text-text-primary font-medium">Edit</span> to draft a fresh
         plan or <span className="text-text-primary font-medium">Reassign</span> to swap from a template.
       </div>
+    </Card.Body>
+  </Card>
+);
+
+// ── Nutrition tab — real persisted onboarding data + future plan actions.
+const NutritionPlanTab = ({ client, onAction }) => {
+  const macros = [
+    { label: "Calories",     value: client.calories != null ? `${client.calories} kcal` : null },
+    { label: "Protein",      value: client.protein  != null ? `${client.protein} g`     : null },
+    { label: "Carbs",        value: client.carbs    != null ? `${client.carbs} g`       : null },
+    { label: "Fats",         value: client.fats     != null ? `${client.fats} g`        : null },
+    { label: "Meals / day",  value: client.mealsPerDay != null ? String(client.mealsPerDay) : null },
+    { label: "Water target", value: client.waterTarget != null ? `${client.waterTarget} L/day` : null },
+    { label: "Cheat meals",  value: client.cheatMeals  != null ? `${client.cheatMeals} / wk`    : null },
+    { label: "Diet type",    value: client.diet },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <Card.Header>
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <Card.Title>Nutrition Targets</Card.Title>
+              <Card.Description>Captured during onboarding. Edit Plan opens the future plan editor.</Card.Description>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="secondary" onClick={() => onAction("Edit Nutrition plan")}>Edit Nutrition Plan</Button>
+              <Button size="sm" onClick={() => onAction("Reassign Nutrition plan")}>Reassign Nutrition Plan</Button>
+            </div>
+          </div>
+        </Card.Header>
+        <Card.Body>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+            {macros.map((m) => <KV key={m.label} label={m.label} value={m.value} />)}
+          </div>
+        </Card.Body>
+      </Card>
+
+      {(client.foodDislikes || client.eatingHabits) && (
+        <Card>
+          <Card.Header><Card.Title>Preferences & Habits</Card.Title></Card.Header>
+          <Card.Body>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <KV label="Foods to avoid"        value={client.foodDislikes} />
+              <KV label="Current eating habits" value={client.eatingHabits} />
+            </div>
+          </Card.Body>
+        </Card>
+      )}
+    </div>
+  );
+};
+
+// ── Notes tab — renders the trainer-private notes captured at onboarding.
+const NotesPlanTab = ({ client }) => (
+  <Card>
+    <Card.Header>
+      <Card.Title>Private Trainer Notes</Card.Title>
+      <Card.Description>Only visible to you. Captured during onboarding.</Card.Description>
+    </Card.Header>
+    <Card.Body>
+      {client.privateNotes
+        ? <p className="text-sm text-text-primary whitespace-pre-wrap leading-relaxed">{client.privateNotes}</p>
+        : <EmptyState title="No notes recorded" description="Add notes from the Add Client wizard or future edit flow." />
+      }
     </Card.Body>
   </Card>
 );
@@ -403,9 +528,9 @@ const TrainerClientDetailPage = () => {
     overview:  <OverviewTab client={client} lastCheckIn={lastCheckIn} />,
     checkins:  <CheckinsTab clientId={id} items={checkins} loading={false} error={null} onReload={reloadCheckins} />,
     photos:    <PhotosTab   clientId={id} items={photos}   loading={false} error={null} onReload={reloadPhotos}   />,
-    workout:   <PlanTab planName="Workout Plan"   kind="Workout"   onAction={(label) => setToast({ kind: "success", message: `${label} — coming in a later phase` })} />,
-    nutrition: <PlanTab planName="Nutrition Plan" kind="Nutrition" onAction={(label) => setToast({ kind: "success", message: `${label} — coming in a later phase` })} />,
-    notes:     <StubTab title="Private notes" description="Notes API arrives in a later phase." />,
+    workout:   <WorkoutPlanTab   onAction={(label) => setToast({ kind: "success", message: `${label} — coming in a later phase` })} />,
+    nutrition: <NutritionPlanTab client={client} onAction={(label) => setToast({ kind: "success", message: `${label} — coming in a later phase` })} />,
+    notes:     <NotesPlanTab     client={client} />,
   };
 
   return (

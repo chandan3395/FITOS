@@ -53,6 +53,9 @@ async function adminLogin(req, res, next) {
     if (!user) {
       throw new ApiError(401, "Invalid credentials");
     }
+    if (!user.isActive) {
+      throw new ApiError(403, "Account disabled");
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
@@ -150,6 +153,9 @@ async function trainerLogin(req, res, next) {
     const user = await User.findOne({ email, role: "TRAINER" }).select("+password");
     if (!user || !user.password) {
       throw new ApiError(401, "Invalid credentials");
+    }
+    if (!user.isActive) {
+      throw new ApiError(403, "Account disabled — contact your platform admin");
     }
 
     const isMatch = await bcrypt.compare(password, user.password);

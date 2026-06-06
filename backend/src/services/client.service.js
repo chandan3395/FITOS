@@ -9,20 +9,31 @@ const ApiError = require("../utils/ApiError");
 const { env } = require("../config/env");
 const { validateClientPayload } = require("../validators/clientPayload.validator");
 
-// Fields persisted on the Client schema. Anything else returned from the
-// validator (timeline, calories, etc.) is ignored at write-time today —
-// the validator still rejects bad values, so a malformed payload never
-// silently succeeds even before the schema grows.
+// Single source of truth for fields the wizard collects AND the schema
+// persists. The validator gates every field before it gets here; the
+// service simply copies. Keep this list aligned with `Client.schema.js`
+// — the `clientFields.contract.test.js` suite enforces the alignment.
 const PERSISTED_CLIENT_FIELDS = [
-  "name",
-  "phone",
-  "gender",
-  "age",
-  "city",
-  "height",
-  "startingWeight",
-  "targetWeight",
-  "goal",
+  // Identity
+  "name", "phone", "email", "gender", "dob", "age", "city", "occupation",
+
+  // Body
+  "height", "startingWeight", "bodyFat",
+
+  // Health history
+  "medicalConditions", "medications", "pastInjuries", "allergies",
+
+  // Goal & program
+  "goal", "targetWeight", "targetBodyFat", "timeline", "goalDescription",
+  "startDate", "duration", "sessionFrequency",
+
+  // Nutrition
+  "diet", "calories", "protein", "carbs", "fats",
+  "mealsPerDay", "waterTarget", "cheatMeals",
+  "foodDislikes", "eatingHabits",
+
+  // Trainer notes
+  "privateNotes",
 ];
 
 async function resolveTrainerId(user, body) {
@@ -61,7 +72,6 @@ async function createClient(user, body) {
   PERSISTED_CLIENT_FIELDS.forEach((field) => {
     if (value[field] !== undefined) data[field] = value[field];
   });
-  if (value.email) data.email = value.email;
 
   const client = await Client.create(data);
 
@@ -134,11 +144,9 @@ async function updateClient(id, user, body) {
     throw err;
   });
 
-  const ALLOWED = [
-    "name", "phone", "gender", "age", "city", "height",
-    "startingWeight", "targetWeight", "goal", "status", "email",
-  ];
-  for (const k of ALLOWED) {
+  // PATCH may touch any persisted onboarding field plus `status`.
+  const PATCHABLE = [...PERSISTED_CLIENT_FIELDS, "status"];
+  for (const k of PATCHABLE) {
     if (value[k] !== undefined) client[k] = value[k];
   }
 
