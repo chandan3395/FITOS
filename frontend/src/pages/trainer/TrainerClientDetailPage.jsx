@@ -12,6 +12,7 @@ import { SkeletonDetail, ErrorState, EmptyState, Toast } from "../../components/
 import clientService from "../../services/clientService";
 import checkinService from "../../services/checkinService";
 import progressPhotoService from "../../services/progressPhotoService";
+import WorkoutPlanTab from "./WorkoutPlanTab";
 
 const TABS = [
   { id: "overview",  label: "Overview" },
@@ -351,31 +352,6 @@ const PhotosTab = ({ clientId, items, loading, error, onReload }) => {
   );
 };
 
-// ── Workout tab — placeholder for the future plan editor with the
-//    Edit / Reassign affordances visible.
-const WorkoutPlanTab = ({ onAction }) => (
-  <Card>
-    <Card.Header>
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div>
-          <Card.Title>Workout Plan</Card.Title>
-          <Card.Description>No plan assigned yet. You can assign one now, or reuse a template later.</Card.Description>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button size="sm" variant="secondary" onClick={() => onAction("Edit Workout plan")}>Edit Workout Plan</Button>
-          <Button size="sm" onClick={() => onAction("Reassign Workout plan")}>Reassign Workout Plan</Button>
-        </div>
-      </div>
-    </Card.Header>
-    <Card.Body>
-      <div className="text-sm text-text-secondary py-6 text-center border border-dashed border-border rounded-xl">
-        Plan editor arrives in a later phase. Use <span className="text-text-primary font-medium">Edit</span> to draft a fresh
-        plan or <span className="text-text-primary font-medium">Reassign</span> to swap from a template.
-      </div>
-    </Card.Body>
-  </Card>
-);
-
 // ── Nutrition tab — real persisted onboarding data + future plan actions.
 const NutritionPlanTab = ({ client, onAction }) => {
   const macros = [
@@ -528,7 +504,7 @@ const TrainerClientDetailPage = () => {
     overview:  <OverviewTab client={client} lastCheckIn={lastCheckIn} />,
     checkins:  <CheckinsTab clientId={id} items={checkins} loading={false} error={null} onReload={reloadCheckins} />,
     photos:    <PhotosTab   clientId={id} items={photos}   loading={false} error={null} onReload={reloadPhotos}   />,
-    workout:   <WorkoutPlanTab   onAction={(label) => setToast({ kind: "success", message: `${label} — coming in a later phase` })} />,
+    workout:   <WorkoutPlanTab clientId={id} />,
     nutrition: <NutritionPlanTab client={client} onAction={(label) => setToast({ kind: "success", message: `${label} — coming in a later phase` })} />,
     notes:     <NotesPlanTab     client={client} />,
   };

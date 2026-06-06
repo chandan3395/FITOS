@@ -8,6 +8,7 @@ const trainerRouter       = require("./trainer.routes");
 const adminRouter         = require("./admin.routes");
 const checkinRouter       = require("./checkin.routes");
 const progressPhotoRouter = require("./progressPhoto.routes");
+const workoutRouter       = require("./workout.routes");
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.use("/trainer",          trainerRouter);
 router.use("/admin",            adminRouter);
 router.use("/checkins",         checkinRouter);
 router.use("/progress-photos",  progressPhotoRouter);
+router.use("/workouts",         workoutRouter);
 
 module.exports = router;
