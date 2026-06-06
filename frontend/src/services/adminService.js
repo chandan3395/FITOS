@@ -25,12 +25,43 @@ async function getPlatformMetrics() {
   return res.data?.data?.metrics ?? null;
 }
 
+// ─── Admin management ───────────────────────────────────────
+async function listAdmins() {
+  const res = await api.get("/admin/admins");
+  return res.data?.data?.admins ?? [];
+}
+
+async function createAdmin(payload) {
+  const res = await api.post("/admin/admins", payload);
+  return res.data?.data?.admin ?? null;
+}
+
+async function disableAdmin(id) {
+  const res = await api.post(`/admin/admins/${id}/disable`);
+  return res.data?.data?.admin ?? null;
+}
+
+async function enableAdmin(id) {
+  const res = await api.post(`/admin/admins/${id}/enable`);
+  return res.data?.data?.admin ?? null;
+}
+
+async function deleteAdmin(id) {
+  const res = await api.delete(`/admin/admins/${id}`);
+  return res.data?.data ?? null;
+}
+
 const adminService = {
   listTrainers,
   createTrainer,
   disableTrainer,
   enableTrainer,
   getPlatformMetrics,
+  listAdmins,
+  createAdmin,
+  disableAdmin,
+  enableAdmin,
+  deleteAdmin,
 };
 
 export default adminService;

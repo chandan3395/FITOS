@@ -241,6 +241,21 @@ const CheckinsTab = ({ clientId, items, loading, error, onReload }) => {
 };
 
 // ── PROGRESS PHOTOS ─────────────────────────────────────────────
+const PHOTO_BADGE = {
+  PENDING:  { label: "Pending review", cls: "bg-amber-400/10 text-amber-300" },
+  REVIEWED: { label: "Reviewed",       cls: "bg-emerald-400/10 text-emerald-300" },
+  FLAGGED:  { label: "Flagged",        cls: "bg-red-500/10 text-red-300" },
+};
+
+const PhotoStatusBadge = ({ status }) => {
+  const meta = PHOTO_BADGE[status] || PHOTO_BADGE.PENDING;
+  return (
+    <span className={`inline-flex px-2.5 py-1 rounded-full text-[11px] font-semibold ${meta.cls}`}>
+      {meta.label}
+    </span>
+  );
+};
+
 const PhotosTab = ({ clientId, items, loading, error, onReload }) => {
   const fileRef = useRef(null);
   const [week, setWeek] = useState("");
@@ -248,10 +263,14 @@ const PhotosTab = ({ clientId, items, loading, error, onReload }) => {
   const [uploading, setUp] = useState(false);
   const [toast, setToast] = useState(null);
   const [commentDraft, setCommentDraft] = useState({});
+  const [actionBusy, setActionBusy] = useState(null);
 
   const upload = async (e) => {
     e.preventDefault();
     if (!week) return setToast({ kind: "error", message: "Week number is required" });
+    if (!files.front && !files.side && !files.back) {
+      return setToast({ kind: "error", message: "Pick at least one photo (front, side, or back)" });
+    }
     setUp(true);
     try {
       await progressPhotoService.upload({ clientId, weekNumber: Number(week), ...files });
@@ -268,12 +287,42 @@ const PhotosTab = ({ clientId, items, loading, error, onReload }) => {
   };
 
   const saveComment = async (id) => {
+    setActionBusy(id);
     try {
-      await progressPhotoService.comment(id, commentDraft[id] || "");
-      setToast({ kind: "success", message: "Comment saved" });
+      await progressPhotoService.comment(id, commentDraft[id] ?? "");
+      setToast({ kind: "success", message: "Comment saved · marked Reviewed" });
       onReload();
     } catch (err) {
       setToast({ kind: "error", message: err?.response?.data?.message || "Comment failed" });
+    } finally {
+      setActionBusy(null);
+    }
+  };
+
+  const setPhotoStatus = async (id, status) => {
+    setActionBusy(id);
+    try {
+      await progressPhotoService.setStatus(id, status);
+      setToast({ kind: "success", message: `Marked ${status.toLowerCase()}` });
+      onReload();
+    } catch (err) {
+      setToast({ kind: "error", message: err?.response?.data?.message || "Status update failed" });
+    } finally {
+      setActionBusy(null);
+    }
+  };
+
+  const deletePhotoSet = async (p) => {
+    if (!confirm(`Delete the Week ${p.weekNumber} photo set? This cannot be undone.`)) return;
+    setActionBusy(p._id);
+    try {
+      await progressPhotoService.remove(p._id);
+      setToast({ kind: "success", message: "Photo set deleted" });
+      onReload();
+    } catch (err) {
+      setToast({ kind: "error", message: err?.response?.data?.message || "Delete failed" });
+    } finally {
+      setActionBusy(null);
     }
   };
 
@@ -315,38 +364,59 @@ const PhotosTab = ({ clientId, items, loading, error, onReload }) => {
           ? <ErrorState title="Couldn't load photos" message={error} onRetry={onReload} />
           : items.length === 0
             ? <EmptyState title="No progress photos yet" description="Upload the first set above." />
-            : items.map((p) => (
-                <Card key={p._id}>
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <Card.Title>Week {p.weekNumber}</Card.Title>
-                      <p className="text-[12px] text-text-muted">{fmtDate(p.createdAt)} · {p.status}</p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    {["front", "side", "back"].map((slot) => {
-                      const url = p[`${slot}Photo`];
-                      return (
-                        <div key={slot} className="aspect-square rounded-xl bg-surface-elevated border border-border overflow-hidden flex items-center justify-center text-text-muted text-[12px]">
-                          {url
-                            ? <img src={url} alt={slot} className="w-full h-full object-cover" />
-                            : <span className="capitalize">{slot} — none</span>
-                          }
+            : items.map((p) => {
+                const busy = actionBusy === p._id;
+                return (
+                  <Card key={p._id}>
+                    <div className="flex items-start justify-between mb-3 gap-3 flex-wrap">
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Card.Title>Week {p.weekNumber}</Card.Title>
+                          <PhotoStatusBadge status={p.status} />
                         </div>
-                      );
-                    })}
-                  </div>
-                  <div className="mt-3 flex gap-2">
-                    <input
-                      defaultValue={p.comment || ""}
-                      onChange={(e) => setCommentDraft((d) => ({ ...d, [p._id]: e.target.value }))}
-                      placeholder="Add a comment for the client…"
-                      className="flex-1 h-9 px-3 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary"
-                    />
-                    <Button size="sm" onClick={() => saveComment(p._id)}>Save</Button>
-                  </div>
-                </Card>
-              ))
+                        <p className="text-[12px] text-text-muted mt-1">{fmtDate(p.createdAt)}</p>
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {p.status !== "REVIEWED" && (
+                          <Button size="sm" variant="secondary" disabled={busy} onClick={() => setPhotoStatus(p._id, "REVIEWED")}>
+                            Mark Reviewed
+                          </Button>
+                        )}
+                        {p.status !== "FLAGGED" && (
+                          <Button size="sm" variant="secondary" disabled={busy} onClick={() => setPhotoStatus(p._id, "FLAGGED")}>
+                            Flag
+                          </Button>
+                        )}
+                        <Button size="sm" variant="danger" disabled={busy} onClick={() => deletePhotoSet(p)}>
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      {["front", "side", "back"].map((slot) => {
+                        const url = p[`${slot}Photo`];
+                        return (
+                          <div key={slot} className="aspect-square rounded-xl bg-surface-elevated border border-border overflow-hidden flex items-center justify-center text-text-muted text-[12px]">
+                            {url
+                              ? <a href={url} target="_blank" rel="noreferrer" className="block w-full h-full"><img src={url} alt={slot} className="w-full h-full object-cover" /></a>
+                              : <span className="capitalize">{slot} — none</span>
+                            }
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="mt-3 flex gap-2">
+                      <input
+                        defaultValue={p.comment || ""}
+                        onChange={(e) => setCommentDraft((d) => ({ ...d, [p._id]: e.target.value }))}
+                        placeholder="Add a comment for the client…"
+                        className="flex-1 h-9 px-3 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary"
+                      />
+                      <Button size="sm" disabled={busy} onClick={() => saveComment(p._id)}>Save Comment</Button>
+                    </div>
+                  </Card>
+                );
+              })
       }
       <Toast {...(toast || {})} onDismiss={() => setToast(null)} />
     </div>

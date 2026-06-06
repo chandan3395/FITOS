@@ -6,6 +6,7 @@ const { Client } = require("../schemas/Client.schema");
 const { WorkoutCompletion } = require("../schemas/WorkoutCompletion.schema");
 const { validateWorkoutPayload } = require("../validators/workoutPayload.validator");
 const ApiError = require("../utils/ApiError");
+const activityService = require("./activity.service");
 
 function assertObjectId(id, label) {
   if (!mongoose.isValidObjectId(id)) {
@@ -142,8 +143,25 @@ async function publishWorkoutPlan(user, workoutPlanId) {
   if (!workoutPlan.exercises || workoutPlan.exercises.length === 0) {
     throw new ApiError(400, "Cannot publish a plan with no exercises");
   }
+  const wasActive = workoutPlan.status === "ACTIVE";
   workoutPlan.status = "ACTIVE";
   await workoutPlan.save();
+
+  // Record only on the DRAFT/ARCHIVED → ACTIVE edge so flipping an
+  // already-published plan doesn't spam the feed.
+  if (!wasActive) {
+    const client = await Client.findById(workoutPlan.clientId);
+    await activityService.record({
+      trainerId: client?.trainerId || user._id,
+      clientId:  workoutPlan.clientId,
+      actorId:   user._id,
+      actorRole: user.role,
+      type:      "WORKOUT_PUBLISHED",
+      entityId:  workoutPlan._id,
+      summary:   `Workout plan "${workoutPlan.planName}" published${client?.name ? ` for ${client.name}` : ""}`,
+    });
+  }
+
   return workoutPlan;
 }
 

@@ -4,7 +4,13 @@ const { Router } = require("express");
 const authenticate = require("../middleware/auth");
 const { allowRoles } = require("../middleware/roles");
 const { upload } = require("../middleware/upload");
-const { create, listForClient, comment } = require("../controllers/progressPhoto.controller");
+const {
+  create,
+  listForClient,
+  comment,
+  setStatus,
+  remove,
+} = require("../controllers/progressPhoto.controller");
 
 const router = Router();
 
@@ -21,7 +27,9 @@ router.post(
   create
 );
 
-router.get("/client/:id",   listForClient);
-router.patch("/:id/comment", comment);
+router.get("/client/:id",     listForClient);
+router.patch("/:id/comment",  comment);
+router.patch("/:id/status",   setStatus);
+router.delete("/:id",         remove);
 
 module.exports = router;

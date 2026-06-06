@@ -23,5 +23,17 @@ async function comment(id, comment) {
   return res.data?.data?.photo ?? null;
 }
 
-const progressPhotoService = { listForClient, upload, comment };
+/** Trainer marks a set as REVIEWED or FLAGGED (no comment required). */
+async function setStatus(id, status) {
+  const res = await api.patch(`/progress-photos/${id}/status`, { status });
+  return res.data?.data?.photo ?? null;
+}
+
+/** Hard-delete the record and its underlying files. */
+async function remove(id) {
+  const res = await api.delete(`/progress-photos/${id}`);
+  return res.data?.data ?? null;
+}
+
+const progressPhotoService = { listForClient, upload, comment, setStatus, remove };
 export default progressPhotoService;

@@ -5,6 +5,7 @@ const { NutritionPlan } = require("../schemas/NutritionPlan.schema");
 const { Client } = require("../schemas/Client.schema");
 const { validateNutritionPayload } = require("../validators/nutritionPayload.validator");
 const ApiError = require("../utils/ApiError");
+const activityService = require("./activity.service");
 
 // Single source of truth for fields the validator may write into a plan.
 // Update this list when the schema gains new persisted fields.
@@ -116,8 +117,23 @@ async function publishNutritionPlan(user, planId) {
   if (plan.calories == null) {
     throw new ApiError(400, "Cannot publish without a daily calorie target");
   }
+  const wasActive = plan.status === "ACTIVE";
   plan.status = "ACTIVE";
   await plan.save();
+
+  if (!wasActive) {
+    const client = await Client.findById(plan.clientId);
+    await activityService.record({
+      trainerId: client?.trainerId || user._id,
+      clientId:  plan.clientId,
+      actorId:   user._id,
+      actorRole: user.role,
+      type:      "NUTRITION_PUBLISHED",
+      entityId:  plan._id,
+      summary:   `Nutrition plan "${plan.planName}" published${client?.name ? ` for ${client.name}` : ""}`,
+    });
+  }
+
   return plan;
 }
 

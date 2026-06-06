@@ -24,4 +24,18 @@ async function comment(req, res, next) {
   } catch (e) { next(e); }
 }
 
-module.exports = { create, listForClient, comment };
+async function setStatus(req, res, next) {
+  try {
+    const doc = await progressPhotoService.setStatus(req.params.id, req.user, req.body);
+    return ApiResponse.ok(res, "Status updated", { photo: doc });
+  } catch (e) { next(e); }
+}
+
+async function remove(req, res, next) {
+  try {
+    const result = await progressPhotoService.remove(req.params.id, req.user);
+    return ApiResponse.ok(res, "Progress photo deleted", result);
+  } catch (e) { next(e); }
+}
+
+module.exports = { create, listForClient, comment, setStatus, remove };

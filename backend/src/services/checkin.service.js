@@ -4,25 +4,38 @@ const mongoose = require("mongoose");
 const { CheckIn, CHECKIN_STATUSES } = require("../schemas/CheckIn.schema");
 const { Client } = require("../schemas/Client.schema");
 const ApiError = require("../utils/ApiError");
+const activityService = require("./activity.service");
 
-/** Verifies the trainer owns the client (admin bypasses). */
+/**
+ * Verifies the caller may write/read against the given clientId.
+ * - TRAINER: must own the client.
+ * - ADMIN:   bypass.
+ * - CLIENT:  must BE the client (CLIENT.userId === req.user._id).
+ */
 async function assertClientAccess(clientId, user) {
   if (!mongoose.isValidObjectId(clientId)) throw new ApiError(400, "Invalid clientId");
   const client = await Client.findById(clientId);
   if (!client) throw new ApiError(404, "Client not found");
-  if (user.role !== "ADMIN" && String(client.trainerId) !== String(user._id)) {
-    throw new ApiError(403, "Forbidden");
-  }
-  return client;
+  if (user.role === "ADMIN") return client;
+  if (user.role === "TRAINER" && String(client.trainerId) === String(user._id)) return client;
+  if (user.role === "CLIENT"  && String(client.userId)    === String(user._id)) return client;
+  throw new ApiError(403, "Forbidden");
 }
 
 /**
  * POST /api/checkins
- * Trainer creates a check-in on behalf of a client (prototype shortcut —
- * a future client app would POST directly). Body: { clientId, weight, sleep, ... }
+ * - TRAINER/ADMIN: passes `clientId` in body (trainer-on-behalf path).
+ * - CLIENT:        omits `clientId`; we resolve their Client record from
+ *                  their User._id and stamp it automatically.
  */
 async function create(user, body) {
-  const client = await assertClientAccess(body.clientId, user);
+  let client;
+  if (user.role === "CLIENT") {
+    client = await Client.findOne({ userId: user._id });
+    if (!client) throw new ApiError(404, "Client record not found");
+  } else {
+    client = await assertClientAccess(body.clientId, user);
+  }
 
   const data = {
     clientId:  client._id,
@@ -37,6 +50,17 @@ async function create(user, body) {
   };
 
   const doc = await CheckIn.create(data);
+
+  await activityService.record({
+    trainerId: client.trainerId,
+    clientId:  client._id,
+    actorId:   user._id,
+    actorRole: user.role,
+    type:      "CHECKIN_SUBMITTED",
+    entityId:  doc._id,
+    summary:   `${client.name} submitted a check-in${doc.weight ? ` — ${doc.weight} kg` : ""}`,
+  });
+
   return doc;
 }
 

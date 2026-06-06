@@ -15,6 +15,7 @@ import ClientLayout  from "../components/layouts/ClientLayout";
 // Admin pages
 import AdminDashboard    from "../pages/admin/AdminDashboard";
 import AdminTrainersPage from "../pages/admin/AdminTrainersPage";
+import AdminAdminsPage   from "../pages/admin/AdminAdminsPage";
 
 // Trainer pages
 import TrainerDashboard         from "../pages/trainer/TrainerDashboard";
@@ -47,6 +48,7 @@ const AppRoutes = () => (
       <Route index             element={<Navigate to={ROUTES.ADMIN_DASHBOARD} replace />} />
       <Route path="dashboard"  element={<AdminDashboard />} />
       <Route path="trainers"   element={<AdminTrainersPage />} />
+      <Route path="admins"     element={<AdminAdminsPage />} />
     </Route>
 
     {/* Trainer */}

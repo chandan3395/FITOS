@@ -38,10 +38,51 @@ async function getPlatformMetrics(_req, res, next) {
   } catch (e) { next(e); }
 }
 
+// ─── Admin management ──────────────────────────────────────────
+async function listAdmins(_req, res, next) {
+  try {
+    const admins = await adminService.listAdmins();
+    return ApiResponse.ok(res, "Admins fetched", { admins });
+  } catch (e) { next(e); }
+}
+
+async function createAdmin(req, res, next) {
+  try {
+    const admin = await adminService.createAdmin(req.body);
+    return ApiResponse.created(res, "Admin created", { admin });
+  } catch (e) { next(e); }
+}
+
+async function disableAdmin(req, res, next) {
+  try {
+    const admin = await adminService.setAdminActive(req.user, req.params.id, false);
+    return ApiResponse.ok(res, "Admin disabled", { admin });
+  } catch (e) { next(e); }
+}
+
+async function enableAdmin(req, res, next) {
+  try {
+    const admin = await adminService.setAdminActive(req.user, req.params.id, true);
+    return ApiResponse.ok(res, "Admin enabled", { admin });
+  } catch (e) { next(e); }
+}
+
+async function deleteAdmin(req, res, next) {
+  try {
+    const result = await adminService.deleteAdmin(req.user, req.params.id);
+    return ApiResponse.ok(res, "Admin deleted", result);
+  } catch (e) { next(e); }
+}
+
 module.exports = {
   listTrainers,
   createTrainer,
   disableTrainer,
   enableTrainer,
   getPlatformMetrics,
+  listAdmins,
+  createAdmin,
+  disableAdmin,
+  enableAdmin,
+  deleteAdmin,
 };

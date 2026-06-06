@@ -6,9 +6,9 @@ import { SkeletonGrid, EmptyState, ErrorState, Toast } from "../../components/fe
 import checkinService from "../../services/checkinService";
 
 const TABS = [
-  { id: "PENDING",  label: "Pending"  },
-  { id: "REVIEWED", label: "Reviewed" },
-  { id: "FLAGGED",  label: "Flagged"  },
+  { id: "PENDING",  label: "Pending"         },
+  { id: "REVIEWED", label: "Reviewed"        },
+  { id: "FLAGGED",  label: "Action Required" },
 ];
 
 const initials = (name = "") => name.split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("") || "C";
@@ -27,34 +27,50 @@ function formatDate(iso) {
 
 const TrainerCheckinsPage = () => {
   const [tab, setTab]       = useState("PENDING");
-  const [items, setItems]   = useState([]);
+  const [allItems, setAll]  = useState([]);
   const [loading, setLoad]  = useState(true);
   const [error, setError]   = useState(null);
   const [actingId, setActing] = useState(null);
   const [toast, setToast]   = useState(null);
 
+  // Single fetch — load everything once, then partition by status client-side
+  // so the tab counts are always accurate (previous code only loaded the
+  // active tab's items, leaving the other counters frozen at 0).
   const load = useCallback(async () => {
     setLoad(true);
     setError(null);
     try {
-      const data = await checkinService.list({ status: tab });
-      setItems(data);
+      const data = await checkinService.list({ limit: 200 });
+      setAll(data);
     } catch (e) {
       setError(e?.response?.data?.message || e?.message || "Failed to load check-ins");
     } finally {
       setLoad(false);
     }
-  }, [tab]);
+  }, []);
 
   useEffect(() => { load(); }, [load]);
 
-  const counts = useMemo(() => ({ PENDING: 0, REVIEWED: 0, FLAGGED: 0, [tab]: items.length }), [items, tab]);
+  const counts = useMemo(() => {
+    const c = { PENDING: 0, REVIEWED: 0, FLAGGED: 0 };
+    for (const item of allItems) {
+      if (c[item.status] != null) c[item.status] += 1;
+    }
+    return c;
+  }, [allItems]);
+
+  const items = useMemo(
+    () => allItems.filter((c) => c.status === tab),
+    [allItems, tab]
+  );
 
   async function act(id, status, label) {
     setActing(id);
     try {
-      await checkinService.review(id, { status });
-      setItems((curr) => curr.filter((c) => c._id !== id));
+      const updated = await checkinService.review(id, { status });
+      // Patch the row in place so the counts on the other tabs increment
+      // immediately without a refetch.
+      setAll((curr) => curr.map((c) => (c._id === id ? { ...c, ...updated } : c)));
       setToast({ kind: "success", message: `Check-in ${label}` });
     } catch (e) {
       setToast({ kind: "error", message: e?.response?.data?.message || "Action failed" });
@@ -96,7 +112,11 @@ const TrainerCheckinsPage = () => {
           ? <ErrorState title="Couldn't load check-ins" message={error} onRetry={load} />
           : items.length === 0
             ? <EmptyState
-                title={tab === "PENDING" ? "No pending check-ins" : `No ${tab.toLowerCase()} check-ins`}
+                title={
+                  tab === "PENDING"  ? "No pending check-ins" :
+                  tab === "REVIEWED" ? "No reviewed check-ins" :
+                                       "Nothing needs action"
+                }
                 description={tab === "PENDING" ? "All caught up — clients have no unreviewed submissions." : "Nothing in this bucket yet."}
               />
             : (

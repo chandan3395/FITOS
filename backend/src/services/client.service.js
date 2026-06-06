@@ -8,6 +8,7 @@ const { User } = require("../schemas/User.schema");
 const ApiError = require("../utils/ApiError");
 const { env } = require("../config/env");
 const { validateClientPayload } = require("../validators/clientPayload.validator");
+const activityService = require("./activity.service");
 
 // Single source of truth for fields the wizard collects AND the schema
 // persists. The validator gates every field before it gets here; the
@@ -90,6 +91,30 @@ async function createClient(user, body) {
   });
 
   const activationUrl = `${env.CLIENT_ORIGIN}/activate/${inviteToken}`;
+
+  // Two activity events: the client record itself, and the invite that
+  // automatically follows. They share a transaction in the user's mind
+  // even though they're two distinct domain operations.
+  await activityService.record({
+    trainerId,
+    clientId:  client._id,
+    actorId:   user._id,
+    actorRole: user.role,
+    type:      "CLIENT_CREATED",
+    entityId:  client._id,
+    summary:   `Added ${client.name} as a client`,
+  });
+  await activityService.record({
+    trainerId,
+    clientId:  client._id,
+    actorId:   user._id,
+    actorRole: user.role,
+    type:      "INVITE_SENT",
+    entityId:  client._id,
+    summary:   `Activation link generated for ${client.name}`,
+    metadata:  { expiresAt },
+  });
+
   return { client, invite: { token: inviteToken, expiresAt, activationUrl } };
 }
 

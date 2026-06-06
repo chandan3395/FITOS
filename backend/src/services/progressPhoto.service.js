@@ -1,9 +1,13 @@
 "use strict";
 
+const path = require("path");
+const fs = require("fs");
 const mongoose = require("mongoose");
-const { ProgressPhoto } = require("../schemas/ProgressPhoto.schema");
+const { ProgressPhoto, PHOTO_STATUSES } = require("../schemas/ProgressPhoto.schema");
 const { Client } = require("../schemas/Client.schema");
 const ApiError = require("../utils/ApiError");
+const { UPLOAD_ROOT } = require("../middleware/upload");
+const activityService = require("./activity.service");
 
 async function assertClientAccess(clientId, user) {
   if (!mongoose.isValidObjectId(clientId)) throw new ApiError(400, "Invalid clientId");
@@ -44,6 +48,16 @@ async function create(user, body, files = {}) {
     status:     "PENDING",
   });
 
+  await activityService.record({
+    trainerId: client.trainerId,
+    clientId:  client._id,
+    actorId:   user._id,
+    actorRole: user.role,
+    type:      "PROGRESS_PHOTO_UPLOADED",
+    entityId:  doc._id,
+    summary:   `Week ${weekNumber} photos uploaded${client.name ? ` for ${client.name}` : ""}`,
+  });
+
   return doc;
 }
 
@@ -52,7 +66,7 @@ async function listForClient(clientId, user) {
   return ProgressPhoto.find({ clientId }).sort({ weekNumber: -1, createdAt: -1 });
 }
 
-async function comment(id, user, { comment }) {
+async function loadOwned(id, user) {
   if (!mongoose.isValidObjectId(id)) throw new ApiError(400, "Invalid id");
   const doc = await ProgressPhoto.findById(id);
   if (!doc) throw new ApiError(404, "Progress photo not found");
@@ -60,12 +74,55 @@ async function comment(id, user, { comment }) {
     throw new ApiError(403, "Forbidden");
   }
   if (user.role !== "TRAINER" && user.role !== "ADMIN") {
-    throw new ApiError(403, "Only trainers may comment");
+    throw new ApiError(403, "Only trainers may modify progress photos");
   }
+  return doc;
+}
+
+/**
+ * Save / update the trainer's comment. Saving any comment implicitly
+ * promotes the record to REVIEWED — matching the existing UX. Use
+ * `setStatus` instead when the trainer wants to review without comment.
+ */
+async function comment(id, user, { comment }) {
+  const doc = await loadOwned(id, user);
   doc.comment = comment ?? doc.comment;
   doc.status  = "REVIEWED";
   await doc.save();
   return doc;
 }
 
-module.exports = { create, listForClient, comment };
+/**
+ * Explicit status transition — lets the trainer mark a set as
+ * REVIEWED (no comment needed) or FLAGGED (needs attention).
+ */
+async function setStatus(id, user, { status }) {
+  const doc = await loadOwned(id, user);
+  const next = String(status || "").toUpperCase();
+  if (!PHOTO_STATUSES.includes(next)) {
+    throw new ApiError(400, `status must be one of: ${PHOTO_STATUSES.join(", ")}`);
+  }
+  doc.status = next;
+  await doc.save();
+  return doc;
+}
+
+/**
+ * Hard delete the record and best-effort remove the underlying files.
+ * Disk cleanup failures are swallowed — the DB record is the source of
+ * truth; orphaned files at worst waste disk and are easy to sweep later.
+ */
+async function remove(id, user) {
+  const doc = await loadOwned(id, user);
+  const filePaths = [doc.frontPhoto, doc.sidePhoto, doc.backPhoto].filter(Boolean);
+  await ProgressPhoto.deleteOne({ _id: doc._id });
+  for (const rel of filePaths) {
+    // rel looks like "/uploads/<name>"; resolve to disk path safely.
+    const base = path.basename(rel);
+    const full = path.join(UPLOAD_ROOT, base);
+    fs.promises.unlink(full).catch(() => { /* ignore */ });
+  }
+  return { _id: doc._id, deleted: true };
+}
+
+module.exports = { create, listForClient, comment, setStatus, remove };

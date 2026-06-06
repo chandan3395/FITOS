@@ -7,13 +7,16 @@ const { create, list, getOne, review } = require("../controllers/checkin.control
 
 const router = Router();
 
-// Check-in surfaces are trainer/admin only — admin retains read access for
-// support; the ownership filter still applies inside the service.
-router.use(authenticate, allowRoles("TRAINER", "ADMIN"));
+router.use(authenticate);
 
-router.post("/",            create);
-router.get("/",             list);
-router.get("/:id",          getOne);
-router.patch("/:id/review", review);
+// Clients submit their own check-ins (clientId resolved server-side from
+// the auth context); trainers + admins continue to POST on a client's
+// behalf using the body's clientId for the prototype path.
+router.post("/", allowRoles("TRAINER", "ADMIN", "CLIENT"), create);
+
+// Read/review surfaces remain trainer/admin only.
+router.get("/",             allowRoles("TRAINER", "ADMIN"), list);
+router.get("/:id",          allowRoles("TRAINER", "ADMIN"), getOne);
+router.patch("/:id/review", allowRoles("TRAINER", "ADMIN"), review);
 
 module.exports = router;

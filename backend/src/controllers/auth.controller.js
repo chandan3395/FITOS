@@ -11,6 +11,7 @@ const generateRefreshToken = require("../utils/generateRefreshToken");
 const ApiResponse = require("../utils/ApiResponse");
 const ApiError = require("../utils/ApiError");
 const { env } = require("../config/env");
+const activityService = require("../services/activity.service");
 
 const REFRESH_COOKIE = "refreshToken";
 
@@ -317,6 +318,18 @@ async function activateInvite(req, res, next) {
       }
       client.userId = user._id;
       await client.save();
+
+      // Only record the activation event on a first-time activation;
+      // returning users re-hitting the link shouldn't spam the feed.
+      await activityService.record({
+        trainerId: invite.trainerId,
+        clientId:  client._id,
+        actorId:   user._id,
+        actorRole: "CLIENT",
+        type:      "INVITE_ACTIVATED",
+        entityId:  client._id,
+        summary:   `${client.name} activated their account`,
+      });
     }
 
     // Single-use semantic is optional for prototype — mark used but keep

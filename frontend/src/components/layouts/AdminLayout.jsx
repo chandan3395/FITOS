@@ -8,6 +8,7 @@ const initials = (name = "") => name.split(" ").slice(0, 2).map((w) => w[0]?.toU
 const navItems = [
   { label: "Dashboard", to: ROUTES.ADMIN_DASHBOARD, Icon: HomeIcon },
   { label: "Trainers",  to: ROUTES.ADMIN_TRAINERS,  Icon: UsersIcon },
+  { label: "Admins",    to: ROUTES.ADMIN_ADMINS,    Icon: UsersIcon },
 ];
 
 const AdminLayout = () => {

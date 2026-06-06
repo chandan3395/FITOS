@@ -14,6 +14,7 @@ import { SkeletonGrid, ErrorState } from "../../components/feedback/States";
 import trainerService from "../../services/trainerService";
 import clientService from "../../services/clientService";
 import checkinService from "../../services/checkinService";
+import activityService from "../../services/activityService";
 
 const QUICK_ACTIONS = [
   { label: "Add Client",       Icon: UsersIcon,       accent: "bg-emerald-500/10 text-emerald-300", to: `${ROUTES.TRAINER_CLIENTS}/new` },
@@ -38,25 +39,28 @@ function formatRelative(iso) {
 const TrainerDashboard = () => {
   const navigate = useNavigate();
 
-  const [metrics,  setMetrics]  = useState(null);
-  const [clients,  setClients]  = useState([]);
-  const [checkins, setCheckins] = useState([]);
-  const [loading,  setLoading]  = useState(true);
-  const [error,    setError]    = useState(null);
+  const [metrics,    setMetrics]    = useState(null);
+  const [clients,    setClients]    = useState([]);
+  const [checkins,   setCheckins]   = useState([]);
+  const [activities, setActivities] = useState([]);
+  const [loading,    setLoading]    = useState(true);
+  const [error,      setError]      = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      // Fire all three in parallel; metrics is the critical one.
-      const [m, cs, cis] = await Promise.all([
+      // Fire all four in parallel; metrics is the critical one.
+      const [m, cs, cis, acts] = await Promise.all([
         trainerService.getMetrics(),
         clientService.list(),
         checkinService.list({ status: "PENDING" }).catch(() => []),
+        activityService.list({ limit: 8 }).catch(() => []),
       ]);
       setMetrics(m);
       setClients(cs);
       setCheckins(cis);
+      setActivities(acts);
     } catch (e) {
       setError(e?.response?.data?.message || e?.message || "Failed to load dashboard");
     } finally {
@@ -66,15 +70,27 @@ const TrainerDashboard = () => {
 
   useEffect(() => { load(); }, [load]);
 
-  // Build Recent Activity from real check-ins (newest first, up to 5).
+  // Recent Activity reads the real ActivityLog feed (no mock fallback).
+  // Each row's color dot is derived from the event type.
+  const ACTIVITY_DOT = {
+    CLIENT_CREATED:          "bg-sky-400",
+    INVITE_SENT:             "bg-violet-400",
+    INVITE_ACTIVATED:        "bg-emerald-400",
+    WORKOUT_PUBLISHED:       "bg-primary",
+    NUTRITION_PUBLISHED:     "bg-amber-400",
+    CHECKIN_SUBMITTED:       "bg-emerald-400",
+    PROGRESS_PHOTO_UPLOADED: "bg-violet-400",
+  };
   const activity = useMemo(() => {
-    return checkins.slice(0, 5).map((c) => ({
-      who:  c.clientId?.name || "Client",
-      what: `submitted a check-in${c.weight ? ` — ${c.weight} kg` : ""}`,
-      time: formatRelative(c.createdAt),
-      dot:  c.status === "FLAGGED" ? "bg-red-400" : "bg-emerald-400",
+    return activities.slice(0, 5).map((a) => ({
+      key:  a._id,
+      who:  a.clientId?.name || "—",
+      what: a.summary,
+      time: formatRelative(a.createdAt),
+      dot:  ACTIVITY_DOT[a.type] || "bg-zinc-400",
     }));
-  }, [checkins]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activities]);
 
   // Attention list = clients with NO check-in in 7d, capped at 3.
   const attention = useMemo(() => {
@@ -185,12 +201,11 @@ const TrainerDashboard = () => {
               <p className="text-sm text-text-secondary py-4 text-center">No recent activity yet.</p>
             ) : (
               <ul className="space-y-3.5">
-                {activity.map((a, i) => (
-                  <li key={i} className="flex items-start gap-3">
+                {activity.map((a) => (
+                  <li key={a.key} className="flex items-start gap-3">
                     <span className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${a.dot}`} />
                     <div className="flex-1 min-w-0">
                       <p className="text-[13.5px] text-text-primary leading-snug">
-                        <span className="font-semibold">{a.who}</span>{" "}
                         <span className="text-text-secondary">{a.what}</span>
                       </p>
                       <p className="text-[11px] text-text-muted mt-0.5">{a.time}</p>
