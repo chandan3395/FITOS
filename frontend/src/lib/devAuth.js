@@ -22,6 +22,9 @@ const STORAGE_KEY = "fitos.devRole";
 const EVENT_NAME  = "fitos:devRoleChange";
 const DEFAULT_ROLE = "TRAINER";
 
+const CLIENT_STORAGE_KEY = "fitos.devClientId";
+const CLIENT_EVENT_NAME  = "fitos:devClientChange";
+
 /** Mock identities — must satisfy the same shape `/api/auth/me` returns. */
 export const MOCK_USERS = {
   ADMIN: {
@@ -97,4 +100,42 @@ export function subscribeDevRole(fn) {
 export function getMockUser() {
   if (!DEV_BYPASS) return null;
   return MOCK_USERS[getDevRole()];
+}
+
+// ── Dev client impersonation ──────────────────────────────────
+// When acting as CLIENT, the trainer may pick a specific Client doc to
+// view the app through. The selected id is forwarded to the backend via
+// the `x-dev-client-id` header, which the dev bypass resolves into that
+// client's linked User (auto-creating one on first impersonation).
+
+export function getDevClientId() {
+  if (!DEV_BYPASS) return null;
+  try {
+    return localStorage.getItem(CLIENT_STORAGE_KEY) || null;
+  } catch {
+    return null;
+  }
+}
+
+export function setDevClientId(id) {
+  if (!DEV_BYPASS) return;
+  try {
+    if (id) localStorage.setItem(CLIENT_STORAGE_KEY, id);
+    else    localStorage.removeItem(CLIENT_STORAGE_KEY);
+  } catch { /* ignore */ }
+  window.dispatchEvent(new CustomEvent(CLIENT_EVENT_NAME, { detail: id || null }));
+}
+
+export function subscribeDevClientId(fn) {
+  if (!DEV_BYPASS) return () => {};
+  const onCustom  = (e) => fn(e.detail);
+  const onStorage = (e) => {
+    if (e.key === CLIENT_STORAGE_KEY) fn(e.newValue || null);
+  };
+  window.addEventListener(CLIENT_EVENT_NAME, onCustom);
+  window.addEventListener("storage", onStorage);
+  return () => {
+    window.removeEventListener(CLIENT_EVENT_NAME, onCustom);
+    window.removeEventListener("storage", onStorage);
+  };
 }

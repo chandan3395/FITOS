@@ -13,6 +13,8 @@ import {
   getDevRole,
   setDevRole as setDevRoleStore,
   subscribeDevRole,
+  getDevClientId,
+  subscribeDevClientId,
 } from "../lib/devAuth";
 
 export const AuthContext = createContext(null);
@@ -95,6 +97,19 @@ export const AuthProvider = ({ children }) => {
       setDevRoleState(nextRole);
       setUser(MOCK_USERS[nextRole]);
       setStatus(STATUS.AUTHED);
+    });
+  }, []);
+
+  // ── Dev client impersonation subscription ───────────────────
+  // When the trainer picks a Client to view-as in the switcher we
+  // touch the user reference so React subtrees re-render and refetch.
+  // The real identity is resolved server-side via x-dev-client-id; this
+  // local touch just kicks consumers off the previously cached user.
+  useEffect(() => {
+    if (!DEV_BYPASS) return undefined;
+    return subscribeDevClientId(() => {
+      if (getDevRole() !== "CLIENT") return;
+      setUser({ ...MOCK_USERS.CLIENT, _devClientId: getDevClientId() || null });
     });
   }, []);
 
