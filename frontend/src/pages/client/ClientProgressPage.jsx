@@ -188,11 +188,11 @@ const ClientProgressPage = () => {
                   </div>
                   <div className="grid grid-cols-3 gap-3">
                     {["front", "side", "back"].map((slot) => {
-                      const url = p[`${slot}Photo`];
+                      const photo = p[`${slot}Photo`];
                       return (
                         <div key={slot} className="aspect-square rounded-lg bg-surface border border-border overflow-hidden flex items-center justify-center text-text-muted text-[12px]">
-                          {url
-                            ? <a href={url} target="_blank" rel="noreferrer" className="block w-full h-full"><img src={url} alt={slot} className="w-full h-full object-cover" /></a>
+                          {photo
+                            ? <a href={photo.url} target="_blank" rel="noreferrer" className="block w-full h-full"><img src={photo.thumbnailUrl} alt={slot} className="w-full h-full object-cover" /></a>
                             : <span className="capitalize">{slot} — none</span>
                           }
                         </div>

@@ -12,6 +12,11 @@ if (ENABLE_GOOGLE_AUTH) {
   REQUIRED.push("GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_CALLBACK_URL");
 }
 
+// Cloudinary backs progress-photo storage (signed direct uploads). All
+// three are required — fail fast so a misconfigured deploy never silently
+// breaks uploads at runtime.
+REQUIRED.push("CLOUDINARY_CLOUD_NAME", "CLOUDINARY_API_KEY", "CLOUDINARY_API_SECRET");
+
 function validateEnv() {
   const missing = REQUIRED.filter((key) => !process.env[key]);
   if (missing.length) {
@@ -32,6 +37,9 @@ const env = {
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
   GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL,
   ENABLE_GOOGLE_AUTH,
+  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
+  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
 };
 
 module.exports = { validateEnv, env };

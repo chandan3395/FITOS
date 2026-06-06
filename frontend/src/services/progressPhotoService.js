@@ -1,4 +1,5 @@
 import api from "../lib/api";
+import uploadService from "./uploadService";
 
 async function listForClient(clientId) {
   const res = await api.get(`/progress-photos/client/${clientId}`);
@@ -11,18 +12,26 @@ async function listMine() {
   return res.data?.data?.photos ?? [];
 }
 
+/**
+ * Upload a weekly photo set. Each provided slot is compressed and uploaded
+ * directly to Cloudinary (signed); only the resulting metadata is posted to
+ * our backend. clientId is sent only on the trainer/admin path — the client
+ * portal omits it and the backend resolves the caller's own Client.
+ */
 async function upload({ clientId, weekNumber, front, side, back }) {
-  const fd = new FormData();
-  // clientId is only sent for trainer/admin path. Client portal omits it
-  // and the backend resolves the caller's own Client from auth.
-  if (clientId) fd.append("clientId", clientId);
-  fd.append("weekNumber", weekNumber);
-  if (front) fd.append("front", front);
-  if (side)  fd.append("side",  side);
-  if (back)  fd.append("back",  back);
-  const res = await api.post("/progress-photos", fd, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  const [frontMeta, sideMeta, backMeta] = await Promise.all([
+    uploadService.uploadSlot({ clientId, weekNumber, slot: "front", file: front }),
+    uploadService.uploadSlot({ clientId, weekNumber, slot: "side",  file: side }),
+    uploadService.uploadSlot({ clientId, weekNumber, slot: "back",  file: back }),
+  ]);
+
+  const body = { weekNumber };
+  if (clientId) body.clientId = clientId;
+  if (frontMeta) body.front = frontMeta;
+  if (sideMeta)  body.side  = sideMeta;
+  if (backMeta)  body.back  = backMeta;
+
+  const res = await api.post("/progress-photos", body);
   return res.data?.data?.photo ?? null;
 }
 

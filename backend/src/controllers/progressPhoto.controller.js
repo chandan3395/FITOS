@@ -5,7 +5,9 @@ const ApiResponse = require("../utils/ApiResponse");
 
 async function create(req, res, next) {
   try {
-    const doc = await progressPhotoService.create(req.user, req.body, req.files || {});
+    // Image bytes are uploaded directly to Cloudinary by the browser; the
+    // body now carries only metadata (clientId/weekNumber + per-slot publicIds).
+    const doc = await progressPhotoService.create(req.user, req.body);
     return ApiResponse.created(res, "Progress photos uploaded", { photo: doc });
   } catch (e) { next(e); }
 }

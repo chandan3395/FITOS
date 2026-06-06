@@ -374,7 +374,24 @@ const PhotosTab = ({ clientId, items, loading, error, onReload }) => {
                           <Card.Title>Week {p.weekNumber}</Card.Title>
                           <PhotoStatusBadge status={p.status} />
                         </div>
-                        <p className="text-[12px] text-text-muted mt-1">{fmtDate(p.createdAt)}</p>
+                        {/*
+                          Three-line metadata: who uploaded it, when, and
+                          (implicit via the badge above) review status. We
+                          prefer the uploader's name when populated; fall
+                          back to the role-only string so old records
+                          without uploaderRole still read cleanly.
+                        */}
+                        <p className="text-[12px] text-text-muted mt-1">
+                          {(() => {
+                            const name = p.uploadedBy?.name;
+                            const role = p.uploaderRole;
+                            if (name && role) return `Uploaded by ${name} (${role.charAt(0) + role.slice(1).toLowerCase()})`;
+                            if (name)         return `Uploaded by ${name}`;
+                            if (role)         return `Uploaded by ${role.charAt(0) + role.slice(1).toLowerCase()}`;
+                            return "Uploader unknown";
+                          })()}
+                        </p>
+                        <p className="text-[12px] text-text-muted mt-0.5">{fmtDate(p.createdAt)}</p>
                       </div>
                       <div className="flex items-center gap-2 flex-wrap">
                         {p.status !== "REVIEWED" && (
@@ -394,11 +411,11 @@ const PhotosTab = ({ clientId, items, loading, error, onReload }) => {
                     </div>
                     <div className="grid grid-cols-3 gap-3">
                       {["front", "side", "back"].map((slot) => {
-                        const url = p[`${slot}Photo`];
+                        const photo = p[`${slot}Photo`];
                         return (
                           <div key={slot} className="aspect-square rounded-xl bg-surface-elevated border border-border overflow-hidden flex items-center justify-center text-text-muted text-[12px]">
-                            {url
-                              ? <a href={url} target="_blank" rel="noreferrer" className="block w-full h-full"><img src={url} alt={slot} className="w-full h-full object-cover" /></a>
+                            {photo
+                              ? <a href={photo.url} target="_blank" rel="noreferrer" className="block w-full h-full"><img src={photo.thumbnailUrl} alt={slot} className="w-full h-full object-cover" /></a>
                               : <span className="capitalize">{slot} — none</span>
                             }
                           </div>

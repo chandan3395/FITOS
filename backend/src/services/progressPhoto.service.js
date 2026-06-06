@@ -1,13 +1,13 @@
 "use strict";
 
-const path = require("path");
-const fs = require("fs");
 const mongoose = require("mongoose");
 const { ProgressPhoto, PHOTO_STATUSES } = require("../schemas/ProgressPhoto.schema");
 const { Client } = require("../schemas/Client.schema");
 const ApiError = require("../utils/ApiError");
-const { UPLOAD_ROOT } = require("../middleware/upload");
+const cloudinary = require("../config/cloudinary");
 const activityService = require("./activity.service");
+
+const SLOTS = ["front", "side", "back"];
 
 async function assertClientAccess(clientId, user) {
   if (!mongoose.isValidObjectId(clientId)) throw new ApiError(400, "Invalid clientId");
@@ -26,23 +26,41 @@ async function resolveCurrentClient(user) {
   return client;
 }
 
-function fileToPath(file) {
-  return file ? `/uploads/${file.filename}` : undefined;
+/**
+ * Normalise an incoming slot payload from the client. The browser uploads
+ * directly to Cloudinary, then sends us back the resulting `publicId` (and
+ * optionally the `url`). We re-derive both display + thumbnail URLs from the
+ * publicId so the backend stays authoritative over delivery transforms and
+ * never trusts an arbitrary url from the client.
+ */
+function buildSlot(raw) {
+  if (!raw) return undefined;
+  const publicId = typeof raw === "string" ? raw : raw.publicId;
+  if (!publicId || typeof publicId !== "string") {
+    throw new ApiError(400, "Each photo must include a Cloudinary publicId");
+  }
+  return {
+    publicId,
+    url:          cloudinary.urlFor(publicId),
+    thumbnailUrl: cloudinary.thumbnailUrlFor(publicId),
+  };
 }
 
 /**
  * POST /api/progress-photos
- * Upsert semantic — one photo set per (clientId, weekNumber). If a set
- * already exists for this week, the provided slots replace the existing
- * ones (slots not provided are left intact). Disk cleanup for replaced
- * files is best-effort.
+ * Upsert semantic — one photo set per (clientId, weekNumber). The browser
+ * has already uploaded the image bytes straight to Cloudinary; here we only
+ * persist metadata. Slots not provided are left intact.
+ *
+ * Cloudinary publicIds are deterministic per (client, week, slot) and the
+ * signed upload uses overwrite=true, so replacing a slot reuses the same
+ * asset id (no orphans). If a provided publicId ever differs from the one
+ * already stored, we destroy the stale asset after the DB write succeeds.
  *
  * - TRAINER / ADMIN: must pass `clientId` in body.
  * - CLIENT:          `clientId` resolved from auth (their own Client doc).
  */
-async function create(user, body, files = {}) {
-  // Resolve the client. Client role uploads for self; trainer/admin pass
-  // an explicit clientId.
+async function create(user, body) {
   let client;
   if (user.role === "CLIENT") {
     client = await resolveCurrentClient(user);
@@ -53,31 +71,34 @@ async function create(user, body, files = {}) {
   const weekNumber = Number(body.weekNumber);
   if (!weekNumber || weekNumber < 1) throw new ApiError(400, "weekNumber is required");
 
-  const front = files.front?.[0];
-  const side  = files.side?.[0];
-  const back  = files.back?.[0];
-  if (!front && !side && !back) throw new ApiError(400, "At least one photo is required");
+  const incoming = {
+    front: buildSlot(body.front),
+    side:  buildSlot(body.side),
+    back:  buildSlot(body.back),
+  };
+  if (!incoming.front && !incoming.side && !incoming.back) {
+    throw new ApiError(400, "At least one photo is required");
+  }
 
   const existing = await ProgressPhoto.findOne({ clientId: client._id, weekNumber });
 
-  // Track which on-disk files get replaced so we can unlink them after
-  // the DB write succeeds.
-  const replaced = [];
-  const setSlot = (doc, slot, file) => {
-    if (!file) return;
-    if (doc[`${slot}Photo`]) replaced.push(doc[`${slot}Photo`]);
-    doc[`${slot}Photo`] = fileToPath(file);
+  // Track stale Cloudinary assets to destroy after the DB write. With
+  // deterministic ids this is normally empty (overwrite-in-place), but we
+  // guard against a publicId ever changing so we never orphan an asset.
+  const stale = [];
+  const applySlot = (doc, slot) => {
+    const next = incoming[slot];
+    if (!next) return;
+    const prev = doc[`${slot}Photo`];
+    if (prev?.publicId && prev.publicId !== next.publicId) stale.push(prev.publicId);
+    doc[`${slot}Photo`] = next;
   };
 
   let doc;
   if (existing) {
-    setSlot(existing, "front", front);
-    setSlot(existing, "side",  side);
-    setSlot(existing, "back",  back);
+    SLOTS.forEach((slot) => applySlot(existing, slot));
     existing.uploadedBy   = user._id;
     existing.uploaderRole = user.role;
-    // Re-set status to PENDING on overwrite so trainer reviews the new
-    // version. Skip if uploader is the same trainer keeping it reviewed.
     if (existing.status !== "PENDING") existing.status = "PENDING";
     await existing.save();
     doc = existing;
@@ -86,20 +107,18 @@ async function create(user, body, files = {}) {
       clientId:     client._id,
       trainerId:    client.trainerId,
       weekNumber,
-      frontPhoto:   fileToPath(front),
-      sidePhoto:    fileToPath(side),
-      backPhoto:    fileToPath(back),
+      frontPhoto:   incoming.front,
+      sidePhoto:    incoming.side,
+      backPhoto:    incoming.back,
       uploadedBy:   user._id,
       uploaderRole: user.role,
       status:       "PENDING",
     });
   }
 
-  // Best-effort cleanup of replaced files. Failures are swallowed; the
-  // DB record is the source of truth.
-  for (const rel of replaced) {
-    const full = path.join(UPLOAD_ROOT, path.basename(rel));
-    fs.promises.unlink(full).catch(() => { /* ignore */ });
+  // Best-effort orphan cleanup. The DB record is the source of truth.
+  for (const publicId of stale) {
+    cloudinary.destroy(publicId).catch(() => { /* ignore */ });
   }
 
   await activityService.record({
@@ -172,19 +191,17 @@ async function setStatus(id, user, { status }) {
 }
 
 /**
- * Hard delete the record and best-effort remove the underlying files.
- * Disk cleanup failures are swallowed — the DB record is the source of
- * truth; orphaned files at worst waste disk and are easy to sweep later.
+ * Hard delete the record and its Cloudinary assets. Asset destruction is
+ * best-effort but attempted for every slot so no orphans are left behind.
  */
 async function remove(id, user) {
   const doc = await loadOwned(id, user);
-  const filePaths = [doc.frontPhoto, doc.sidePhoto, doc.backPhoto].filter(Boolean);
+  const publicIds = SLOTS
+    .map((slot) => doc[`${slot}Photo`]?.publicId)
+    .filter(Boolean);
   await ProgressPhoto.deleteOne({ _id: doc._id });
-  for (const rel of filePaths) {
-    // rel looks like "/uploads/<name>"; resolve to disk path safely.
-    const base = path.basename(rel);
-    const full = path.join(UPLOAD_ROOT, base);
-    fs.promises.unlink(full).catch(() => { /* ignore */ });
+  for (const publicId of publicIds) {
+    cloudinary.destroy(publicId).catch(() => { /* ignore */ });
   }
   return { _id: doc._id, deleted: true };
 }

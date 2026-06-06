@@ -3,7 +3,6 @@
 const { Router } = require("express");
 const authenticate = require("../middleware/auth");
 const { allowRoles } = require("../middleware/roles");
-const { upload } = require("../middleware/upload");
 const {
   create,
   listForClient,
@@ -17,16 +16,12 @@ const router = Router();
 
 router.use(authenticate);
 
-// Three optional file slots — trainer or client can upload Front/Side/Back.
-// CLIENT path resolves clientId from auth; TRAINER/ADMIN pass it in body.
+// Metadata-only upsert. Browser uploads bytes straight to Cloudinary, then
+// posts the resulting per-slot publicIds here. CLIENT path resolves clientId
+// from auth; TRAINER/ADMIN pass it in the JSON body.
 router.post(
   "/",
   allowRoles("TRAINER", "ADMIN", "CLIENT"),
-  upload.fields([
-    { name: "front", maxCount: 1 },
-    { name: "side",  maxCount: 1 },
-    { name: "back",  maxCount: 1 },
-  ]),
   create
 );
 
