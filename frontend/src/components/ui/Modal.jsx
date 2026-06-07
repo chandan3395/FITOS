@@ -48,10 +48,12 @@ const Modal = ({
         aria-hidden="true"
       />
 
-      {/* Panel */}
+      {/* Panel — flex column capped to the viewport so the BODY scrolls
+          internally instead of overflowing the panel / pushing page scroll. */}
       <div
         className={[
           "relative w-full bg-surface border border-border rounded-2xl shadow-glow animate-fade-in",
+          "flex flex-col max-h-[calc(100vh-2rem)] overflow-hidden",
           sizes[size],
           className,
         ]
@@ -60,7 +62,7 @@ const Modal = ({
       >
         {/* Header */}
         {(title || onClose) && (
-          <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-border">
+          <div className="shrink-0 flex items-center justify-between px-6 pt-5 pb-4 border-b border-border">
             {title && (
               <h2 className="text-base font-semibold text-text-primary">{title}</h2>
             )}
@@ -83,12 +85,12 @@ const Modal = ({
           </div>
         )}
 
-        {/* Body */}
-        <div className="px-6 py-5">{children}</div>
+        {/* Body — the single scroll region. */}
+        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5">{children}</div>
 
         {/* Footer */}
         {footer && (
-          <div className="flex items-center justify-end gap-3 px-6 pb-5 pt-2 border-t border-border">
+          <div className="shrink-0 flex items-center justify-end gap-3 px-6 pb-5 pt-2 border-t border-border">
             {footer}
           </div>
         )}
