@@ -191,4 +191,4 @@ All secrets live in `backend/.env` (never exposed to the frontend bundle):
   `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_VERIFY_TOKEN`.
 
 Frontend (`frontend/.env.local`) exposes only `VITE_`-prefixed flags:
-`VITE_ENABLE_GOOGLE_AUTH`, `VITE_DEV_AUTH_BYPASS`.
+`VITE_ENABLE_GOOGLE_AUTH`.

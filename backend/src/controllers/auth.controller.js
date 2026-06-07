@@ -302,7 +302,7 @@ async function activateInvite(req, res, next) {
       }
       const { name: providedName, password } = result.value;
 
-      const email = (invite.email || `${invite.inviteToken.slice(0, 12)}@invite.fitos.local`).toLowerCase();
+      const email = (invite.email || `${invite.inviteToken.slice(0, 12)}@invite.fitos.app`).toLowerCase();
       const existing = await User.findOne({ email });
       if (existing) {
         user = existing;

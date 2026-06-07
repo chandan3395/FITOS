@@ -61,7 +61,7 @@ FITOS/
 │       │   ├── logger.js
 │       │   └── passport.js
 │       ├── middleware/
-│       │   ├── auth.js     ← validates JWT + isActive (+ dev bypass)
+│       │   ├── auth.js     ← validates JWT + isActive (bearer only)
 │       │   ├── roles.js    ← allowRoles helper
 │       │   ├── errorHandler.js
 │       │   ├── notFound.js
@@ -106,7 +106,7 @@ FITOS/
 │       │   ├── index.js  ← mounts all routers under /api
 │       │   ├── auth / client / admin / checkin / progress-photos / uploads
 │       │   ├── workouts / nutrition / workout-templates / nutrition-templates
-│       │   ├── trainer / activity / health / dev .routes.js
+│       │   ├── trainer / activity / health .routes.js
 │       └── utils/
 │           ├── ApiError.js  ← validation() static helper
 │           ├── ApiResponse.js
@@ -116,17 +116,15 @@ FITOS/
     ├── package.json
     ├── vite.config.js       ← /api proxy → localhost:5000
     ├── tailwind.config.js · postcss.config.js · index.html
-    ├── .env.development     ← VITE_DEV_AUTH_BYPASS=true (dev-only)
     ├── .env.example
     └── src/
-        ├── main.jsx · App.jsx (mounts DevRoleSwitcher when bypass on)
+        ├── main.jsx · App.jsx
         ├── routes/AppRoutes.jsx
         ├── constants/{routes,roles,index}.js
         ├── contexts/{AuthContext,ThemeContext,index}.jsx
         ├── hooks/{useAuth,useTheme,index}.js
         ├── lib/
         │   ├── api.js               ← axios + auto-refresh interceptor
-        │   ├── devAuth.js           ← DEV_BYPASS + mock users + role storage
         │   └── imageCompression.js  ← browser WebP compression (max 1200px, q0.8)
         ├── styles/{globals.css, index.css, theme.js}
         ├── components/
@@ -134,7 +132,6 @@ FITOS/
         │   ├── design-system/  (MetricCard, ClientCard, AlertCard, Icons, …)
         │   ├── progress/ComparePhotos.jsx  ← before/after photo compare modal
         │   ├── feedback/States.jsx (Skeleton, EmptyState, ErrorState, Toast)
-        │   ├── dev/DevRoleSwitcher.jsx
         │   └── layouts/{Auth,Admin,Trainer,Client}Layout.jsx
         ├── services/
         │   ├── authService · clientService · adminService · checkinService
@@ -198,15 +195,11 @@ CLOUDINARY_API_SECRET=...
 WHATSAPP_ACCESS_TOKEN=...
 WHATSAPP_PHONE_NUMBER_ID=...
 WHATSAPP_VERIFY_TOKEN=...        # reserved for inbound webhook (later)
-
-# Dev-only bypass (NEVER enable in production)
-DEV_AUTH_BYPASS=false
 ```
 
-### Frontend `.env.local` (or `.env.development`)
+### Frontend `.env.local`
 
 ```
-VITE_DEV_AUTH_BYPASS=true        # dev-only; compiled out of prod builds
 VITE_ENABLE_GOOGLE_AUTH=true     # mirrors backend flag — hides Google CTA
 ```
 
@@ -234,12 +227,9 @@ Flow:
   and at login; disabling also clears the refresh token, so live sessions
   die on next refresh.
 
-### Dev auth bypass
-- Frontend: hard-gated on `import.meta.env.DEV && VITE_DEV_AUTH_BYPASS`;
-  injects a mock user, switchable via the floating `DevRoleSwitcher`.
-- Backend: `DEV_AUTH_BYPASS=true` lets `authenticate()` resolve `req.user`
-  from `x-dev-role` / `x-dev-client-id` headers and unlocks `/api/dev/*`.
-  Never enable in production.
+> There is **no development auth bypass**. The `authenticate` middleware
+> accepts only a valid `Authorization: Bearer <token>`; there is no
+> impersonation, role switching, mock users, or `/api/dev/*` surface.
 
 ### Google OAuth feature flag
 - Backend `ENABLE_GOOGLE_AUTH=false`: passport never loaded,
@@ -432,11 +422,10 @@ All routes mounted under `/api`. `★` = gated by `ENABLE_GOOGLE_AUTH`.
 | DELETE | `/api/admin/admins/:id`                | Remove admin |
 | GET    | `/api/admin/metrics`                   | Platform totals (no PII) |
 
-### Trainer / Activity / Health / Dev
+### Trainer / Activity / Health
 - `GET /api/trainer/metrics` (TRAINER) — real dashboard counts.
 - `GET /api/activity` (TRAINER \| ADMIN) — newest-first activity feed.
 - `GET /api/health` — liveness. `GET /uploads/<file>` — legacy local photos.
-- `GET /api/dev/clients`, `POST /api/dev/session` — dev-only (bypass).
 
 ---
 

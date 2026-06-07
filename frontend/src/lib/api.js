@@ -1,5 +1,4 @@
 import axios from "axios";
-import { DEV_BYPASS, getDevRole, getDevClientId } from "./devAuth";
 
 // ─────────────────────────────────────────────────────────────
 // Token store — in-memory + localStorage for restore on reload.
@@ -35,20 +34,11 @@ const api = axios.create({
   timeout: 15000,
 });
 
-// Attach Authorization on every request. When the dev bypass is on we
-// also forward the current mock role (and the selected client id when
-// impersonating CLIENT) so the backend bypass can resolve the right User.
+// Attach the bearer access token on every request.
 api.interceptors.request.use((config) => {
   config.headers = config.headers || {};
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`;
-  }
-  if (DEV_BYPASS) {
-    const role = getDevRole();
-    const cid  = role === "CLIENT" ? getDevClientId() : null;
-    if (role) config.headers["x-dev-role"] = role;
-    if (cid)  config.headers["x-dev-client-id"] = cid;
-    console.log("[api req]", config.method?.toUpperCase(), config.url, { role, cid });
   }
   return config;
 });
