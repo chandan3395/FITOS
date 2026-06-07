@@ -25,14 +25,26 @@ passport.use(
         }
 
         if (user) {
+          // Admins must use email + password only — never attach Google to
+          // an admin account or let it authenticate via OAuth.
+          if (user.role === "ADMIN") {
+            return done(null, false, { message: "Admins must sign in with email and password" });
+          }
+          // Link Google to the existing TRAINER/CLIENT account (same email,
+          // existing role wins — no duplicate is created).
           if (!user.googleId) {
             user.googleId = profile.id;
+            user.googleLinked = true;
+            await user.save();
+          } else if (!user.googleLinked) {
+            user.googleLinked = true;
             await user.save();
           }
           return done(null, user);
         }
 
         // Recover role from OAuth state parameter (base64-encoded JSON).
+        // Only TRAINER/CLIENT may be created via Google; never ADMIN.
         let role = "CLIENT";
         try {
           const state = JSON.parse(Buffer.from(req.query.state, "base64").toString("utf8"));
@@ -45,6 +57,7 @@ passport.use(
           name: profile.displayName,
           email,
           googleId: profile.id,
+          googleLinked: true,
           profileImage: profile.photos?.[0]?.value,
           role,
         });

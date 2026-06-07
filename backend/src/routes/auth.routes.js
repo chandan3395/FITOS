@@ -5,6 +5,8 @@ const authenticate = require("../middleware/auth");
 const { allowRoles } = require("../middleware/roles");
 const { env } = require("../config/env");
 const {
+  login,
+  setPassword,
   adminLogin,
   trainerLogin,
   trainerSignup,
@@ -19,6 +21,9 @@ const {
 const router = Router();
 
 router.post("/admin/create", authenticate, allowRoles("ADMIN"), createAdmin);
+
+// Role-agnostic email + password login (the CLIENT login path).
+router.post("/login", login);
 
 // Admin login
 router.post("/admin/login", adminLogin);
@@ -50,7 +55,10 @@ if (env.ENABLE_GOOGLE_AUTH) {
 
   router.get(
     "/google/callback",
-    passport.authenticate("google", { session: false, failureRedirect: "/api/auth/google/failure" }),
+    passport.authenticate("google", {
+      session: false,
+      failureRedirect: `${env.CLIENT_ORIGIN}/login?error=google_failed`,
+    }),
     googleCallback
   );
 
@@ -71,6 +79,9 @@ router.post("/refresh", refresh);
 router.post("/logout",  logout);
 
 router.get("/me", authenticate, getCurrentUser);
+
+// Set / change password — trainers & clients (incl. Google-created accounts).
+router.post("/password", authenticate, allowRoles("TRAINER", "CLIENT"), setPassword);
 
 // Client invite — public (the token is the secret)
 router.get("/invite/:token",           getInvite);

@@ -85,6 +85,9 @@ async function googleCallback(req, res, _next) {
     if (!req.user) {
       throw new ApiError(401, "Google authentication failed");
     }
+    if (!req.user.isActive) {
+      return res.redirect(`${env.CLIENT_ORIGIN}/login?error=account_disabled`);
+    }
 
     const accessToken = await issueTokens(req.user, res);
     const params = new URLSearchParams({
@@ -135,6 +138,77 @@ async function logout(req, res, next) {
 
     res.clearCookie(REFRESH_COOKIE, COOKIE_OPTIONS);
     return ApiResponse.ok(res, "Logged out successfully");
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * POST /api/auth/login
+ * Role-agnostic email + password login. Finds the user by email, verifies
+ * the password and active state, and issues the standard token pair. This
+ * is the only password-login path available to CLIENT accounts (admins and
+ * trainers also have role-specific endpoints). It is NOT an auth bypass:
+ * credentials are checked against the real hashed password every time.
+ */
+async function login(req, res, next) {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      throw new ApiError(400, "Email and password are required");
+    }
+
+    const user = await User.findOne({ email: String(email).toLowerCase() }).select("+password");
+    if (!user || !user.password) {
+      throw new ApiError(401, "Invalid credentials");
+    }
+    // Admins are restricted to the dedicated /auth/admin/login path.
+    if (user.role === "ADMIN") {
+      throw new ApiError(403, "Admins must sign in from the admin login");
+    }
+    if (!user.isActive) {
+      throw new ApiError(403, "Account disabled");
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      throw new ApiError(401, "Invalid credentials");
+    }
+
+    const accessToken = await issueTokens(user, res);
+    return ApiResponse.ok(res, "Login successful", { accessToken, user: buildSafeUser(user) });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * POST /api/auth/password  (authenticated TRAINER | CLIENT)
+ * Set or change the caller's password. Accounts created through Google have
+ * no password initially — in that case `currentPassword` is not required.
+ * Once a password exists, changing it requires the correct current one.
+ */
+async function setPassword(req, res, next) {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!newPassword || String(newPassword).length < 8) {
+      throw new ApiError(400, "New password must be at least 8 characters");
+    }
+
+    const user = await User.findById(req.user._id).select("+password");
+    if (!user) throw new ApiError(404, "User not found");
+
+    if (user.password) {
+      if (!currentPassword) {
+        throw new ApiError(400, "Current password is required");
+      }
+      const ok = await bcrypt.compare(currentPassword, user.password);
+      if (!ok) throw new ApiError(401, "Current password is incorrect");
+    }
+
+    user.password = await bcrypt.hash(newPassword, 12);
+    await user.save();
+    return ApiResponse.ok(res, "Password updated");
   } catch (err) {
     next(err);
   }
@@ -346,11 +420,13 @@ async function activateInvite(req, res, next) {
 }
 
 function getCurrentUser(req, res) {
-  const { _id, name, email, role, isActive, profileImage, createdAt, updatedAt } = req.user;
-  return res.status(200).json({ success: true, user: { _id, name, email, role, isActive, profileImage, createdAt, updatedAt } });
+  const { _id, name, email, role, isActive, profileImage, googleLinked, createdAt, updatedAt } = req.user;
+  return res.status(200).json({ success: true, user: { _id, name, email, role, isActive, profileImage, googleLinked, createdAt, updatedAt } });
 }
 
 module.exports = {
+  login,
+  setPassword,
   adminLogin,
   trainerLogin,
   trainerSignup,

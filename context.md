@@ -345,15 +345,17 @@ All routes mounted under `/api`. `★` = gated by `ENABLE_GOOGLE_AUTH`.
 ### Auth
 | Method | Path                                  | Auth     |
 |--------|---------------------------------------|----------|
-| POST   | `/api/auth/admin/login`               | public   |
+| POST   | `/api/auth/login`                     | public   | Email+password for TRAINER \| CLIENT (admins rejected → use admin login) |
+| POST   | `/api/auth/admin/login`               | public   | ADMIN only |
 | POST   | `/api/auth/admin/create`              | ADMIN    |
 | POST   | `/api/auth/trainer/signup`            | public   |
 | POST   | `/api/auth/trainer/login`             | public   |
-| GET    | `/api/auth/google?role=TRAINER\|CLIENT`| public ★|
-| GET    | `/api/auth/google/callback`           | passport ★|
+| POST   | `/api/auth/password`                  | TRAINER \| CLIENT | Set/change password (works for Google-created accounts) |
+| GET    | `/api/auth/google?role=TRAINER\|CLIENT`| public ★| New users created as TRAINER/CLIENT; never ADMIN |
+| GET    | `/api/auth/google/callback`           | passport ★| Links Google to existing same-email TRAINER/CLIENT; admins blocked |
 | POST   | `/api/auth/refresh`                   | cookie   |
 | POST   | `/api/auth/logout`                    | cookie   |
-| GET    | `/api/auth/me`                        | bearer   |
+| GET    | `/api/auth/me`                        | bearer   | Returns `googleLinked` |
 | GET    | `/api/auth/invite/:token`             | public   |
 | POST   | `/api/auth/invite/:token/activate`    | public   |
 

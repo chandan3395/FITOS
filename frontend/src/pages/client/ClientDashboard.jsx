@@ -9,6 +9,7 @@ import workoutService from "../../services/workoutService";
 import nutritionService from "../../services/nutritionService";
 import checkinService from "../../services/checkinService";
 import progressPhotoService from "../../services/progressPhotoService";
+import ChangePasswordCard from "../../components/account/ChangePasswordCard";
 
 const todayDayNumber = () => {
   const jsDay = new Date().getDay();
@@ -210,6 +211,8 @@ const ClientDashboard = () => {
           )}
         </Card.Body>
       </Card>
+
+      <ChangePasswordCard />
     </div>
   );
 };

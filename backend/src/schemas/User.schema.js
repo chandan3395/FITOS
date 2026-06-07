@@ -31,6 +31,13 @@ const userSchema = new mongoose.Schema(
       type: String,
       sparse: true,
     },
+    // True when the account was created via Google or has since linked a
+    // Google identity. Trainers/clients may still set a password and use
+    // email+password login in addition to Google.
+    googleLinked: {
+      type: Boolean,
+      default: false,
+    },
     profileImage: {
       type: String,
     },
