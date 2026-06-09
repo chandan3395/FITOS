@@ -87,8 +87,14 @@ function validateClientPayload(body, opts = {}) {
     else                       value.phone = phone;
   }
 
-  // ── email (optional but format-checked when present) ──────────
-  if (isPresent(body.email)) {
+  // ── email (required) ──────────────────────────────────────────
+  // In the Google-only model a client signs in with Google and is matched
+  // by email, so a real email is mandatory at intake — without it the
+  // client could never be matched and would be locked out. (PATCH/partial
+  // updates only validate format when the field is present.)
+  if (!isPresent(body.email)) {
+    if (!partial) errors.email = "Email is required.";
+  } else {
     const email = String(body.email).trim().toLowerCase();
     if (!EMAIL_RX.test(email)) errors.email = "Enter a valid email address.";
     else                       value.email = email;

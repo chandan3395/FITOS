@@ -5,11 +5,6 @@ async function listTrainers() {
   return res.data?.data?.trainers ?? [];
 }
 
-async function createTrainer(payload) {
-  const res = await api.post("/admin/trainers", payload);
-  return res.data?.data?.trainer ?? null;
-}
-
 async function disableTrainer(id) {
   const res = await api.post(`/admin/trainers/${id}/disable`);
   return res.data?.data?.trainer ?? null;
@@ -53,7 +48,6 @@ async function deleteAdmin(id) {
 
 const adminService = {
   listTrainers,
-  createTrainer,
   disableTrainer,
   enableTrainer,
   getPlatformMetrics,

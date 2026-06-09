@@ -114,12 +114,7 @@ const AdminDashboard = () => {
           <div className="p-6">
             <EmptyState
               title="No trainers yet"
-              description="Create the first trainer from the Trainer Management page."
-              action={
-                <Link to={ROUTES.ADMIN_TRAINERS}>
-                  <Button>+ Create Trainer</Button>
-                </Link>
-              }
+              description="Trainers appear here once they sign in with Google."
             />
           </div>
         ) : (

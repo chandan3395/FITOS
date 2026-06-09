@@ -5,6 +5,7 @@ const { validateClientPayload } = require("../../src/validators/clientPayload.va
 const baseline = () => ({
   name: "Test Client",
   phone: "+91 99999 88888",
+  email: "test.client@fitos.app",
   height: 170,
   startingWeight: 70,
   targetWeight: 65,

@@ -10,13 +10,6 @@ async function listTrainers(_req, res, next) {
   } catch (e) { next(e); }
 }
 
-async function createTrainer(req, res, next) {
-  try {
-    const trainer = await adminService.createTrainer(req.body);
-    return ApiResponse.created(res, "Trainer created", { trainer });
-  } catch (e) { next(e); }
-}
-
 async function disableTrainer(req, res, next) {
   try {
     const trainer = await adminService.setTrainerActive(req.params.id, false);
@@ -76,7 +69,6 @@ async function deleteAdmin(req, res, next) {
 
 module.exports = {
   listTrainers,
-  createTrainer,
   disableTrainer,
   enableTrainer,
   getPlatformMetrics,

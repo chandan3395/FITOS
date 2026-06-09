@@ -58,6 +58,7 @@ describe("validateClientPayload — missing required fields", () => {
   test.each([
     ["name",           "Name is required."],
     ["phone",          "Phone is required."],
+    ["email",          "Email is required."],
     ["height",         "Height is required."],
     ["startingWeight", "Starting weight is required."],
     ["targetWeight",   "Target weight is required."],
@@ -80,7 +81,7 @@ describe("validateClientPayload — missing required fields", () => {
     const res = validateClientPayload({});
     expect(res.ok).toBe(false);
     expect(Object.keys(res.errors).sort()).toEqual(
-      ["goal", "height", "name", "phone", "startingWeight", "targetWeight"].sort()
+      ["email", "goal", "height", "name", "phone", "startingWeight", "targetWeight"].sort()
     );
   });
 });

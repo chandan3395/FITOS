@@ -23,6 +23,7 @@ async function issueInvite(client) {
 
   await ClientInvite.create({
     trainerId:  client.trainerId,
+    clientId:   client._id,
     clientName: client.name,
     phone:      client.phone,
     email:      client.email,

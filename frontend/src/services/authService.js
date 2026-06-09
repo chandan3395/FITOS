@@ -13,39 +13,6 @@ async function adminLogin({ email, password }) {
   return user;
 }
 
-/** POST /api/auth/login — role-agnostic email/password login (clients + QA) */
-async function login({ email, password }) {
-  const res = await api.post("/auth/login", { email, password });
-  const { accessToken, user } = res.data?.data ?? {};
-  if (!accessToken) throw new Error("Login response missing accessToken");
-  setAccessToken(accessToken);
-  return user;
-}
-
-/** POST /api/auth/trainer/login — email/password login for trainers */
-async function trainerLogin({ email, password }) {
-  const res = await api.post("/auth/trainer/login", { email, password });
-  const { accessToken, user } = res.data?.data ?? {};
-  if (!accessToken) throw new Error("Login response missing accessToken");
-  setAccessToken(accessToken);
-  return user;
-}
-
-/** POST /api/auth/trainer/signup — open trainer self-signup */
-async function trainerSignup({ name, email, password }) {
-  const res = await api.post("/auth/trainer/signup", { name, email, password });
-  const { accessToken, user } = res.data?.data ?? {};
-  if (!accessToken) throw new Error("Signup response missing accessToken");
-  setAccessToken(accessToken);
-  return user;
-}
-
-/** POST /api/auth/password — set/change password (trainer & client) */
-async function setPassword({ currentPassword, newPassword }) {
-  const res = await api.post("/auth/password", { currentPassword, newPassword });
-  return res.data ?? null;
-}
-
 /** GET /api/auth/me — authenticated profile fetch */
 async function getCurrentUser() {
   const res = await api.get("/auth/me");
@@ -62,6 +29,6 @@ async function logout() {
   setAccessToken(null);
 }
 
-const authService = { login, setPassword, adminLogin, trainerLogin, trainerSignup, getCurrentUser, logout };
+const authService = { adminLogin, getCurrentUser, logout };
 
 export default authService;

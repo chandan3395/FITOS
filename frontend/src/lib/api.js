@@ -80,8 +80,7 @@ api.interceptors.response.use(
       status !== 401 ||
       !original ||
       original._retried ||
-      original.url?.includes("/auth/refresh") ||
-      original.url?.includes("/auth/login")
+      original.url?.includes("/auth/refresh")
     ) {
       return Promise.reject(error);
     }

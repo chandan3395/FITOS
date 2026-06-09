@@ -12,9 +12,9 @@ FITOS is a fitness-coaching platform with three roles:
 
 | Role        | Signup path                              | What they do                                          |
 |-------------|------------------------------------------|-------------------------------------------------------|
-| **ADMIN**   | Bootstrapped manually + admin-created    | Platform operator. Manages trainers & admins. No client PII. |
-| **TRAINER** | Created by admin · Google OAuth (gated)  | Onboards clients, builds workout/nutrition plans & templates, reviews check-ins & photos. |
-| **CLIENT**  | Invite link from trainer                 | Activates account, submits check-ins, uploads progress photos, sees own plans & progress. |
+| **ADMIN**   | Bootstrapped manually + admin-created. Sign in with **email + password only**. | Platform operator. Lists/enables/disables trainers, manages admins. No client PII. |
+| **TRAINER** | **Self-registers via Google sign-in only** (gated). No admin-created trainers, no password. | Onboards clients, builds workout/nutrition plans & templates, reviews check-ins & photos. |
+| **CLIENT**  | Invite link from trainer → activates, then signs in with **Google only** (matched by email). No password. | Activates account, submits check-ins, uploads progress photos, sees own plans & progress. |
 
 No in-app messaging. Trainers deliver activation links to clients via
 **WhatsApp** (Meta Cloud API, send-only foundation) or out-of-band
@@ -211,6 +211,18 @@ VITE_ENABLE_GOOGLE_AUTH=true     # mirrors backend flag — hides Google CTA
 
 ## 5. Authentication model
 
+**Sign-in model (per role):**
+- **TRAINER & CLIENT — Google OAuth only.** There is no email/password path
+  for them: no `/auth/login`, no `/auth/trainer/login`, no `/auth/trainer/signup`,
+  no `/auth/password`. Trainer/client `User` documents never store a password.
+  A trainer self-registers the first time they sign in with Google; a client
+  activates via their invite link (which provisions the account) and then signs
+  in with Google. Both are matched/linked by **email**, so the client's invite
+  must carry a real email (enforced at intake — see §7).
+- **ADMIN — email + password only.** Admins authenticate at `/auth/admin/login`
+  and are never allowed through Google OAuth. Email is normalized to lowercase
+  on both create and login so casing can't lock an admin out.
+
 | Token         | Lifetime | Storage                                  |
 |---------------|----------|------------------------------------------|
 | Access token  | 10 min   | JS memory (mirrored to localStorage)     |
@@ -261,8 +273,12 @@ refreshToken (select:false), timestamps`
 Indexes: `{trainerId}`, `{trainerId, status}`. All onboarding fields optional.
 
 ### ClientInvite
-`trainerId, clientName, phone, email, inviteToken (unique), expiresAt,
-isUsed, timestamps`. Indexes: `{trainerId, isUsed}`, `{inviteToken, expiresAt}`.
+`trainerId, clientId (ref Client), clientName, phone, email, inviteToken
+(unique), expiresAt, isUsed, timestamps`. Indexes: `{trainerId, isUsed}`,
+`{inviteToken, expiresAt}`. Activation resolves the client by `clientId`
+(falling back to `clientName` only for legacy invites minted before the
+field existed). `email` carries the client's real address — required so the
+activated CLIENT can be matched to their Google account.
 
 ### CheckIn
 `clientId, trainerId, weight, sleep, water, energy (1–5), mood (1–5), notes,
@@ -331,7 +347,11 @@ envelope:
 
 Validators: `clientPayload` (strict + partial), `activationPayload`,
 `workoutPayload`, `nutritionPayload`, `workoutTemplatePayload`,
-`nutritionTemplatePayload`. Macro/body ranges are shared across
+`nutritionTemplatePayload`. `clientPayload` requires **email** (alongside
+name, phone, height, startingWeight, targetWeight, goal) — a real client
+email is mandatory because the activated client is matched to Google by it.
+`activationPayload` accepts only an optional display-name (no password).
+Macro/body ranges are shared across
 client onboarding, plans, and templates so values flow through without
 re-validation. Schema-level min/max/maxlength/enum mirror the validators
 as defense-in-depth.
@@ -345,19 +365,19 @@ All routes mounted under `/api`. `★` = gated by `ENABLE_GOOGLE_AUTH`.
 ### Auth
 | Method | Path                                  | Auth     |
 |--------|---------------------------------------|----------|
-| POST   | `/api/auth/login`                     | public   | Email+password for TRAINER \| CLIENT (admins rejected → use admin login) |
-| POST   | `/api/auth/admin/login`               | public   | ADMIN only |
-| POST   | `/api/auth/admin/create`              | ADMIN    |
-| POST   | `/api/auth/trainer/signup`            | public   |
-| POST   | `/api/auth/trainer/login`             | public   |
-| POST   | `/api/auth/password`                  | TRAINER \| CLIENT | Set/change password (works for Google-created accounts) |
-| GET    | `/api/auth/google?role=TRAINER\|CLIENT`| public ★| New users created as TRAINER/CLIENT; never ADMIN |
+| POST   | `/api/auth/admin/login`               | public   | ADMIN only — the **only** email+password path. Email lowercased before lookup. |
+| POST   | `/api/auth/admin/create`              | ADMIN    | Stores admin email lowercased |
+| GET    | `/api/auth/google?role=TRAINER\|CLIENT`| public ★| Trainer/client sign-in. New users created as TRAINER/CLIENT; never ADMIN |
 | GET    | `/api/auth/google/callback`           | passport ★| Links Google to existing same-email TRAINER/CLIENT; admins blocked |
 | POST   | `/api/auth/refresh`                   | cookie   |
 | POST   | `/api/auth/logout`                    | cookie   |
 | GET    | `/api/auth/me`                        | bearer   | Returns `googleLinked` |
 | GET    | `/api/auth/invite/:token`             | public   |
-| POST   | `/api/auth/invite/:token/activate`    | public   |
+| POST   | `/api/auth/invite/:token/activate`    | public   | Provisions the CLIENT user (no password) + links `Client.userId`. Rejects if the invite has no real email. |
+
+> Removed in the Google-only migration: `POST /api/auth/login`,
+> `/api/auth/trainer/login`, `/api/auth/trainer/signup`, `/api/auth/password`.
+> Trainers and clients have no email/password endpoints.
 
 ### Clients
 | Method | Path                       | Auth             | Notes |
@@ -416,8 +436,7 @@ All routes mounted under `/api`. `★` = gated by `ENABLE_GOOGLE_AUTH`.
 | Method | Path                                   | Notes |
 |--------|----------------------------------------|-------|
 | GET    | `/api/admin/trainers`                  | List w/ client counts |
-| POST   | `/api/admin/trainers`                  | Create trainer |
-| POST   | `/api/admin/trainers/:id/disable` `/enable` | Toggle isActive (disable clears refresh) |
+| POST   | `/api/admin/trainers/:id/disable` `/enable` | Toggle isActive (disable clears refresh). No create route — trainers self-register via Google. |
 | GET    | `/api/admin/admins`                    | List admins |
 | POST   | `/api/admin/admins`                    | Create admin |
 | POST   | `/api/admin/admins/:id/disable` `/enable` | Toggle admin |
@@ -495,7 +514,9 @@ frontend-only fullscreen modal grouping any two weeks by pose
 3. **Hidden fields** — `User.refreshToken` / `User.password` are `select:false`.
 4. **JWT middleware** — validates bearer token AND `isActive`.
 5. **Disable cascade** — disabling clears `refreshToken`.
-6. **Cookies** — refresh cookie `httpOnly + sameSite:"strict"`, `secure` in prod.
+6. **Cookies** — refresh cookie `httpOnly`; in production `sameSite:"none" +
+   secure:true` (so the cookie survives the cross-domain Google OAuth redirect),
+   in development `sameSite:"lax" + secure:false`.
 7. **Uploads** — signed direct-to-Cloudinary; backend never handles bytes.
    Signatures are scoped to a client the caller owns/is.
 8. **Invite tokens** — 32-byte random, 72h expiry.
@@ -506,30 +527,33 @@ frontend-only fullscreen modal grouping any two weeks by pose
 ## 12. Working trainer flow (end-to-end)
 
 ```
-1. Admin creates trainer → POST /api/admin/trainers
-2. Trainer logs in (email/password or Google) → /trainer/dashboard
-3. Dashboard: real metrics + activity feed + attention list
-4. +Add Client → 5-step wizard → POST /api/clients → { client, invite }
-   → activation panel: Copy link · Copy WhatsApp message · Send WhatsApp Invite
-5. Send invite via WhatsApp (POST /api/clients/:id/invite) or share link
-6. Client opens /activate/:token → sets password → CLIENT user created,
-   Client.userId linked → /client/dashboard
-7. Trainer on /trainer/client/:id:
+1. Trainer self-registers by signing in with Google → /trainer/dashboard
+   (admins only list/enable/disable trainers; they cannot create them)
+2. Dashboard: real metrics + activity feed + attention list
+3. +Add Client → 5-step wizard (email REQUIRED) → POST /api/clients
+   → { client, invite } → activation panel: Copy link · Copy WhatsApp
+   message · Send WhatsApp Invite
+4. Send invite via WhatsApp (POST /api/clients/:id/invite) or share link
+5. Client opens /activate/:token → one-tap activate (no password) → CLIENT
+   user created, Client.userId linked → /client/dashboard. Next time the
+   client signs in with Google using the same email.
+6. Trainer on /trainer/client/:id:
    - Overview (35+ fields, last check-in, Invite Sent date)
    - Check-ins (form + list + approve/flag)
    - Photos (Cloudinary upload front/side/back, comment, Compare Photos)
    - Workout / Nutrition plan tabs (build, publish, archive, reassign)
    - Notes (privateNotes)
    - Resend Invite from header
-8. Templates page: build reusable workout/nutrition blueprints; assign to clients
-9. Admin can disable a trainer → refresh invalidated → next request 401
+7. Templates page: build reusable workout/nutrition blueprints; assign to clients
+8. Admin can disable a trainer → refresh invalidated → next request 401
 ```
 
 ---
 
 ## 13. What's built vs. not
 
-**Built**: auth (JWT + OAuth-gated), admin trainer/admin management,
+**Built**: auth (admin email+password; trainer/client Google-only, OAuth-gated),
+admin trainer management (list/enable/disable) + admin management,
 client onboarding (35+ fields), check-ins, **Cloudinary progress photos +
 Compare Mode**, workout plans + completions, nutrition plans,
 workout/nutrition templates, activity feed, **WhatsApp invite foundation**,
@@ -549,7 +573,7 @@ Cloudinary migration script run (see §2 scripts).
 cd backend && npm install
 # create .env from .env.example (Cloudinary required; WhatsApp optional)
 npm run dev       # nodemon   ·   npm start = production
-npm test          # Jest — 10 suites, 184 tests, ~1s
+npm test          # Jest — 10 suites, 181 tests, ~1s
 
 # Frontend
 cd frontend && npm install
@@ -582,13 +606,13 @@ One-shot scripts (run from `backend/`):
 
 ## 16. Test coverage
 
-Jest — **10 suites, 184 tests** passing:
+Jest — **10 suites, 181 tests** passing:
 
 | Suite | Covers |
 |---|---|
-| `validators/clientPayload.test.js` | onboarding happy/sad paths, email/phone/number range validation, enums, body guards |
+| `validators/clientPayload.test.js` | onboarding happy/sad paths, required email + phone/number range validation, enums, body guards |
 | `validators/clientPayload.expanded.test.js` | full payload, dob→age, future-dob rejection, length caps |
-| `validators/activationPayload.test.js` | password/name rules, body shape |
+| `validators/activationPayload.test.js` | optional display-name rules + body shape (no password) |
 | `validators/workoutPayload.test.js` | plan + exercise validation |
 | `validators/nutritionPayload.test.js` | macro/preference validation |
 | `validators/workoutTemplatePayload.test.js` | template + exercise validation |

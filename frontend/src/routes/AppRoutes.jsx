@@ -53,7 +53,7 @@ const AppRoutes = () => (
     </Route>
 
     {/* Trainer */}
-    <Route path="/trainer" element={<RequireAuth roles={["TRAINER", "ADMIN"]}><TrainerLayout /></RequireAuth>}>
+    <Route path="/trainer" element={<RequireAuth roles={["TRAINER"]}><TrainerLayout /></RequireAuth>}>
       <Route index               element={<Navigate to={ROUTES.TRAINER_DASHBOARD} replace />} />
       <Route path="dashboard"    element={<TrainerDashboard />} />
       <Route path="clients"      element={<TrainerClientsPage />} />

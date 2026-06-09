@@ -1,45 +1,39 @@
 "use strict";
 
-const { validateActivationPayload, PASSWORD_MIN } = require("../../src/validators/activationPayload.validator");
+const { validateActivationPayload, NAME_MIN } = require("../../src/validators/activationPayload.validator");
 
 describe("validateActivationPayload", () => {
-  test("accepts a valid password", () => {
-    const res = validateActivationPayload({ password: "correcthorse" });
+  test("accepts an empty body (no required fields)", () => {
+    const res = validateActivationPayload({});
     expect(res.ok).toBe(true);
-    expect(res.value.password).toBe("correcthorse");
+    expect(res.value).toEqual({});
+  });
+
+  test.each([null, undefined])("treats a missing body (%p) as valid", (body) => {
+    const res = validateActivationPayload(body);
+    expect(res.ok).toBe(true);
+    expect(res.value).toEqual({});
   });
 
   test("accepts an optional name and trims it", () => {
-    const res = validateActivationPayload({ name: "  Priya  ", password: "correcthorse" });
+    const res = validateActivationPayload({ name: "  Priya  " });
     expect(res.ok).toBe(true);
     expect(res.value.name).toBe("Priya");
   });
 
-  test.each([null, undefined, ""])("rejects empty password (%p)", (password) => {
-    const res = validateActivationPayload({ password });
-    expect(res.ok).toBe(false);
-    expect(res.errors.password).toBe("Password is required.");
+  test("ignores password — it is no longer part of activation", () => {
+    const res = validateActivationPayload({ password: "anything" });
+    expect(res.ok).toBe(true);
+    expect(res.value.password).toBeUndefined();
   });
 
-  test("rejects password shorter than the min", () => {
-    const res = validateActivationPayload({ password: "a".repeat(PASSWORD_MIN - 1) });
+  test("rejects a name that's too short", () => {
+    const res = validateActivationPayload({ name: "A" });
     expect(res.ok).toBe(false);
-    expect(res.errors.password).toMatch(new RegExp(`at least ${PASSWORD_MIN}`));
+    expect(res.errors.name).toMatch(new RegExp(`at least ${NAME_MIN}`));
   });
 
-  test("rejects non-string password", () => {
-    const res = validateActivationPayload({ password: 12345678 });
-    expect(res.ok).toBe(false);
-    expect(res.errors.password).toMatch(/string/i);
-  });
-
-  test("rejects name that's too short", () => {
-    const res = validateActivationPayload({ name: "A", password: "correcthorse" });
-    expect(res.ok).toBe(false);
-    expect(res.errors.name).toBeDefined();
-  });
-
-  test.each([null, undefined, 5, "x"])("rejects non-object body: %p", (body) => {
+  test.each([5, "x"])("rejects a non-object body: %p", (body) => {
     const res = validateActivationPayload(body);
     expect(res.ok).toBe(false);
     expect(res.errors._root).toBeDefined();

@@ -76,22 +76,6 @@ export const AuthProvider = ({ children }) => {
     return () => setUnauthorizedHandler(null);
   }, []);
 
-  const login = useCallback(async ({ email, password }) => {
-    setError(null);
-    setStatus(STATUS.LOADING);
-    try {
-      const u = await authService.login({ email, password });
-      setUser(u);
-      setStatus(STATUS.AUTHED);
-      return u;
-    } catch (err) {
-      const msg = err?.response?.data?.message || err?.message || "Login failed";
-      setError(msg);
-      setStatus(STATUS.GUEST);
-      throw new Error(msg);
-    }
-  }, []);
-
   const adminLogin = useCallback(async ({ email, password }) => {
     setError(null);
     setStatus(STATUS.LOADING);
@@ -102,38 +86,6 @@ export const AuthProvider = ({ children }) => {
       return u;
     } catch (err) {
       const msg = err?.response?.data?.message || err?.message || "Login failed";
-      setError(msg);
-      setStatus(STATUS.GUEST);
-      throw new Error(msg);
-    }
-  }, []);
-
-  const trainerLogin = useCallback(async ({ email, password }) => {
-    setError(null);
-    setStatus(STATUS.LOADING);
-    try {
-      const u = await authService.trainerLogin({ email, password });
-      setUser(u);
-      setStatus(STATUS.AUTHED);
-      return u;
-    } catch (err) {
-      const msg = err?.response?.data?.message || err?.message || "Login failed";
-      setError(msg);
-      setStatus(STATUS.GUEST);
-      throw new Error(msg);
-    }
-  }, []);
-
-  const trainerSignup = useCallback(async ({ name, email, password }) => {
-    setError(null);
-    setStatus(STATUS.LOADING);
-    try {
-      const u = await authService.trainerSignup({ name, email, password });
-      setUser(u);
-      setStatus(STATUS.AUTHED);
-      return u;
-    } catch (err) {
-      const msg = err?.response?.data?.message || err?.message || "Signup failed";
       setError(msg);
       setStatus(STATUS.GUEST);
       throw new Error(msg);
@@ -152,10 +104,7 @@ export const AuthProvider = ({ children }) => {
     error,
     isReady:         status !== STATUS.IDLE && status !== STATUS.LOADING,
     isAuthenticated: status === STATUS.AUTHED,
-    login,
     adminLogin,
-    trainerLogin,
-    trainerSignup,
     logout,
   };
 

@@ -56,39 +56,6 @@ async function listTrainers() {
   });
 }
 
-/** POST /api/admin/trainers — admin-created trainer with password. */
-async function createTrainer(body) {
-  const errors = {};
-  if (!body || typeof body !== "object") {
-    return { ok: false, errors: { _root: "Body required" } };
-  }
-  const name = String(body.name || "").trim();
-  const email = String(body.email || "").trim().toLowerCase();
-  const password = body.password;
-
-  if (name.length < 2)            errors.name = "Name must be at least 2 characters.";
-  if (!EMAIL_RX.test(email))      errors.email = "Enter a valid email address.";
-  if (!password || typeof password !== "string" || password.length < 8)
-    errors.password = "Password must be at least 8 characters.";
-
-  if (Object.keys(errors).length) throw ApiError.validation(errors);
-
-  if (await User.findOne({ email })) {
-    throw new ApiError(409, "Email already in use");
-  }
-
-  const hashed = await bcrypt.hash(password, 12);
-  const trainer = await User.create({
-    name,
-    email,
-    password: hashed,
-    role:     "TRAINER",
-    isActive: true,
-  });
-
-  return buildSafeTrainer(trainer);
-}
-
 async function setTrainerActive(id, isActive) {
   if (!mongoose.isValidObjectId(id)) throw new ApiError(400, "Invalid trainer id");
   const trainer = await User.findOneAndUpdate(
@@ -214,7 +181,6 @@ async function deleteAdmin(currentUser, id) {
 
 module.exports = {
   listTrainers,
-  createTrainer,
   setTrainerActive,
   getPlatformMetrics,
   // Admin management

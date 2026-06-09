@@ -1,46 +1,36 @@
 "use strict";
 
-const PASSWORD_MIN = 8;
-const PASSWORD_MAX = 256;
+const NAME_MIN = 2;
+const NAME_MAX = 200;
 
 /**
  * Validates the body of POST /api/auth/invite/:token/activate.
  *
- * Returns `{ ok, errors, value }` mirroring the client validator.
+ * Activation no longer sets a password — clients authenticate via Google
+ * using the same email. The only accepted field is an optional display-name
+ * override; an empty/absent body is valid.
  *
- * Rules:
- *   - password required, length in [PASSWORD_MIN, PASSWORD_MAX]
- *   - name optional but length-checked when present
+ * Returns `{ ok, errors, value }` mirroring the client validator.
  */
 function validateActivationPayload(body) {
   const errors = {};
   const value  = {};
 
-  if (!body || typeof body !== "object") {
+  // An empty body is fine — there are no required activation fields.
+  if (body == null) return { ok: true, value };
+  if (typeof body !== "object") {
     return { ok: false, errors: { _root: "Request body must be an object." } };
   }
 
   if (body.name != null && body.name !== "") {
     const name = String(body.name).trim();
-    if (name.length < 2)        errors.name = "Name must be at least 2 characters.";
-    else if (name.length > 200) errors.name = "Name is too long.";
-    else                        value.name = name;
-  }
-
-  if (body.password == null || body.password === "") {
-    errors.password = "Password is required.";
-  } else if (typeof body.password !== "string") {
-    errors.password = "Password must be a string.";
-  } else if (body.password.length < PASSWORD_MIN) {
-    errors.password = `Password must be at least ${PASSWORD_MIN} characters.`;
-  } else if (body.password.length > PASSWORD_MAX) {
-    errors.password = "Password is too long.";
-  } else {
-    value.password = body.password;
+    if (name.length < NAME_MIN)      errors.name = `Name must be at least ${NAME_MIN} characters.`;
+    else if (name.length > NAME_MAX) errors.name = "Name is too long.";
+    else                             value.name = name;
   }
 
   if (Object.keys(errors).length > 0) return { ok: false, errors };
   return { ok: true, value };
 }
 
-module.exports = { validateActivationPayload, PASSWORD_MIN, PASSWORD_MAX };
+module.exports = { validateActivationPayload, NAME_MIN, NAME_MAX };

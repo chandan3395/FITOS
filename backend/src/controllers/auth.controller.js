@@ -15,10 +15,15 @@ const activityService = require("../services/activity.service");
 
 const REFRESH_COOKIE = "refreshToken";
 
+// In production the frontend and backend are served from different domains,
+// so the refresh cookie must be SameSite=None + Secure to survive the Google
+// OAuth cross-site redirect. In development they share localhost, so Lax +
+// non-secure keeps the cookie working over plain HTTP.
+const IS_PROD = env.NODE_ENV === "production";
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: env.NODE_ENV === "production",
-  sameSite: "strict",
+  secure: IS_PROD,
+  sameSite: IS_PROD ? "none" : "lax",
 };
 
 function buildSafeUser(user) {
@@ -50,7 +55,10 @@ async function adminLogin(req, res, next) {
       throw new ApiError(400, "Email and password are required");
     }
 
-    const user = await User.findOne({ email, role: "ADMIN" }).select("+password");
+    // Stored admin emails are lowercased (see createAdmin + schema), so
+    // normalize the lookup to avoid a casing mismatch locking admins out.
+    const normalizedEmail = String(email).toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail, role: "ADMIN" }).select("+password");
     if (!user) {
       throw new ApiError(401, "Invalid credentials");
     }
@@ -143,155 +151,6 @@ async function logout(req, res, next) {
   }
 }
 
-/**
- * POST /api/auth/login
- * Role-agnostic email + password login. Finds the user by email, verifies
- * the password and active state, and issues the standard token pair. This
- * is the only password-login path available to CLIENT accounts (admins and
- * trainers also have role-specific endpoints). It is NOT an auth bypass:
- * credentials are checked against the real hashed password every time.
- */
-async function login(req, res, next) {
-  try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      throw new ApiError(400, "Email and password are required");
-    }
-
-    const user = await User.findOne({ email: String(email).toLowerCase() }).select("+password");
-    if (!user || !user.password) {
-      throw new ApiError(401, "Invalid credentials");
-    }
-    // Admins are restricted to the dedicated /auth/admin/login path.
-    if (user.role === "ADMIN") {
-      throw new ApiError(403, "Admins must sign in from the admin login");
-    }
-    if (!user.isActive) {
-      throw new ApiError(403, "Account disabled");
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      throw new ApiError(401, "Invalid credentials");
-    }
-
-    const accessToken = await issueTokens(user, res);
-    return ApiResponse.ok(res, "Login successful", { accessToken, user: buildSafeUser(user) });
-  } catch (err) {
-    next(err);
-  }
-}
-
-/**
- * POST /api/auth/password  (authenticated TRAINER | CLIENT)
- * Set or change the caller's password. Accounts created through Google have
- * no password initially — in that case `currentPassword` is not required.
- * Once a password exists, changing it requires the correct current one.
- */
-async function setPassword(req, res, next) {
-  try {
-    const { currentPassword, newPassword } = req.body;
-    if (!newPassword || String(newPassword).length < 8) {
-      throw new ApiError(400, "New password must be at least 8 characters");
-    }
-
-    const user = await User.findById(req.user._id).select("+password");
-    if (!user) throw new ApiError(404, "User not found");
-
-    if (user.password) {
-      if (!currentPassword) {
-        throw new ApiError(400, "Current password is required");
-      }
-      const ok = await bcrypt.compare(currentPassword, user.password);
-      if (!ok) throw new ApiError(401, "Current password is incorrect");
-    }
-
-    user.password = await bcrypt.hash(newPassword, 12);
-    await user.save();
-    return ApiResponse.ok(res, "Password updated");
-  } catch (err) {
-    next(err);
-  }
-}
-
-/**
- * POST /api/auth/trainer/login
- * Email + password login for the TRAINER role.
- */
-async function trainerLogin(req, res, next) {
-  try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      throw new ApiError(400, "Email and password are required");
-    }
-
-    const user = await User.findOne({ email, role: "TRAINER" }).select("+password");
-    if (!user || !user.password) {
-      throw new ApiError(401, "Invalid credentials");
-    }
-    if (!user.isActive) {
-      throw new ApiError(403, "Account disabled — contact your platform admin");
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      throw new ApiError(401, "Invalid credentials");
-    }
-
-    const accessToken = await issueTokens(user, res);
-    return ApiResponse.ok(res, "Login successful", {
-      accessToken,
-      user: buildSafeUser(user),
-    });
-  } catch (err) {
-    next(err);
-  }
-}
-
-/**
- * POST /api/auth/trainer/signup
- * Open self-signup for TRAINER role with email + password.
- * Issues the same access + refresh token pair as login so the
- * new trainer is logged in immediately.
- *
- * Trainers may still also sign up via Google OAuth; this is an
- * additional path that does not change the OAuth flow.
- */
-async function trainerSignup(req, res, next) {
-  try {
-    const { name, email, password } = req.body;
-
-    if (!name || !email || !password) {
-      throw new ApiError(400, "Name, email and password are required");
-    }
-    if (password.length < 8) {
-      throw new ApiError(400, "Password must be at least 8 characters");
-    }
-
-    const existing = await User.findOne({ email });
-    if (existing) {
-      throw new ApiError(409, "Email already in use");
-    }
-
-    const hashed = await bcrypt.hash(password, 12);
-    const user = await User.create({
-      name,
-      email,
-      password: hashed,
-      role: "TRAINER",
-      isActive: true,
-    });
-
-    const accessToken = await issueTokens(user, res);
-    return ApiResponse.created(res, "Trainer account created", {
-      accessToken,
-      user: buildSafeUser(user),
-    });
-  } catch (err) {
-    next(err);
-  }
-}
-
 async function createAdmin(req, res, next) {
   try {
     const { name, email, password } = req.body;
@@ -300,7 +159,10 @@ async function createAdmin(req, res, next) {
       throw new ApiError(400, "Name, email and password are required");
     }
 
-    const existing = await User.findOne({ email });
+    // Normalize so the stored email always matches what adminLogin looks up.
+    const normalizedEmail = String(email).toLowerCase().trim();
+
+    const existing = await User.findOne({ email: normalizedEmail });
     if (existing) {
       throw new ApiError(409, "Email already in use");
     }
@@ -309,7 +171,7 @@ async function createAdmin(req, res, next) {
 
     await User.create({
       name,
-      email,
+      email: normalizedEmail,
       password: hashed,
       role: "ADMIN",
       isActive: true,
@@ -349,9 +211,10 @@ async function getInvite(req, res, next) {
  * issues tokens, and returns them. Idempotent: if the User already exists
  * (re-clicking the activation link) we just log them in.
  *
- * Body: { name?, password? } — both optional. If no password is set the
- * client can still log back in by clicking the same activation link until
- * it expires, or via Google OAuth using the same email.
+ * Clients never get a password: after this first session they sign back in
+ * with Google using the same email (the Google strategy links by email).
+ *
+ * Body: { name? } — optional display-name override.
  */
 async function activateInvite(req, res, next) {
   try {
@@ -359,33 +222,49 @@ async function activateInvite(req, res, next) {
     if (!invite) throw new ApiError(404, "Invitation not found");
     if (invite.expiresAt < new Date()) throw new ApiError(410, "Invitation has expired");
 
-    const client = await Client.findOne({ trainerId: invite.trainerId, name: invite.clientName });
+    // Prefer the unambiguous clientId reference. Fall back to the legacy
+    // name match only for invites minted before clientId was recorded.
+    let client = null;
+    if (invite.clientId) {
+      client = await Client.findById(invite.clientId);
+    }
+    if (!client) {
+      client = await Client.findOne({ trainerId: invite.trainerId, name: invite.clientName });
+    }
     if (!client) throw new ApiError(404, "Linked client record was not found");
 
     let user;
     if (client.userId) {
-      // Already activated — just sign them in. Password not re-required
-      // because the existing user already has credentials on file.
+      // Already activated — just sign them in.
       user = await User.findById(client.userId);
       if (!user) throw new ApiError(500, "Client account record missing");
     } else {
-      // First-time activation — password is REQUIRED and validated here.
+      // First-time activation. An optional display name may be supplied;
+      // no password is created — clients authenticate via Google.
       const result = validateActivationPayload(req.body);
       if (!result.ok) {
         throw ApiError.validation(result.errors);
       }
-      const { name: providedName, password } = result.value;
+      const { name: providedName } = result.value;
 
-      const email = (invite.email || `${invite.inviteToken.slice(0, 12)}@invite.fitos.app`).toLowerCase();
+      // A real email is mandatory: clients sign in with Google and are
+      // matched by email. A synthetic placeholder address could never match
+      // a Google account, permanently locking the client out — so reject
+      // the activation and surface a clear, actionable error instead.
+      if (!invite.email) {
+        throw new ApiError(
+          400,
+          "This invite has no email on file. Ask your trainer to re-send it with your Google email address."
+        );
+      }
+      const email = invite.email.toLowerCase();
       const existing = await User.findOne({ email });
       if (existing) {
         user = existing;
       } else {
-        const hashed = await bcrypt.hash(password, 12);
         user = await User.create({
           name:     providedName || invite.clientName,
           email,
-          password: hashed,
           role:     "CLIENT",
           isActive: true,
         });
@@ -425,11 +304,7 @@ function getCurrentUser(req, res) {
 }
 
 module.exports = {
-  login,
-  setPassword,
   adminLogin,
-  trainerLogin,
-  trainerSignup,
   googleCallback,
   refresh,
   logout,

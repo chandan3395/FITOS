@@ -5,7 +5,6 @@ const authenticate = require("../middleware/auth");
 const { allowRoles } = require("../middleware/roles");
 const {
   listTrainers,
-  createTrainer,
   disableTrainer,
   enableTrainer,
   getPlatformMetrics,
@@ -20,9 +19,9 @@ const router = Router();
 
 router.use(authenticate, allowRoles("ADMIN"));
 
-// Trainer management (existing).
+// Trainer management. Trainers self-register via Google sign-in, so there
+// is no create route — admins can only list, enable, and disable them.
 router.get("/trainers",              listTrainers);
-router.post("/trainers",             createTrainer);
 router.post("/trainers/:id/disable", disableTrainer);
 router.post("/trainers/:id/enable",  enableTrainer);
 

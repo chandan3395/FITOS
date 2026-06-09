@@ -15,7 +15,6 @@ import trainerService from "../../services/trainerService";
 import clientService from "../../services/clientService";
 import checkinService from "../../services/checkinService";
 import activityService from "../../services/activityService";
-import ChangePasswordCard from "../../components/account/ChangePasswordCard";
 
 const QUICK_ACTIONS = [
   { label: "Add Client",       Icon: UsersIcon,       accent: "bg-emerald-500/10 text-emerald-300", to: `${ROUTES.TRAINER_CLIENTS}/new` },
@@ -257,8 +256,6 @@ const TrainerDashboard = () => {
           </Card.Body>
         </Card>
       </div>
-
-      <ChangePasswordCard />
     </div>
   );
 };

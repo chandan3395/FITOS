@@ -97,7 +97,7 @@ const LoginPage = () => {
 
       {!GOOGLE_AUTH_ENABLED && (
         <div className="mb-6 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[12px] text-amber-300">
-          Google sign-in is temporarily disabled. Use email & password below.
+          Google sign-in is temporarily disabled. Trainers and clients can sign in once it is re-enabled.
         </div>
       )}
 
@@ -107,7 +107,7 @@ const LoginPage = () => {
           onClick={() => setShowAdmin(true)}
           className="w-full text-[12.5px] font-medium text-text-secondary hover:text-text-primary transition-colors"
         >
-          Sign in with email & password →
+          Admin sign-in →
         </button>
       ) : (
         <form onSubmit={onAdminSubmit} className="space-y-4">

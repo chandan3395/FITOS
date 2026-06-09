@@ -5,11 +5,7 @@ const authenticate = require("../middleware/auth");
 const { allowRoles } = require("../middleware/roles");
 const { env } = require("../config/env");
 const {
-  login,
-  setPassword,
   adminLogin,
-  trainerLogin,
-  trainerSignup,
   refresh,
   logout,
   createAdmin,
@@ -22,15 +18,9 @@ const router = Router();
 
 router.post("/admin/create", authenticate, allowRoles("ADMIN"), createAdmin);
 
-// Role-agnostic email + password login (the CLIENT login path).
-router.post("/login", login);
-
-// Admin login
+// Admin login — the only email + password path. Trainers and clients
+// authenticate exclusively through Google OAuth below.
 router.post("/admin/login", adminLogin);
-
-// Trainer signup + password login
-router.post("/trainer/signup", trainerSignup);
-router.post("/trainer/login",  trainerLogin);
 
 // ── Google OAuth — gated by ENABLE_GOOGLE_AUTH feature flag.
 // When disabled, the implementation is preserved but never reached:
@@ -79,9 +69,6 @@ router.post("/refresh", refresh);
 router.post("/logout",  logout);
 
 router.get("/me", authenticate, getCurrentUser);
-
-// Set / change password — trainers & clients (incl. Google-created accounts).
-router.post("/password", authenticate, allowRoles("TRAINER", "CLIENT"), setPassword);
 
 // Client invite — public (the token is the secret)
 router.get("/invite/:token",           getInvite);

@@ -10,7 +10,7 @@ FITOS connects fitness trainers with their clients on a single platform. It supp
 
 ### Features (current)
 
-- **Auth** — JWT access + refresh (HttpOnly cookie); Google OAuth 2.0 (feature-flag gated); admin/trainer email-password login.
+- **Auth** — JWT access + refresh (HttpOnly cookie); trainers and clients sign in with Google OAuth 2.0 (feature-flag gated); admins use email + password.
 - **Admin** — manage trainers and admins (create / enable / disable); platform metrics (no client PII).
 - **Trainer** — client onboarding wizard (35+ fields), check-in review, workout & nutrition plans, reusable workout/nutrition templates, activity feed.
 - **Progress photos** — stored on **Cloudinary** via signed direct browser uploads (backend never handles bytes); before/after **Compare Mode**.

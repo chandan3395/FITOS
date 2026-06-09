@@ -24,69 +24,6 @@ const StatusBadge = ({ active }) => {
 
 const fmt = (iso) => iso ? new Date(iso).toLocaleDateString(undefined, { month: "short", year: "numeric" }) : "—";
 
-const CreateTrainerModal = ({ onClose, onCreated }) => {
-  const [name, setName]         = useState("");
-  const [email, setEmail]       = useState("");
-  const [password, setPassword] = useState("");
-  const [busy, setBusy]         = useState(false);
-  const [error, setError]       = useState(null);
-  const [fieldErrs, setFieldErrs] = useState({});
-
-  const submit = async (e) => {
-    e.preventDefault();
-    setError(null);
-    setFieldErrs({});
-    setBusy(true);
-    try {
-      const trainer = await adminService.createTrainer({ name: name.trim(), email: email.trim(), password });
-      onCreated(trainer);
-    } catch (err) {
-      if (err?.response?.data?.errors) setFieldErrs(err.response.data.errors);
-      else setError(err?.response?.data?.message || err?.message || "Failed to create trainer");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const inputCls = (bad) =>
-    `w-full h-10 px-3 rounded-lg bg-surface-elevated border ${bad ? "border-red-500/50 focus:border-red-400" : "border-border focus:border-[#333]"} text-sm text-text-primary placeholder:text-text-muted focus:outline-none transition-colors`;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <Card className="w-full max-w-md">
-        <Card.Header>
-          <Card.Title>Create Trainer</Card.Title>
-          <Card.Description>The trainer can log in immediately with these credentials.</Card.Description>
-        </Card.Header>
-        <Card.Body>
-          <form onSubmit={submit} className="space-y-3">
-            <div>
-              <label className="block text-[11px] font-semibold tracking-[0.08em] text-text-muted uppercase mb-1.5">Name</label>
-              <input value={name} onChange={(e) => setName(e.target.value)} className={inputCls(fieldErrs.name)} placeholder="Coach Raj" />
-              {fieldErrs.name && <p className="mt-1 text-[11.5px] text-red-300">{fieldErrs.name}</p>}
-            </div>
-            <div>
-              <label className="block text-[11px] font-semibold tracking-[0.08em] text-text-muted uppercase mb-1.5">Email</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls(fieldErrs.email)} placeholder="raj@fitos.app" />
-              {fieldErrs.email && <p className="mt-1 text-[11.5px] text-red-300">{fieldErrs.email}</p>}
-            </div>
-            <div>
-              <label className="block text-[11px] font-semibold tracking-[0.08em] text-text-muted uppercase mb-1.5">Password</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls(fieldErrs.password)} placeholder="At least 8 characters" autoComplete="new-password" />
-              {fieldErrs.password && <p className="mt-1 text-[11.5px] text-red-300">{fieldErrs.password}</p>}
-            </div>
-            {error && <div className="text-[12.5px] text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</div>}
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <Button variant="ghost" type="button" onClick={onClose} disabled={busy}>Cancel</Button>
-              <Button type="submit" loading={busy}>Create Trainer</Button>
-            </div>
-          </form>
-        </Card.Body>
-      </Card>
-    </div>
-  );
-};
-
 const AdminTrainersPage = () => {
   const [trainers, setTrainers] = useState([]);
   const [loading,  setLoading]  = useState(true);
@@ -94,7 +31,6 @@ const AdminTrainersPage = () => {
   const [filter,   setFilter]   = useState("all");
   const [search,   setSearch]   = useState("");
   const [actingId, setActing]   = useState(null);
-  const [showCreate, setShowCreate] = useState(false);
   const [toast,    setToast]    = useState(null);
 
   const load = useCallback(async () => {
@@ -157,7 +93,6 @@ const AdminTrainersPage = () => {
             placeholder="Search trainers..."
             className="h-9 w-64 px-3 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-[#333]"
           />
-          <Button onClick={() => setShowCreate(true)}>+ Create Trainer</Button>
         </div>
       </div>
 
@@ -188,10 +123,7 @@ const AdminTrainersPage = () => {
           : filtered.length === 0
             ? <EmptyState
                 title={trainers.length === 0 ? "No trainers yet" : "No trainers match this filter"}
-                description={trainers.length === 0 ? "Create the first trainer to get started." : "Try a different filter or search term."}
-                action={trainers.length === 0 && (
-                  <Button onClick={() => setShowCreate(true)}>+ Create Trainer</Button>
-                )}
+                description={trainers.length === 0 ? "Trainers appear here once they sign in with Google." : "Try a different filter or search term."}
               />
             : (
               <Card padding="none" className="overflow-hidden">
@@ -235,17 +167,6 @@ const AdminTrainersPage = () => {
               </Card>
             )
       }
-
-      {showCreate && (
-        <CreateTrainerModal
-          onClose={() => setShowCreate(false)}
-          onCreated={(trainer) => {
-            setShowCreate(false);
-            setTrainers((curr) => [{ ...trainer, activeClients: 0, totalClients: 0 }, ...curr]);
-            setToast({ kind: "success", message: "Trainer created" });
-          }}
-        />
-      )}
 
       <Toast {...(toast || {})} onDismiss={() => setToast(null)} />
     </div>

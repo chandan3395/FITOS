@@ -9,6 +9,14 @@ const clientInviteSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    // Authoritative link to the invited Client record. Activation resolves
+    // the client by this id; matching on clientName is ambiguous when one
+    // trainer has two clients with the same name. Optional so legacy invites
+    // created before this field continue to load (they fall back to name).
+    clientId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Client",
+    },
     clientName: {
       type: String,
       required: true,
