@@ -4,6 +4,7 @@ import AuthLayout from "../../components/layouts/AuthLayout";
 import Button from "../../components/ui/Button";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { ROUTES } from "../../constants/routes";
+import { API_BASE_URL } from "../../lib/api";
 
 const dashboardFor = (role) => {
   if (role === "ADMIN")   return ROUTES.ADMIN_DASHBOARD;
@@ -13,9 +14,11 @@ const dashboardFor = (role) => {
 };
 
 // Google OAuth lives on the backend; we let the browser navigate to it so
-// the OAuth redirect dance happens on the same origin as the server.
+// the OAuth redirect dance is a top-level navigation (not XHR). Built from
+// API_BASE_URL so it targets the backend origin in production (Vercel),
+// not the frontend origin. Locally API_BASE_URL is "/api" (Vite proxy).
 function googleSignInUrl(role = "TRAINER") {
-  return `/api/auth/google?role=${encodeURIComponent(role)}`;
+  return `${API_BASE_URL}/auth/google?role=${encodeURIComponent(role)}`;
 }
 
 // Feature flag — when "false", hide the Google CTA entirely. Defaults to

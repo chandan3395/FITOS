@@ -25,11 +25,16 @@ export const setAccessToken = (token) => {
 };
 
 // ─────────────────────────────────────────────────────────────
-// Axios instance — relative /api works thanks to the Vite proxy
-// in dev. `withCredentials` is required to send the refresh cookie.
+// Axios instance. Locally (VITE_API_URL unset) the relative "/api"
+// base works via the Vite dev proxy. In production (e.g. Vercel) the
+// frontend and backend are on different origins, so VITE_API_URL must
+// point at the full backend base URL. `withCredentials` is required to
+// send the refresh cookie cross-origin.
 // ─────────────────────────────────────────────────────────────
+export const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
+
 const api = axios.create({
-  baseURL: "/api",
+  baseURL: API_BASE_URL,
   withCredentials: true,
   timeout: 15000,
 });
@@ -56,9 +61,11 @@ export const setUnauthorizedHandler = (fn) => {
 };
 
 async function refreshAccessToken() {
-  // raw axios — no interceptors, no Authorization header
+  // raw axios — no interceptors, no Authorization header. Uses the same
+  // base URL as the shared instance so it hits the backend in production
+  // (not the Vercel origin) rather than a hardcoded "/api" prefix.
   const res = await axios.post(
-    "/api/auth/refresh",
+    `${API_BASE_URL}/auth/refresh`,
     {},
     { withCredentials: true, timeout: 15000 }
   );
