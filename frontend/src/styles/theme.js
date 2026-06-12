@@ -1,27 +1,28 @@
 export const theme = {
   colors: {
-    // Base
-    background: "#0a0a0a",
-    surface: "#111111",
-    surfaceElevated: "#1a1a1a",
-    border: "#222222",
-    borderSubtle: "#1a1a1a",
+    // Base — FITOS brand surfaces
+    background: "#0A0A0A",
+    surface: "#151515",
+    surfaceElevated: "#1C1C1C",
+    card: "#1C1C1C",
+    border: "#2A2A2A",
+    borderSubtle: "#1C1C1C",
 
-    // Brand — electric indigo accent
-    primary: "#6366f1",
-    primaryHover: "#4f46e5",
-    primaryMuted: "#6366f11a",
+    // Brand — FITOS lime green accent
+    primary: "#A6CE39",
+    primaryHover: "#B7DC4E",
+    primaryMuted: "rgba(166,206,57,0.12)",
 
     // Semantic
-    success: "#22c55e",
+    success: "#A6CE39",
     warning: "#f59e0b",
     error: "#ef4444",
     info: "#3b82f6",
 
     // Text
-    textPrimary: "#f9fafb",
-    textSecondary: "#9ca3af",
-    textMuted: "#4b5563",
+    textPrimary: "#FFFFFF",
+    textSecondary: "#B0B0B0",
+    textMuted: "#6E6E6E",
   },
 
   spacing: {

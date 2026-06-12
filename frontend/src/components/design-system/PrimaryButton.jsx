@@ -37,8 +37,8 @@ const PrimaryButton = ({
       disabled={disabled || loading}
       className={[
         "inline-flex items-center justify-center font-semibold select-none",
-        "bg-white text-black",
-        "hover:bg-zinc-100 active:bg-zinc-200 active:scale-[0.97]",
+        "bg-primary text-black shadow-glow-sm",
+        "hover:bg-primary-hover hover:shadow-glow active:scale-[0.97]",
         "transition-all duration-150 ease-out",
         "disabled:opacity-30 disabled:cursor-not-allowed disabled:active:scale-100",
         fullWidth ? "w-full" : "",

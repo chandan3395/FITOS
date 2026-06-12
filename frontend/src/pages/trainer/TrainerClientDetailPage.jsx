@@ -23,6 +23,7 @@ const TABS = [
   { id: "workout",   label: "Workout Plan" },
   { id: "nutrition", label: "Nutrition Plan" },
   { id: "notes",     label: "Notes" },
+  { id: "messages",  label: "Messages" },
 ];
 
 const initials = (name = "") => name.split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
@@ -463,6 +464,138 @@ const NotesPlanTab = ({ client }) => (
   </Card>
 );
 
+// ── Messages tab — premium trainer⇄client chat. ────────────────────
+// DEMO-ONLY: there is no backend, socket, or persistence. The thread lives
+// entirely in local React state and resets on reload. It exists purely to
+// showcase what FITOS messaging looks like during a client presentation.
+const fmtTime = (d) =>
+  new Date(d).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+// Seed a realistic coaching conversation, timestamped relative to "now"
+// so it always reads as a fresh, same-day thread in the demo.
+function seedMessages(firstName) {
+  const now = Date.now();
+  const m = 60 * 1000;
+  return [
+    { id: "s1", from: "trainer", text: `Hey ${firstName}! Great work crushing this week's sessions 💪 How are you feeling?`, time: new Date(now - 322 * m) },
+    { id: "s2", from: "client",  text: "Honestly feeling stronger! The new push day was tough but I really enjoyed it.", time: new Date(now - 313 * m) },
+    { id: "s3", from: "trainer", text: "That's exactly what I like to hear. Did you manage to hit your protein target most days?", time: new Date(now - 305 * m) },
+    { id: "s4", from: "client",  text: "Most days yes — came up a little short on Wednesday but I logged everything in the app.", time: new Date(now - 298 * m) },
+    { id: "s5", from: "trainer", text: "Perfect — consistency over perfection. I'll tweak Thursday's plan slightly. Keep the water up too 💧", time: new Date(now - 142 * m) },
+    { id: "s6", from: "client",  text: "Will do! Quick one — can we move the Saturday session to Sunday this week?", time: new Date(now - 46 * m) },
+    { id: "s7", from: "trainer", text: "Absolutely, Sunday 9am works great. I'll update your schedule now.", time: new Date(now - 7 * m) },
+  ];
+}
+
+const MessagesTab = ({ client }) => {
+  const firstName = (client?.name || "Client").split(" ")[0];
+  const [messages, setMessages] = useState(() => seedMessages(firstName));
+  const [draft, setDraft] = useState("");
+  const listRef = useRef(null);
+
+  // Auto-scroll the thread (not the page) to the newest message.
+  useEffect(() => {
+    const el = listRef.current;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  }, [messages]);
+
+  const send = () => {
+    const text = draft.trim();
+    if (!text) return;
+    setMessages((prev) => [
+      ...prev,
+      { id: `m-${Date.now()}`, from: "trainer", text, time: new Date() },
+    ]);
+    setDraft("");
+  };
+
+  const onKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    }
+  };
+
+  return (
+    <Card padding="none" className="overflow-hidden flex flex-col">
+      {/* Conversation header */}
+      <div className="flex items-center gap-3 px-5 py-4 border-b border-border">
+        <div className="relative">
+          <div className="w-10 h-10 rounded-full bg-sky-500/20 text-sky-300 flex items-center justify-center text-[13px] font-bold">
+            {initials(client?.name) || "C"}
+          </div>
+          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-primary border-2 border-card" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-text-primary truncate">{client?.name || "Client"}</p>
+          <p className="text-[12px] text-primary flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary" /> Active now
+          </p>
+        </div>
+        <div className="ml-auto flex items-center gap-1.5 text-text-muted">
+          <button className="w-9 h-9 rounded-xl hover:bg-surface-elevated hover:text-text-primary flex items-center justify-center transition-colors" aria-label="Call">
+            <svg width="17" height="17" viewBox="0 0 18 18" fill="none"><path d="M6 3.5C6 3 5.5 2.5 5 2.5H3.2c-.6 0-1.1.5-1 1.2C2.7 9 7 13.3 12.3 15.8c.7.3 1.2-.2 1.2-.9V13c0-.5-.5-1-1-1l-2 .5c-1.6-.8-2.9-2.1-3.7-3.7L7 6.8c0-.5.3-.8 0-1.3L6 3.5z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/></svg>
+          </button>
+          <button className="w-9 h-9 rounded-xl hover:bg-surface-elevated hover:text-text-primary flex items-center justify-center transition-colors" aria-label="More">
+            <svg width="17" height="17" viewBox="0 0 18 18" fill="none"><circle cx="4" cy="9" r="1.3" fill="currentColor"/><circle cx="9" cy="9" r="1.3" fill="currentColor"/><circle cx="14" cy="9" r="1.3" fill="currentColor"/></svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Thread */}
+      <div ref={listRef} className="h-[460px] overflow-y-auto px-5 py-5 space-y-4 bg-bg/40">
+        <p className="text-center text-[11px] font-medium uppercase tracking-[0.1em] text-text-muted">Today</p>
+
+        {messages.map((msg) => {
+          const isTrainer = msg.from === "trainer";
+          return isTrainer ? (
+            <div key={msg.id} className="flex justify-end">
+              <div className="max-w-[80%] sm:max-w-[72%] flex flex-col items-end gap-1">
+                <div className="rounded-2xl rounded-br-md bg-primary text-black px-4 py-2.5 text-sm leading-relaxed shadow-glow-sm">
+                  {msg.text}
+                </div>
+                <span className="text-[11px] text-text-muted pr-1">You · {fmtTime(msg.time)}</span>
+              </div>
+            </div>
+          ) : (
+            <div key={msg.id} className="flex justify-start items-end gap-2.5">
+              <div className="w-8 h-8 shrink-0 rounded-full bg-sky-500/20 text-sky-300 flex items-center justify-center text-[11px] font-bold">
+                {initials(client?.name) || "C"}
+              </div>
+              <div className="max-w-[80%] sm:max-w-[72%] flex flex-col items-start gap-1">
+                <div className="rounded-2xl rounded-bl-md bg-surface-elevated border border-border text-text-primary px-4 py-2.5 text-sm leading-relaxed">
+                  {msg.text}
+                </div>
+                <span className="text-[11px] text-text-muted pl-1">{firstName} · {fmtTime(msg.time)}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Composer */}
+      <div className="border-t border-border p-4">
+        <div className="flex items-center gap-2">
+          <input
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={onKeyDown}
+            placeholder={`Message ${firstName}…`}
+            className="flex-1 h-11 px-4 rounded-xl bg-surface-elevated border border-border text-sm text-text-primary placeholder:text-text-muted outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/25"
+          />
+          <Button onClick={send} disabled={!draft.trim()} className="px-4" aria-label="Send message">
+            <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
+              <path d="M16 2L8 10M16 2l-5 14-3-6-6-3 14-5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Send
+          </Button>
+        </div>
+        <p className="text-[11px] text-text-muted mt-2 pl-1">Press Enter to send · Shift+Enter for a new line</p>
+      </div>
+    </Card>
+  );
+};
+
 // ── PAGE ────────────────────────────────────────────────────────
 const TrainerClientDetailPage = () => {
   const { id } = useParams();
@@ -566,6 +699,7 @@ const TrainerClientDetailPage = () => {
     workout:   <WorkoutPlanTab clientId={id} />,
     nutrition: <NutritionPlanTab clientId={id} />,
     notes:     <NotesPlanTab     client={client} />,
+    messages:  <MessagesTab      client={client} />,
   };
 
   return (

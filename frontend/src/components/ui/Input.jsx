@@ -41,10 +41,10 @@ const Input = ({
           disabled={disabled}
           required={required}
           className={[
-            "w-full h-10 bg-surface-elevated border rounded-[10px]",
+            "w-full h-11 bg-surface-elevated border rounded-xl",
             "text-sm text-text-primary placeholder:text-text-muted",
             "transition-all duration-150 outline-none",
-            "focus:border-primary focus:ring-2 focus:ring-primary/20",
+            "focus:border-primary focus:ring-2 focus:ring-primary/25",
             "disabled:opacity-40 disabled:cursor-not-allowed",
             error ? "border-red-500/60 focus:border-red-500 focus:ring-red-500/20" : "border-border",
             Icon ? "pl-9 pr-4" : "px-4",

@@ -23,9 +23,9 @@ const MetricCard = ({
   className = "",
 }) => {
   const trendMeta = {
-    up:      { color: "text-emerald-400", Icon: TrendUpIcon },
-    down:    { color: "text-red-400",     Icon: TrendDownIcon },
-    neutral: { color: "text-zinc-500",    Icon: null },
+    up:      { color: "text-primary",  Icon: TrendUpIcon },
+    down:    { color: "text-red-400",  Icon: TrendDownIcon },
+    neutral: { color: "text-text-muted", Icon: null },
   };
 
   const { color, Icon: TrendIcon } = trendMeta[trend] ?? trendMeta.neutral;
@@ -34,7 +34,9 @@ const MetricCard = ({
     <div
       onClick={onClick}
       className={[
-        "card p-6 flex flex-col gap-5",
+        // Dark card with a soft green accent edge on the left.
+        "relative overflow-hidden card p-6 flex flex-col gap-5",
+        "before:content-[''] before:absolute before:inset-y-0 before:left-0 before:w-[3px] before:bg-primary/70",
         onClick ? "card-hover cursor-pointer" : "",
         className,
       ]
@@ -43,17 +45,19 @@ const MetricCard = ({
     >
       {/* Top row */}
       <div className="flex items-start justify-between">
-        <span className="text-[13px] font-medium text-zinc-500 tracking-wide">
+        <span className="text-[12px] font-semibold uppercase tracking-[0.1em] text-text-muted">
           {label}
         </span>
         {icon && (
-          <span className="text-zinc-600 -mt-0.5">{icon}</span>
+          <span className="w-9 h-9 -mt-0.5 rounded-xl bg-primary/12 text-primary flex items-center justify-center ring-1 ring-primary/20">
+            {icon}
+          </span>
         )}
       </div>
 
       {/* Value */}
       <div>
-        <p className="text-[2.25rem] font-bold text-white tracking-tight leading-none">
+        <p className="text-[2.6rem] font-extrabold text-white tracking-tight leading-none">
           {value}
         </p>
       </div>
@@ -64,9 +68,9 @@ const MetricCard = ({
           {TrendIcon && (
             <TrendIcon size={13} className={color} />
           )}
-          <span className={`text-[13px] font-medium ${color}`}>{delta}</span>
+          <span className={`text-[13px] font-semibold ${color}`}>{delta}</span>
           {deltaLabel && (
-            <span className="text-[13px] text-zinc-600">{deltaLabel}</span>
+            <span className="text-[13px] text-text-muted">{deltaLabel}</span>
           )}
         </div>
       )}

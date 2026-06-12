@@ -5,37 +5,38 @@ export default {
   theme: {
     extend: {
       colors: {
-        // ── Core blacks ─────────────────────────
+        // ── FITOS brand surfaces (from the marketing palette) ──
         black:   "#000000",
-        bg:      "#000000",
+        bg:      "#0A0A0A",   // DARK BLACK — app background
         surface: {
-          DEFAULT: "#0a0a0a",
-          1:       "#0a0a0a",
-          2:       "#111111",
-          3:       "#171717",
-          4:       "#1f1f1f",
+          DEFAULT: "#151515", // SURFACE — sidebar / topbar / sunken panels
+          1:       "#151515",
+          2:       "#1C1C1C", // CARD
+          3:       "#1C1C1C",
+          4:       "#232323",
         },
+        card:    "#1C1C1C",   // CARD — primary content surface
         // ── Borders ─────────────────────────────
         line: {
-          DEFAULT: "#1f1f1f",
-          hover:   "#2a2a2a",
-          focus:   "#3a3a3a",
+          DEFAULT: "#2A2A2A", // BORDER
+          hover:   "#383838",
+          focus:   "#454545",
         },
-        // ── Legacy aliases (Phase 1 compat) ──────
-        "surface-elevated": "#1a1a1a",
-        border:             "#222222",
-        // ── Accent ──────────────────────────────
+        // ── Legacy aliases (kept so existing classes resolve) ──
+        "surface-elevated": "#232323",
+        border:             "#2A2A2A",
+        // ── Accent — FITOS lime green ───────────
         primary: {
-          DEFAULT: "#6366f1",
-          hover:   "#4f46e5",
-          muted:   "rgba(99,102,241,0.10)",
+          DEFAULT: "#A6CE39", // PRIMARY GREEN
+          hover:   "#B7DC4E",
+          muted:   "rgba(166,206,57,0.12)",
         },
         // ── Text ────────────────────────────────
-        "text-primary":   "#ffffff",
-        "text-secondary": "#a1a1aa",
-        "text-muted":     "#52525b",
+        "text-primary":   "#FFFFFF", // WHITE
+        "text-secondary": "#B0B0B0", // SECONDARY TEXT
+        "text-muted":     "#6E6E6E",
         // ── Semantic ────────────────────────────
-        success: "#22c55e",
+        success: "#A6CE39",
         warning: "#f59e0b",
         danger:  "#ef4444",
         info:    "#3b82f6",
@@ -60,9 +61,12 @@ export default {
       },
 
       boxShadow: {
-        "card-sm": "0 1px 2px rgba(0,0,0,0.8)",
-        card:      "0 2px 8px rgba(0,0,0,0.6)",
-        "card-lg": "0 8px 32px rgba(0,0,0,0.5)",
+        "card-sm": "0 1px 2px rgba(0,0,0,0.6)",
+        card:      "0 2px 10px rgba(0,0,0,0.45)",
+        "card-lg": "0 16px 48px rgba(0,0,0,0.55)",
+        // Green-tinted premium glow for primary actions, modals, focus.
+        "glow-sm": "0 0 0 1px rgba(166,206,57,0.12), 0 4px 16px rgba(166,206,57,0.14)",
+        glow:      "0 0 0 1px rgba(166,206,57,0.18), 0 10px 34px rgba(166,206,57,0.22)",
       },
 
       animation: {

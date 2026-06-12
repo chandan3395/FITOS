@@ -97,10 +97,10 @@ export const ErrorState = ({ title = "Couldn't load this", message, onRetry }) =
 export const Toast = ({ kind = "success", message, onDismiss }) => {
   if (!message) return null;
   const meta = kind === "success"
-    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+    ? "bg-primary/10 border-primary/30 text-primary"
     : "bg-red-500/10 border-red-500/30 text-red-300";
   return (
-    <div className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl border text-[13px] font-medium shadow-card-lg animate-slide-up ${meta}`}>
+    <div className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl border text-[13px] font-semibold shadow-card-lg animate-slide-up ${meta}`}>
       <div className="flex items-center gap-3">
         <span>{message}</span>
         {onDismiss && (

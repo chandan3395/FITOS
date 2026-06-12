@@ -17,11 +17,13 @@ const Card = ({
     <div
       onClick={onClick}
       className={[
-        "rounded-xl border border-border",
-        glass ? "glass" : "bg-surface",
+        "rounded-2xl border border-border",
+        glass ? "glass" : "bg-card",
         glow ? "shadow-glow" : "shadow-card",
         paddings[padding],
-        onClick ? "cursor-pointer hover:border-[#333] transition-colors duration-150" : "",
+        onClick
+          ? "cursor-pointer transition-all duration-200 hover:border-line-hover hover:-translate-y-0.5 hover:shadow-card-lg"
+          : "",
         className,
       ]
         .filter(Boolean)

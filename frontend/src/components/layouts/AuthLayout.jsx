@@ -12,11 +12,14 @@ const AuthLayout = ({ children }) => {
       {/* Card */}
       <div className="relative z-10 w-full max-w-md">
         {/* Logo */}
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <span className="text-2xl font-bold gradient-text tracking-tight">FITOS</span>
+        <div className="flex items-center justify-center gap-2.5 mb-8">
+          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-glow-sm">
+            <span className="text-black font-extrabold text-lg leading-none">F</span>
+          </div>
+          <span className="text-2xl font-extrabold tracking-tight text-white">FITOS</span>
         </div>
 
-        <div className="bg-surface border border-border rounded-2xl p-8 shadow-glow animate-fade-in">
+        <div className="bg-card border border-border rounded-2xl p-8 shadow-glow animate-fade-in">
           {children}
         </div>
       </div>

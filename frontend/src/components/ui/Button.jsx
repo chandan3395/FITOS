@@ -1,17 +1,17 @@
 const variants = {
   primary:
-    "bg-primary hover:bg-primary-hover text-white shadow-glow-sm hover:shadow-glow active:scale-[0.98]",
+    "bg-primary hover:bg-primary-hover text-black font-semibold shadow-glow-sm hover:shadow-glow hover:-translate-y-px active:translate-y-0 active:scale-[0.98]",
   secondary:
-    "bg-surface-elevated hover:bg-[#222] text-text-primary border border-border hover:border-[#333]",
+    "bg-surface-elevated hover:bg-line-hover text-text-primary border border-border hover:border-line-hover",
   ghost: "bg-transparent hover:bg-surface-elevated text-text-secondary hover:text-text-primary",
-  danger: "bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 hover:border-red-500/40",
+  danger: "bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/25 hover:border-red-500/45",
   outline:
-    "bg-transparent border border-primary text-primary hover:bg-primary-muted",
+    "bg-transparent border border-primary/60 text-primary hover:bg-primary-muted hover:border-primary",
 };
 
 const sizes = {
-  sm: "h-8 px-3 text-xs rounded-lg",
-  md: "h-10 px-5 text-sm rounded-[10px]",
+  sm: "h-9 px-3.5 text-xs rounded-lg",
+  md: "h-11 px-5 text-sm rounded-xl",
   lg: "h-12 px-7 text-base rounded-xl",
 };
 

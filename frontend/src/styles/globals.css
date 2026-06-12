@@ -7,20 +7,20 @@
 /* ─── Design tokens ──────────────────────────────────────── */
 @layer base {
   :root {
-    --bg:           #000000;
-    --surface-1:    #0a0a0a;
-    --surface-2:    #111111;
-    --surface-3:    #171717;
-    --line:         #1f1f1f;
-    --line-hover:   #2a2a2a;
-    --line-focus:   #3a3a3a;
+    --bg:           #0A0A0A;
+    --surface-1:    #151515;
+    --surface-2:    #1C1C1C;
+    --surface-3:    #232323;
+    --line:         #2A2A2A;
+    --line-hover:   #383838;
+    --line-focus:   #454545;
 
-    --text-1:       #ffffff;
-    --text-2:       #a1a1aa;
-    --text-3:       #52525b;
+    --text-1:       #FFFFFF;
+    --text-2:       #B0B0B0;
+    --text-3:       #6E6E6E;
 
-    --accent:       #6366f1;
-    --accent-hover: #4f46e5;
+    --accent:       #A6CE39;
+    --accent-hover: #B7DC4E;
 
     --success-bg:   rgba(34, 197, 94, 0.08);
     --success-line: rgba(34, 197, 94, 0.18);
@@ -64,14 +64,14 @@
   }
 
   /* ── Scrollbar ───── */
-  ::-webkit-scrollbar       { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: #000; }
+  ::-webkit-scrollbar       { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
-    background: #222;
+    background: #2A2A2A;
     border-radius: 9999px;
     transition: background 0.15s;
   }
-  ::-webkit-scrollbar-thumb:hover { background: #333; }
+  ::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
 
   /* ── Focus ring ─── */
   :focus-visible {
@@ -80,27 +80,38 @@
   }
 
   ::selection {
-    background: rgba(99, 102, 241, 0.25);
+    background: rgba(166, 206, 57, 0.28);
     color: #fff;
   }
 }
 
 /* ─── Utilities ──────────────────────────────────────────── */
 @layer utilities {
-  /* Frosted card */
+  /* Content card */
   .card {
-    background: var(--surface-1);
+    background: var(--surface-2);
     border: 1px solid var(--line);
     border-radius: 16px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
   }
 
   .card-hover {
-    transition: border-color 0.15s ease, background 0.15s ease;
+    transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
   }
 
   .card-hover:hover {
     border-color: var(--line-hover);
-    background: #0f0f0f;
+    background: #202020;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Frosted glass surface (used by Card glass variant / overlays) */
+  .glass {
+    background: rgba(28, 28, 28, 0.72);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.06);
   }
 
   /* Progress bar fill */
@@ -114,7 +125,7 @@
   .progress-fill {
     height: 100%;
     border-radius: 9999px;
-    background: #fff;
+    background: linear-gradient(90deg, #A6CE39, #C7E85A);
     transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
@@ -144,11 +155,16 @@
   .animate-spin-slow  { animation: spin-slow 1.4s  linear infinite; }
   .animate-pulse-slow { animation: pulse-slow 2s   ease-in-out infinite; }
 
-  /* Gradient text (used sparingly) */
+  /* Gradient text — FITOS lime (used for the wordmark) */
   .gradient-text {
-    background: linear-gradient(135deg, #6366f1, #a78bfa);
+    background: linear-gradient(135deg, #C7E85A, #A6CE39);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+
+  /* Subtle brand-tinted radial wash for hero / empty surfaces */
+  .brand-glow {
+    background-image: radial-gradient(60% 80% at 50% 0%, rgba(166, 206, 57, 0.10), transparent 70%);
   }
 }
