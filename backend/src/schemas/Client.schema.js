@@ -87,16 +87,39 @@ const clientSchema = new mongoose.Schema(
     // The email of the Google account that was linked (for the trainer's
     // reference / mismatch audit). Distinct from `email`, the invited address.
     googleEmail:  { type: String, lowercase: true, trim: true },
+    // The email the client was originally invited under, captured at link
+    // time. Snapshotted so a later edit to `email` can't rewrite history —
+    // the mismatch badge compares this against `googleEmail`.
+    invitedEmail: { type: String, lowercase: true, trim: true },
+    // When the Google account was successfully attached to this profile.
+    linkedAt:     { type: Date },
 
     // Timestamp of the most recent successful WhatsApp activation invite.
     // Drives the "Invite Sent: <date>" display in the client overview.
     lastInviteSentAt: { type: Date },
+
+    // Set true when an activation-relevant field (email/name/phone) is edited
+    // after the invite was issued, so the existing invite link may no longer
+    // reflect the client. Drives the "invite information has changed" banner
+    // and is cleared when a fresh invite is regenerated.
+    inviteNeedsRegeneration: { type: Boolean, default: false },
+
+    // ── Soft delete ──────────────────────────────────────────
+    // Deleting a client is non-destructive: we flip `isDeleted` and stamp
+    // who/when. The document — and every workout, nutrition plan, check-in,
+    // photo and activity log keyed by its clientId — stays in the database,
+    // but the client disappears from lists, detail views, search, and loses
+    // portal access. This keeps history intact and makes deletion reversible.
+    isDeleted: { type: Boolean, default: false },
+    deletedAt: { type: Date },
+    deletedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }
 );
 
 clientSchema.index({ trainerId: 1 });
 clientSchema.index({ trainerId: 1, status: 1 });
+clientSchema.index({ trainerId: 1, isDeleted: 1 });
 
 const Client = mongoose.model("Client", clientSchema);
 

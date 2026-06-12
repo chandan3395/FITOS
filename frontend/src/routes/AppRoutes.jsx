@@ -5,6 +5,7 @@ import LoginPage          from "../pages/auth/LoginPage";
 import GoogleCallbackPage from "../pages/auth/GoogleCallbackPage";
 import ActivatePage       from "../pages/auth/ActivatePage";
 import LinkAccountPage     from "../pages/auth/LinkAccountPage";
+import AccountDisabledPage from "../pages/auth/AccountDisabledPage";
 import DesignSystemPage   from "../pages/DesignSystemPage";
 import NotFound           from "../pages/NotFound";
 
@@ -44,6 +45,7 @@ const AppRoutes = () => (
     <Route path={ROUTES.GOOGLE_CALLBACK} element={<GoogleCallbackPage />} />
     <Route path={ROUTES.ACTIVATE}        element={<ActivatePage />} />
     <Route path={ROUTES.ACTIVATE_LINK}   element={<LinkAccountPage />} />
+    <Route path={ROUTES.ACCOUNT_DISABLED} element={<AccountDisabledPage />} />
     <Route path={ROUTES.DESIGN_SYSTEM}   element={<DesignSystemPage />} />
 
     {/* Admin */}

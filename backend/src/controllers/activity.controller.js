@@ -13,4 +13,13 @@ async function list(req, res, next) {
   } catch (err) { return next(err); }
 }
 
-module.exports = { list };
+async function listMine(req, res, next) {
+  try {
+    const items = await activityService.listForClientUser(req.user, {
+      limit: req.query.limit,
+    });
+    return ApiResponse.ok(res, "Activity feed", { activities: items });
+  } catch (err) { return next(err); }
+}
+
+module.exports = { list, listMine };

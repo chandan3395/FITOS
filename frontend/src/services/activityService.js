@@ -5,5 +5,11 @@ async function list({ limit = 20 } = {}) {
   return res.data?.data?.activities ?? [];
 }
 
-const activityService = { list };
+/** GET /api/activity/me — the signed-in client's own Recent Activity feed. */
+async function listMine({ limit = 20 } = {}) {
+  const res = await api.get("/activity/me", { params: { limit } });
+  return res.data?.data?.activities ?? [];
+}
+
+const activityService = { list, listMine };
 export default activityService;

@@ -103,6 +103,11 @@ async function performLink({ invite, client, googleUser }) {
     client.userId = googleUser._id;
     client.googleLinked = true;
     client.googleEmail = googleEmail;
+    // Snapshot the invited address so a later trainer edit to `email`
+    // doesn't retroactively erase the mismatch record. Fall back to the
+    // current profile email when the invite carried none.
+    if (invitedEmail) client.invitedEmail = invitedEmail;
+    client.linkedAt = new Date();
     client.status = "ACTIVE";
     await client.save();
 

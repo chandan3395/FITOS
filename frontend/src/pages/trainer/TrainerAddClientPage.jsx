@@ -661,6 +661,10 @@ const TrainerAddClientPage = () => {
   const [submitError, setSubmitErr] = useState(null);
   const [activation, setActivation] = useState(null);
   const [inviteBusy, setInviteBusy] = useState(false);
+  const [regenBusy, setRegenBusy]   = useState(false);
+  // Snapshot of the form at creation time — lets us detect edits made after
+  // "Create Client" so we can offer to regenerate the now-stale invite.
+  const [createdSnapshot, setCreatedSnapshot] = useState(null);
   const [toast, setToast]           = useState(null);
 
   const cardRef = useRef(null);
@@ -748,6 +752,7 @@ const TrainerAddClientPage = () => {
         expiresAt:  result?.invite?.expiresAt,
         hasPhone:   Boolean(form.phone),
       });
+      setCreatedSnapshot(form);
       setToast({ kind: "success", message: "Client created — share the activation link" });
     } catch (e) {
       const status = e?.response?.status;
@@ -770,6 +775,38 @@ const TrainerAddClientPage = () => {
       setToast({ kind: "error", message: e?.response?.data?.message || "Couldn't send invite" });
     } finally {
       setInviteBusy(false);
+    }
+  };
+
+  // True when the trainer edited the form after creating the client — the
+  // outstanding invite no longer reflects the latest info.
+  const dirtySinceCreate =
+    !!activation && !!createdSnapshot && JSON.stringify(form) !== JSON.stringify(createdSnapshot);
+
+  // Persist any post-creation edits, then mint a fresh invite link (old one
+  // is invalidated server-side). Always available once the client exists.
+  const regenerateInvite = async () => {
+    if (!activation?.id) return;
+    setRegenBusy(true);
+    setSubmitErr(null);
+    try {
+      if (dirtySinceCreate) {
+        await clientService.update(activation.id, toApiPayload(form));
+      }
+      const result = await clientService.regenerateInvite(activation.id);
+      setActivation((a) => ({
+        ...a,
+        clientName: result?.client?.name || a.clientName,
+        url:        result?.invite?.activationUrl || a.url,
+        expiresAt:  result?.invite?.expiresAt || a.expiresAt,
+        hasPhone:   Boolean(form.phone),
+      }));
+      setCreatedSnapshot(form);
+      setToast({ kind: "success", message: "New invite link generated" });
+    } catch (e) {
+      setToast({ kind: "error", message: e?.response?.data?.message || "Couldn't regenerate invite" });
+    } finally {
+      setRegenBusy(false);
     }
   };
 
@@ -810,6 +847,22 @@ const TrainerAddClientPage = () => {
           </Card.Header>
           <Card.Body>
             <div className="space-y-4">
+              {/* Stale-invite notice — appears when the form was edited after creation. */}
+              {dirtySinceCreate && (
+                <div className="flex items-start gap-3 rounded-lg border border-amber-400/30 bg-amber-400/[0.06] px-3 py-3">
+                  <WarningIcon size={16} className="text-amber-300 mt-0.5 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-semibold text-amber-200">Invite information has changed</p>
+                    <p className="text-[12px] text-text-secondary mt-0.5">
+                      You edited the client after creating it. Regenerate the link so it reflects the latest details — the old link will stop working.
+                    </p>
+                    <Button size="sm" className="mt-2.5" loading={regenBusy} onClick={regenerateInvite}>
+                      Regenerate Invite Link
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               {/* Link row */}
               <div>
                 <Label>Activation link</Label>
@@ -896,9 +949,16 @@ const TrainerAddClientPage = () => {
               {step > 1 && <Button variant="secondary" onClick={back} disabled={submitting}>Back</Button>}
               {step < 5
                 ? <Button onClick={next} disabled={submitting}>Continue →</Button>
-                : <Button onClick={submit} loading={submitting} disabled={!!activation}>
-                    {activation ? "Created ✓" : (submitting ? "Creating…" : "Create Client")}
-                  </Button>
+                : activation
+                  ? <div className="flex items-center gap-2">
+                      <span className="text-[12px] text-emerald-300 font-medium">Created ✓</span>
+                      <Button variant="secondary" onClick={regenerateInvite} loading={regenBusy}>
+                        Regenerate Invite Link
+                      </Button>
+                    </div>
+                  : <Button onClick={submit} loading={submitting}>
+                      {submitting ? "Creating…" : "Create Client"}
+                    </Button>
               }
             </div>
           </div>

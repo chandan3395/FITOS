@@ -39,6 +39,24 @@ async function updateClient(req, res, next) {
   }
 }
 
+async function deleteClient(req, res, next) {
+  try {
+    const result = await clientService.deleteClient(req.params.id, req.user);
+    return ApiResponse.ok(res, "Client deleted successfully", result);
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function regenerateInvite(req, res, next) {
+  try {
+    const result = await clientService.regenerateInvite(req.params.id, req.user);
+    return ApiResponse.ok(res, "Invite link regenerated", result);
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function sendInvite(req, res, next) {
   try {
     const result = await clientService.sendWhatsAppInvite(req.params.id, req.user);
@@ -48,4 +66,4 @@ async function sendInvite(req, res, next) {
   }
 }
 
-module.exports = { createClient, listClients, getClient, updateClient, sendInvite };
+module.exports = { createClient, listClients, getClient, updateClient, deleteClient, regenerateInvite, sendInvite };

@@ -5,6 +5,7 @@ export const ROUTES = {
   GOOGLE_CALLBACK:  "/auth/google/callback",
   ACTIVATE:         "/activate/:token",
   ACTIVATE_LINK:    "/activate/:token/link",
+  ACCOUNT_DISABLED: "/account-disabled",
 
   // Admin
   ADMIN:           "/admin",

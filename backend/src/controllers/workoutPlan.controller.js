@@ -11,7 +11,8 @@ const {
   deleteWorkoutPlan,
   reassignWorkoutPlan,
   getWorkoutCompletionHistory,
-  completeExercise
+  completeExercise,
+  logTodaysWorkoutViewed
 } = require("../services/workoutPlan.service");
 const ApiResponse = require("../utils/ApiResponse");
 
@@ -118,6 +119,15 @@ async function completeExerciseHandler(req, res, next) {
   }
 }
 
+async function logTodaysWorkoutViewedHandler(req, res, next) {
+  try {
+    const result = await logTodaysWorkoutViewed(req.user);
+    return ApiResponse.ok(res, "Recorded", result);
+  } catch (err) {
+    return next(err);
+  }
+}
+
 module.exports = {
   createWorkoutPlanHandler,
   getWorkoutPlansHandler,
@@ -129,5 +139,6 @@ module.exports = {
   deleteWorkoutPlanHandler,
   reassignWorkoutPlanHandler,
   getWorkoutCompletionHandler,
-  completeExerciseHandler
+  completeExerciseHandler,
+  logTodaysWorkoutViewedHandler
 };

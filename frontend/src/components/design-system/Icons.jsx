@@ -122,6 +122,19 @@ export const CalendarIcon = ({ size = 16, className = "" }) => (
   </svg>
 );
 
+export const PencilIcon = ({ size = 14, className = "" }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" fill="none" className={className}>
+    <path d="M11.5 2.5l2 2L6 12l-2.5.5L4 10l7.5-7.5z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
+    <path d="M10 4l2 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+  </svg>
+);
+
+export const CheckIcon = ({ size = 14, className = "" }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" fill="none" className={className}>
+    <path d="M3 8.5l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
 export const SpinnerIcon = ({ size = 16, className = "" }) => (
   <span
     style={{ width: size, height: size }}

@@ -113,7 +113,19 @@ async function googleCallback(req, res, _next) {
       throw new ApiError(401, "Google authentication failed");
     }
     if (!req.user.isActive) {
-      return res.redirect(`${env.CLIENT_ORIGIN}/login?error=account_disabled`);
+      // A disabled trainer who tries to sign in lands on a dedicated
+      // "Account Disabled" screen (not a silent bounce back to login).
+      // Record the attempt so admins can see it in the trainer's feed.
+      if (req.user.role === "TRAINER") {
+        await activityService.record({
+          trainerId: req.user._id,
+          actorId:   req.user._id,
+          actorRole: "TRAINER",
+          type:      "TRAINER_DISABLED_LOGIN_ATTEMPT",
+          summary:   `${req.user.name} attempted to sign in while disabled`,
+        });
+      }
+      return res.redirect(`${env.CLIENT_ORIGIN}/account-disabled`);
     }
 
     const { invite: inviteToken } = decodeState(req.query.state);

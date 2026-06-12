@@ -2,7 +2,26 @@
 
 const mongoose = require("mongoose");
 const { ActivityLog, ACTIVITY_TYPES } = require("../schemas/ActivityLog.schema");
+const { Client } = require("../schemas/Client.schema");
 const ApiError = require("../utils/ApiError");
+
+// Event types a CLIENT is allowed to see in their own Recent Activity feed.
+// Trainer-private events (email-mismatch audit, email/details edits made by
+// the trainer, deletion, disabled-login attempts, "viewed" telemetry) are
+// intentionally excluded.
+const CLIENT_VISIBLE_TYPES = [
+  "WORKOUT_PUBLISHED",
+  "NUTRITION_PUBLISHED",
+  "CHECKIN_SUBMITTED",
+  "PROGRESS_PHOTO_UPLOADED",
+  "MEAL_CHECKIN_UPLOADED",
+  "MEAL_PHOTO_UPLOADED",
+  "WORKOUT_COMPLETED",
+  "EXERCISE_COMPLETED",
+  "ACCOUNT_LINKED",
+  "INVITE_ACTIVATED",
+  "CLIENT_DETAILS_UPDATED",
+];
 
 /**
  * Append an activity record. Designed to be non-throwing — any failure is
@@ -65,4 +84,28 @@ async function listForUser(user, { limit = 20, trainerId: trainerIdParam } = {})
     .lean();
 }
 
-module.exports = { record, listForUser };
+/**
+ * GET /api/activity/me — newest-first feed for the signed-in CLIENT,
+ * scoped to their own client profile and filtered to client-visible event
+ * types. Resolves the Client by userId (relationships are keyed by clientId,
+ * never email). Returns [] when the user has no active client profile.
+ */
+async function listForClientUser(user, { limit = 20 } = {}) {
+  if (user.role !== "CLIENT") {
+    throw new ApiError(403, "Forbidden");
+  }
+
+  const client = await Client.findOne({ userId: user._id, isDeleted: { $ne: true } }).select("_id");
+  if (!client) return [];
+
+  const cap = Math.max(1, Math.min(Number(limit) || 20, 100));
+  return ActivityLog.find({
+    clientId: client._id,
+    type: { $in: CLIENT_VISIBLE_TYPES },
+  })
+    .sort({ createdAt: -1 })
+    .limit(cap)
+    .lean();
+}
+
+module.exports = { record, listForUser, listForClientUser, CLIENT_VISIBLE_TYPES };

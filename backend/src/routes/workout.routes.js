@@ -12,7 +12,8 @@ const {
   deleteWorkoutPlanHandler,
   reassignWorkoutPlanHandler,
   getWorkoutCompletionHandler,
-  completeExerciseHandler
+  completeExerciseHandler,
+  logTodaysWorkoutViewedHandler
 } = require("../controllers/workoutPlan.controller");
 const authenticate = require("../middleware/auth");
 
@@ -21,6 +22,7 @@ const router = Router();
 router.use(authenticate);
 
 router.get("/client/me", getCurrentClientWorkoutPlansHandler);
+router.post("/client/me/viewed", logTodaysWorkoutViewedHandler);
 router.post("/client/:clientId", createWorkoutPlanHandler);
 router.get("/client/:clientId", getWorkoutPlansHandler);
 

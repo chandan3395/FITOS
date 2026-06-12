@@ -8,6 +8,8 @@ const {
   listClients,
   getClient,
   updateClient,
+  deleteClient,
+  regenerateInvite,
   sendInvite,
 } = require("../controllers/client.controller");
 
@@ -27,6 +29,12 @@ router.get("/:id", authenticate, allowRoles("TRAINER"), getClient);
 
 // PATCH — update editable fields (incl. status="ARCHIVED" for archive flow).
 router.patch("/:id", authenticate, allowRoles("ADMIN", "TRAINER"), updateClient);
+
+// DELETE — soft-delete a client (non-destructive; reversible).
+router.delete("/:id", authenticate, allowRoles("ADMIN", "TRAINER"), deleteClient);
+
+// POST /api/clients/:id/invite/regenerate — invalidate old invite(s) and mint a fresh link.
+router.post("/:id/invite/regenerate", authenticate, allowRoles("ADMIN", "TRAINER"), regenerateInvite);
 
 // POST /api/clients/:id/invite — (re)send the activation invite via WhatsApp.
 router.post("/:id/invite", authenticate, allowRoles("ADMIN", "TRAINER"), sendInvite);

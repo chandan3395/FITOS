@@ -76,13 +76,22 @@ const TrainerDashboard = () => {
     CLIENT_CREATED:          "bg-sky-400",
     INVITE_SENT:             "bg-violet-400",
     INVITE_ACTIVATED:        "bg-emerald-400",
+    WHATSAPP_INVITE_SENT:    "bg-violet-400",
     ACCOUNT_LINKED:          "bg-primary",
     EMAIL_MISMATCH_DETECTED: "bg-amber-400",
+    CLIENT_DETAILS_UPDATED:  "bg-sky-400",
+    CLIENT_EMAIL_UPDATED:    "bg-sky-400",
+    CLIENT_DELETED:          "bg-red-400",
     WORKOUT_PUBLISHED:       "bg-primary",
     NUTRITION_PUBLISHED:     "bg-amber-400",
     CHECKIN_SUBMITTED:       "bg-emerald-400",
     PROGRESS_PHOTO_UPLOADED: "bg-violet-400",
     MEAL_CHECKIN_UPLOADED:   "bg-primary",
+    MEAL_PHOTO_UPLOADED:     "bg-primary",
+    WORKOUT_COMPLETED:       "bg-primary",
+    EXERCISE_COMPLETED:      "bg-emerald-400",
+    TODAYS_WORKOUT_VIEWED:   "bg-zinc-400",
+    TRAINER_DISABLED_LOGIN_ATTEMPT: "bg-red-400",
   };
   const activity = useMemo(() => {
     return activities.slice(0, 5).map((a) => ({

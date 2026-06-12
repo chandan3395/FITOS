@@ -66,6 +66,15 @@ async function completeExercise(planId, exerciseId) {
   return res.data?.data?.completion ?? null;
 }
 
+/** Fire-and-forget: record that the client viewed today's workout (deduped server-side). */
+async function logTodayViewed() {
+  try {
+    await api.post("/workouts/client/me/viewed");
+  } catch {
+    // Telemetry only — never surface or block the UI on failure.
+  }
+}
+
 const workoutService = {
   listForClient,
   listMine,
@@ -77,7 +86,8 @@ const workoutService = {
   reassign,
   duplicate,
   completions,
-  completeExercise
+  completeExercise,
+  logTodayViewed
 };
 
 export default workoutService;

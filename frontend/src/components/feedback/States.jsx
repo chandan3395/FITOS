@@ -2,6 +2,7 @@
 // These are thin compositions of existing Card + theme tokens — they
 // do not introduce any new colors, spacing, or typography.
 
+import { useEffect, useState } from "react";
 import Card from "../ui/Card";
 import Button from "../ui/Button";
 
@@ -93,21 +94,71 @@ export const ErrorState = ({ title = "Couldn't load this", message, onRetry }) =
   </Card>
 );
 
-/** Tiny inline toast for success/error feedback. */
-export const Toast = ({ kind = "success", message, onDismiss }) => {
+// Per-kind auto-dismiss timings (ms). Success is quick; warnings/errors
+// linger so the user can actually read them. Callers can override via the
+// `duration` prop.
+const TOAST_DURATIONS = {
+  success: 2000,
+  info:    3000,
+  warning: 4500,
+  error:   4500,
+};
+
+const TOAST_META = {
+  success: "bg-primary/10 border-primary/30 text-primary",
+  info:    "bg-info/10 border-info/30 text-info",
+  warning: "bg-warning/10 border-warning/30 text-warning",
+  error:   "bg-red-500/10 border-red-500/30 text-red-300",
+};
+
+const EXIT_MS = 320; // keep in sync with the toast-out keyframe duration
+
+/**
+ * Toast — auto-dismissing bottom-right notification.
+ *
+ * Slides in on mount, waits a kind-dependent duration, then slides/fades out
+ * and calls `onDismiss`. A manual × is still available for impatient users.
+ * Normalizes legacy/alias kinds ("danger" → error) so existing call sites
+ * keep working unchanged.
+ */
+export const Toast = ({ kind = "success", message, onDismiss, duration }) => {
+  const norm = kind === "danger" ? "error" : kind;
+  const [leaving, setLeaving] = useState(false);
+
+  // (Re)start the visible→exit timer whenever a new message appears.
+  useEffect(() => {
+    if (!message) return undefined;
+    setLeaving(false);
+    const ms = duration ?? TOAST_DURATIONS[norm] ?? 3000;
+    const t = setTimeout(() => setLeaving(true), ms);
+    return () => clearTimeout(t);
+  }, [message, norm, duration]);
+
+  // Once the exit animation has played, actually unmount via onDismiss.
+  useEffect(() => {
+    if (!leaving) return undefined;
+    const t = setTimeout(() => onDismiss?.(), EXIT_MS);
+    return () => clearTimeout(t);
+  }, [leaving, onDismiss]);
+
   if (!message) return null;
-  const meta = kind === "success"
-    ? "bg-primary/10 border-primary/30 text-primary"
-    : "bg-red-500/10 border-red-500/30 text-red-300";
+
+  const meta = TOAST_META[norm] || TOAST_META.success;
   return (
-    <div className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl border text-[13px] font-semibold shadow-card-lg animate-slide-up ${meta}`}>
+    <div
+      role="status"
+      aria-live="polite"
+      className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl border text-[13px] font-semibold shadow-card-lg ${meta} ${leaving ? "animate-toast-out" : "animate-toast-in"}`}
+    >
       <div className="flex items-center gap-3">
         <span>{message}</span>
-        {onDismiss && (
-          <button onClick={onDismiss} className="opacity-60 hover:opacity-100 transition-opacity text-base leading-none">
-            ×
-          </button>
-        )}
+        <button
+          onClick={() => setLeaving(true)}
+          className="opacity-60 hover:opacity-100 transition-opacity text-base leading-none"
+          aria-label="Dismiss notification"
+        >
+          ×
+        </button>
       </div>
     </div>
   );

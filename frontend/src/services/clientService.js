@@ -29,12 +29,24 @@ async function archive(id) {
   return update(id, { status: "ARCHIVED" });
 }
 
+/** DELETE /api/clients/:id — soft-delete a client (reversible server-side) */
+async function remove(id) {
+  const res = await api.delete(`/clients/${id}`);
+  return res.data?.data ?? null;
+}
+
 /** POST /api/clients/:id/invite — (re)send the activation invite via WhatsApp */
 async function sendInvite(id) {
   const res = await api.post(`/clients/${id}/invite`);
   return res.data?.data ?? null;
 }
 
-const clientService = { list, getById, create, update, archive, sendInvite };
+/** POST /api/clients/:id/invite/regenerate — invalidate old invite(s) + mint a fresh link */
+async function regenerateInvite(id) {
+  const res = await api.post(`/clients/${id}/invite/regenerate`);
+  return res.data?.data ?? null;
+}
+
+const clientService = { list, getById, create, update, archive, remove, sendInvite, regenerateInvite };
 
 export default clientService;

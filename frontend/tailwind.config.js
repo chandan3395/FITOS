@@ -74,6 +74,8 @@ export default {
         "slide-up":   "slide-up 0.3s ease forwards",
         "spin-slow":  "spin-slow 1.4s linear infinite",
         "pulse-slow": "pulse-slow 2s ease-in-out infinite",
+        "toast-in":   "toast-in 0.28s cubic-bezier(0.21,1.02,0.73,1) forwards",
+        "toast-out":  "toast-out 0.32s cubic-bezier(0.55,0,0.55,0.2) forwards",
       },
 
       keyframes: {
@@ -84,6 +86,14 @@ export default {
         "slide-up": {
           from: { opacity: "0", transform: "translateY(12px)" },
           to:   { opacity: "1", transform: "translateY(0)" },
+        },
+        "toast-in": {
+          from: { opacity: "0", transform: "translateX(24px) translateY(4px)" },
+          to:   { opacity: "1", transform: "translateX(0) translateY(0)" },
+        },
+        "toast-out": {
+          from: { opacity: "1", transform: "translateX(0)" },
+          to:   { opacity: "0", transform: "translateX(24px)" },
         },
         "spin-slow": {
           from: { transform: "rotate(0deg)" },

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
+import Modal from "../../components/ui/Modal";
 import {
   FlameIcon,
   CheckCircleIcon,
@@ -9,7 +10,9 @@ import {
 } from "../../components/design-system/Icons";
 import { ROUTES } from "../../constants/routes";
 import { SkeletonDetail, ErrorState, EmptyState, Toast } from "../../components/feedback/States";
+import InlineEditField from "../../components/trainer/InlineEditField";
 import clientService from "../../services/clientService";
+import workoutService from "../../services/workoutService";
 import checkinService from "../../services/checkinService";
 import progressPhotoService from "../../services/progressPhotoService";
 import mealCheckinService from "../../services/mealCheckinService";
@@ -38,26 +41,214 @@ const KV = ({ label, value, accent = "text-text-primary" }) => (
   </div>
 );
 
+// ── Field validators (mirror backend clientPayload.validator) ───
+const EMAIL_RX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_RX = /^[0-9+\s\-()]{7,20}$/;
+const GENDER_OPTS = [
+  { value: "MALE",   label: "Male" },
+  { value: "FEMALE", label: "Female" },
+  { value: "OTHER",  label: "Other" },
+];
+
+const vName  = (v) => !v ? "Name is required." : v.length < 2 ? "Name must be at least 2 characters." : null;
+const vEmail = (v) => !v ? "Email is required." : EMAIL_RX.test(v) ? null : "Enter a valid email address.";
+const vPhone = (v) => !v ? "Phone is required." : PHONE_RX.test(v) ? null : "Enter a valid phone number (7–20 digits).";
+const vGoal  = (v) => !v ? "Goal is required." : v.length < 2 ? "Goal must be at least 2 characters." : null;
+const vDob   = (v) => {
+  if (!v) return null;
+  const d = new Date(v);
+  if (isNaN(d.getTime())) return "Enter a valid date.";
+  if (d > new Date()) return "Date of birth must be in the past.";
+  return null;
+};
+const vGoalDesc = (v) => !v ? null : v.length < 20 ? "Goal description must be at least 20 characters." : null;
+// Numeric range validator; empty leaves the field unchanged.
+const vNum = (min, max, label, { integer = false } = {}) => (v) => {
+  if (!v) return null;
+  const n = Number(v);
+  if (!Number.isFinite(n)) return `${label} must be a number.`;
+  if (integer && !Number.isInteger(n)) return `${label} must be a whole number.`;
+  if (n < min || n > max) return `${label} must be between ${min} and ${max}.`;
+  return null;
+};
+
+const todayDayNumber = () => {
+  const jsDay = new Date().getDay();
+  return jsDay === 0 ? 7 : jsDay;
+};
+
+// ── TODAY'S WORKOUT STATUS (trainer read-only) ──────────────────
+// Self-contained: fetches the client's ACTIVE plan + completions so the
+// trainer sees today's adherence at a glance, without opening the workout
+// tab. Silent on failure — it's a glanceable widget, not a blocking view.
+const TodaysWorkoutStatus = ({ clientId }) => {
+  const [plan, setPlan] = useState(null);
+  const [completions, setCompletions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const plans = await workoutService.listForClient(clientId, { status: "ACTIVE" });
+        const active = plans[0] || null;
+        let comps = [];
+        if (active) comps = await workoutService.completions(active._id).catch(() => []);
+        if (!cancelled) { setPlan(active); setCompletions(comps); }
+      } catch {
+        if (!cancelled) { setPlan(null); setCompletions([]); }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [clientId]);
+
+  const completedIds = new Set(completions.map((c) => String(c.exerciseId)));
+  const currentDay = todayDayNumber();
+  const todays = (plan?.exercises || [])
+    .filter((ex) => Number(ex.dayNumber || 1) === currentDay)
+    .sort((a, b) => Number(a.order || 0) - Number(b.order || 0));
+  const done = todays.filter((ex) => completedIds.has(String(ex._id))).length;
+  const pct = todays.length ? Math.round((done / todays.length) * 100) : 0;
+
+  return (
+    <Card>
+      <Card.Header>
+        <div className="flex items-center justify-between gap-3">
+          <Card.Title>Today&apos;s Workout Status</Card.Title>
+          {plan && todays.length > 0 && (
+            <span className="text-[12px] font-semibold text-primary">{pct}% · {done}/{todays.length}</span>
+          )}
+        </div>
+      </Card.Header>
+      <Card.Body>
+        {loading ? (
+          <p className="text-sm text-text-muted py-2">Loading today&apos;s workout…</p>
+        ) : !plan ? (
+          <p className="text-sm text-text-secondary">No active workout plan assigned.</p>
+        ) : todays.length === 0 ? (
+          <p className="text-sm text-text-secondary">Nothing scheduled for today (Day {currentDay}).</p>
+        ) : (
+          <>
+            <div className="h-2 rounded-full bg-surface-elevated overflow-hidden mb-4">
+              <div className="h-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+            </div>
+            <div className="space-y-2">
+              {todays.map((ex) => {
+                const completed = completedIds.has(String(ex._id));
+                return (
+                  <div key={ex._id} className="flex items-center justify-between gap-3 rounded-lg bg-surface-elevated border border-border px-3 py-2.5">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-text-primary truncate">{ex.name}</p>
+                      <p className="text-[12px] text-text-muted">
+                        {ex.sets || "—"} sets × {ex.reps || "—"} reps{ex.weight != null ? ` · ${ex.weight} kg` : ""}
+                      </p>
+                    </div>
+                    {completed ? (
+                      <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-emerald-300 shrink-0">
+                        <CheckCircleIcon size={14} /> Completed
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-text-muted shrink-0">
+                        <span className="w-3.5 h-3.5 rounded-[4px] border border-text-muted/60" /> Pending
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </Card.Body>
+    </Card>
+  );
+};
+
 // ── OVERVIEW ────────────────────────────────────────────────────
-const OverviewTab = ({ client, lastCheckIn }) => {
+// `onSaveField(field, value, label)` persists a single field, refreshes the
+// client, and toasts — supplied by the page. Read-only when absent (e.g. an
+// archived client or a non-trainer viewer).
+const OverviewTab = ({ client, lastCheckIn, onSaveField }) => {
   const current = lastCheckIn?.weight ?? client.startingWeight ?? null;
   const change  = current && client.startingWeight ? (current - client.startingWeight).toFixed(1) : null;
   const dob     = client.dob ? new Date(client.dob).toLocaleDateString() : null;
   const startDt = client.startDate ? new Date(client.startDate).toLocaleDateString() : null;
 
   const hasHealth = client.medicalConditions || client.medications || client.pastInjuries || client.allergies;
+  const editable  = typeof onSaveField === "function";
+
+  // Email-mismatch audit: the invited address (snapshotted at link time,
+  // falling back to the current profile email) vs the linked Google email.
+  const invitedEmail = (client.invitedEmail || client.email || "").toLowerCase();
+  const linkedGoogle = (client.googleEmail || "").toLowerCase();
+  const emailMismatch = client.googleLinked && invitedEmail && linkedGoogle && invitedEmail !== linkedGoogle;
+
+  // Helper: render an inline-editable field bound to `client[name]`.
+  const F = (name, label, props = {}) => (
+    <InlineEditField
+      label={label}
+      value={client[name]}
+      editable={editable}
+      onSave={(v) => onSaveField(name, v, label)}
+      {...props}
+    />
+  );
 
   return (
     <div className="space-y-4">
+      {/* Email mismatch — informational; account is linked and working */}
+      {emailMismatch && (
+        <Card className="border-amber-400/30 bg-amber-400/[0.04]">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-400/15 text-amber-300 flex items-center justify-center shrink-0">
+              <WarningIcon size={18} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-amber-200">Email Mismatch Detected</p>
+              <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-4 text-[13px]">
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.08em] text-text-muted">Invited Email</p>
+                  <p className="text-text-secondary mt-0.5 break-all">{invitedEmail}</p>
+                </div>
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.08em] text-text-muted">Linked Google Email</p>
+                  <p className="text-text-secondary mt-0.5 break-all">{linkedGoogle}</p>
+                </div>
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.08em] text-text-muted">Status</p>
+                  <p className="text-emerald-300 mt-0.5 flex items-center gap-1.5">
+                    <CheckCircleIcon size={13} /> Account Linked Successfully
+                  </p>
+                </div>
+              </div>
+              <p className="text-[12px] text-text-muted mt-3">
+                This is informational only — the account is linked and continues to function normally.
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* Goal snapshot */}
       <Card>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-          <KV label="Goal"     value={client.goal} />
-          <KV label="Starting" value={client.startingWeight ? `${client.startingWeight} kg` : null} />
-          <KV label="Current"  value={current ? `${current} kg` : null} />
-          <KV label="Target"   value={client.targetWeight ? `${client.targetWeight} kg` : null} accent="text-primary" />
+          {F("goal", "Goal", { validate: vGoal })}
+          {F("startingWeight", "Starting", {
+            type: "number", validate: vNum(20, 300, "Starting weight"),
+            display: client.startingWeight ? `${client.startingWeight} kg` : null,
+          })}
+          <KV label="Current" value={current ? `${current} kg` : null} />
+          {F("targetWeight", "Target", {
+            type: "number", validate: vNum(20, 300, "Target weight"),
+            display: client.targetWeight ? `${client.targetWeight} kg` : null,
+          })}
         </div>
       </Card>
+
+      {/* Today's workout adherence — glanceable, no extra navigation */}
+      <TodaysWorkoutStatus clientId={client._id} />
 
       {/* Quick metrics */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -93,10 +284,22 @@ const OverviewTab = ({ client, lastCheckIn }) => {
         <Card.Header><Card.Title>Body Metrics</Card.Title></Card.Header>
         <Card.Body>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-            <KV label="Height"          value={client.height ? `${client.height} cm` : null} />
-            <KV label="Body Fat"        value={client.bodyFat != null ? `${client.bodyFat} %` : null} />
-            <KV label="Target Body Fat" value={client.targetBodyFat != null ? `${client.targetBodyFat} %` : null} />
-            <KV label="Age"             value={client.age ? `${client.age} yrs` : null} />
+            {F("height", "Height", {
+              type: "number", validate: vNum(80, 250, "Height"),
+              display: client.height ? `${client.height} cm` : null,
+            })}
+            {F("bodyFat", "Body Fat", {
+              type: "number", validate: vNum(1, 60, "Body fat"),
+              display: client.bodyFat != null ? `${client.bodyFat} %` : null,
+            })}
+            {F("targetBodyFat", "Target Body Fat", {
+              type: "number", validate: vNum(1, 60, "Target body fat"),
+              display: client.targetBodyFat != null ? `${client.targetBodyFat} %` : null,
+            })}
+            {F("age", "Age", {
+              type: "number", validate: vNum(1, 120, "Age", { integer: true }),
+              display: client.age ? `${client.age} yrs` : null,
+            })}
           </div>
         </Card.Body>
       </Card>
@@ -111,26 +314,33 @@ const OverviewTab = ({ client, lastCheckIn }) => {
             <KV label="Session Cadence" value={client.sessionFrequency} />
             <KV label="Start Date"      value={startDt} />
           </div>
-          {client.goalDescription && (
-            <div className="mt-5">
-              <p className="text-[11px] font-semibold tracking-[0.08em] text-text-muted uppercase mb-2">Goal Description</p>
-              <p className="text-sm text-text-secondary whitespace-pre-wrap leading-relaxed">{client.goalDescription}</p>
-            </div>
-          )}
+          <div className="mt-5">
+            {F("goalDescription", "Goal Description", {
+              type: "textarea", validate: vGoalDesc,
+              placeholder: "Describe the client's goal in detail (min 20 characters)…",
+              display: client.goalDescription
+                ? <span className="text-sm text-text-secondary whitespace-pre-wrap leading-relaxed font-normal">{client.goalDescription}</span>
+                : null,
+            })}
+          </div>
         </Card.Body>
       </Card>
 
-      {/* Personal */}
+      {/* Personal Information */}
       <Card>
-        <Card.Header><Card.Title>Personal</Card.Title></Card.Header>
+        <Card.Header>
+          <Card.Title>Personal Information</Card.Title>
+          {editable && <Card.Description>Hover a field and click the pencil to edit it.</Card.Description>}
+        </Card.Header>
         <Card.Body>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-            <KV label="Phone"       value={client.phone} />
-            <KV label="Email"       value={client.email} />
-            <KV label="City"        value={client.city} />
-            <KV label="Occupation"  value={client.occupation} />
-            <KV label="Gender"      value={client.gender} />
-            <KV label="Date of birth" value={dob} />
+            {F("name", "Full Name", { validate: vName })}
+            {F("email", "Email", { type: "email", validate: vEmail })}
+            {F("phone", "Phone", { type: "tel", validate: vPhone })}
+            {F("city", "City")}
+            {F("occupation", "Occupation")}
+            {F("gender", "Gender", { type: "select", options: GENDER_OPTS })}
+            {F("dob", "Date of Birth", { type: "date", validate: vDob, display: dob })}
             <KV label="Invite Sent" value={client.lastInviteSentAt ? fmtDate(client.lastInviteSentAt) : null} />
           </div>
         </Card.Body>
@@ -619,21 +829,36 @@ const MealCheckinsTab = ({ items, loading, error, onReload }) => {
   );
 };
 
-// ── Notes tab — renders the trainer-private notes captured at onboarding.
-const NotesPlanTab = ({ client }) => (
-  <Card>
-    <Card.Header>
-      <Card.Title>Private Trainer Notes</Card.Title>
-      <Card.Description>Only visible to you. Captured during onboarding.</Card.Description>
-    </Card.Header>
-    <Card.Body>
-      {client.privateNotes
-        ? <p className="text-sm text-text-primary whitespace-pre-wrap leading-relaxed">{client.privateNotes}</p>
-        : <EmptyState title="No notes recorded" description="Add notes from the Add Client wizard or future edit flow." />
-      }
-    </Card.Body>
-  </Card>
-);
+// ── Notes tab — trainer-private notes, inline-editable.
+const NotesPlanTab = ({ client, onSaveField }) => {
+  const editable = typeof onSaveField === "function";
+  return (
+    <Card>
+      <Card.Header>
+        <Card.Title>Private Trainer Notes</Card.Title>
+        <Card.Description>Only visible to you. {editable ? "Click the pencil to edit." : "Captured during onboarding."}</Card.Description>
+      </Card.Header>
+      <Card.Body>
+        {editable ? (
+          <InlineEditField
+            label="Notes"
+            value={client.privateNotes}
+            type="textarea"
+            placeholder="Add private notes about this client…"
+            onSave={(v) => onSaveField("privateNotes", v, "Notes")}
+            display={client.privateNotes
+              ? <span className="text-sm text-text-primary whitespace-pre-wrap leading-relaxed font-normal">{client.privateNotes}</span>
+              : null}
+          />
+        ) : client.privateNotes ? (
+          <p className="text-sm text-text-primary whitespace-pre-wrap leading-relaxed">{client.privateNotes}</p>
+        ) : (
+          <EmptyState title="No notes recorded" description="Add notes from the Add Client wizard or future edit flow." />
+        )}
+      </Card.Body>
+    </Card>
+  );
+};
 
 // ── Messages tab — premium trainer⇄client chat. ────────────────────
 // DEMO-ONLY: there is no backend, socket, or persistence. The thread lives
@@ -781,6 +1006,11 @@ const TrainerClientDetailPage = () => {
   const [error, setError]     = useState(null);
   const [archiveBusy, setArc] = useState(false);
   const [inviteBusy, setInviteBusy] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [regenBusy, setRegenBusy] = useState(false);
+  const [inviteBannerDismissed, setInviteBannerDismissed] = useState(false);
+  const [newInviteUrl, setNewInviteUrl] = useState(null);
   const [toast, setToast]     = useState(null);
 
   const reload = useCallback(async () => {
@@ -822,6 +1052,19 @@ const TrainerClientDetailPage = () => {
     setMeals(await mealCheckinService.listForClient(id).catch(() => []));
   }, [id]);
 
+  // Persist a single profile field (CRM-style inline edit). Updates by
+  // clientId — never email — so workouts, nutrition, check-ins, photos and
+  // activity history all stay attached. Throws on failure so the field's
+  // editor can surface an inline error; toasts on success.
+  const saveField = useCallback(async (field, value, label) => {
+    const updated = await clientService.update(id, { [field]: value });
+    if (updated) setClient(updated);
+    // A fresh edit may have re-flagged the invite as stale — un-dismiss so the
+    // warning banner can reappear when the server sets inviteNeedsRegeneration.
+    setInviteBannerDismissed(false);
+    setToast({ kind: "success", message: `${label || "Field"} updated successfully` });
+  }, [id]);
+
   const resendInvite = async () => {
     setInviteBusy(true);
     try {
@@ -832,6 +1075,21 @@ const TrainerClientDetailPage = () => {
       setToast({ kind: "error", message: e?.response?.data?.message || "Couldn't send invite" });
     } finally {
       setInviteBusy(false);
+    }
+  };
+
+  const regenerateInvite = async () => {
+    setRegenBusy(true);
+    try {
+      const result = await clientService.regenerateInvite(id);
+      if (result?.client) setClient(result.client);
+      setNewInviteUrl(result?.invite?.activationUrl || null);
+      setInviteBannerDismissed(true);
+      setToast({ kind: "success", message: "New invite link generated" });
+    } catch (e) {
+      setToast({ kind: "error", message: e?.response?.data?.message || "Couldn't regenerate invite" });
+    } finally {
+      setRegenBusy(false);
     }
   };
 
@@ -846,6 +1104,20 @@ const TrainerClientDetailPage = () => {
       setToast({ kind: "error", message: e?.response?.data?.message || "Archive failed" });
     } finally {
       setArc(false);
+    }
+  };
+
+  const doDelete = async () => {
+    setDeleteBusy(true);
+    try {
+      await clientService.remove(id);
+      setDeleteOpen(false);
+      setToast({ kind: "success", message: "Client deleted" });
+      // Leave the now-inaccessible detail page for the client list.
+      setTimeout(() => navigate(ROUTES.TRAINER_CLIENTS), 700);
+    } catch (e) {
+      setToast({ kind: "error", message: e?.response?.data?.message || "Delete failed" });
+      setDeleteBusy(false);
     }
   };
 
@@ -876,14 +1148,18 @@ const TrainerClientDetailPage = () => {
   const statusLabel = statusMeta.label;
   const statusColor = statusMeta.color;
 
+  // Editing is a trainer capability; archived clients are read-only.
+  const canEdit = client.status !== "ARCHIVED";
+  const editSaver = canEdit ? saveField : undefined;
+
   const tabContent = {
-    overview:  <OverviewTab client={client} lastCheckIn={lastCheckIn} />,
+    overview:  <OverviewTab client={client} lastCheckIn={lastCheckIn} onSaveField={editSaver} />,
     checkins:  <CheckinsTab clientId={id} items={checkins} loading={false} error={null} onReload={reloadCheckins} />,
     photos:    <PhotosTab   clientId={id} items={photos}   loading={false} error={null} onReload={reloadPhotos}   />,
     meals:     <MealCheckinsTab clientId={id} items={meals} loading={false} error={null} onReload={reloadMeals} />,
     workout:   <WorkoutPlanTab clientId={id} />,
     nutrition: <NutritionPlanTab clientId={id} />,
-    notes:     <NotesPlanTab     client={client} />,
+    notes:     <NotesPlanTab     client={client} onSaveField={editSaver} />,
     messages:  <MessagesTab      client={client} />,
   };
 
@@ -933,9 +1209,69 @@ const TrainerClientDetailPage = () => {
             {client.status !== "ARCHIVED" && (
               <Button size="sm" variant="danger" loading={archiveBusy} onClick={archive}>Archive</Button>
             )}
+            <Button size="sm" variant="danger" onClick={() => setDeleteOpen(true)}>Delete Client</Button>
           </div>
         </div>
       </Card>
+
+      {/* Stale-invite warning — shown when onboarding info changed before the
+          client activated, so the outstanding invite link may be invalid. */}
+      {client.inviteNeedsRegeneration && client.status === "PENDING" && !inviteBannerDismissed && (
+        <Card className="border-amber-400/30 bg-amber-400/[0.05]">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-400/15 text-amber-300 flex items-center justify-center shrink-0">
+              <WarningIcon size={18} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-amber-200">Invite information has changed</p>
+              <p className="text-[13px] text-text-secondary mt-1">
+                The current invite link may no longer be valid. Generate a new invite link to share the latest details.
+              </p>
+              <div className="mt-3 flex items-center gap-2 flex-wrap">
+                <Button size="sm" loading={regenBusy} onClick={regenerateInvite}>Generate New Invite Link</Button>
+                <Button size="sm" variant="ghost" disabled={regenBusy} onClick={() => setInviteBannerDismissed(true)}>Dismiss</Button>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Freshly regenerated invite link — copyable. */}
+      {newInviteUrl && (
+        <Card className="border-primary/30 bg-primary/[0.04]">
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <CheckCircleIcon size={16} className="text-primary" />
+              <p className="text-sm font-semibold text-text-primary">New invite link ready</p>
+            </div>
+            <button
+              onClick={() => setNewInviteUrl(null)}
+              className="text-text-muted hover:text-text-primary transition-colors text-sm"
+              aria-label="Hide new invite link"
+            >
+              ×
+            </button>
+          </div>
+          <div className="mt-3 flex items-center gap-2">
+            <input
+              readOnly
+              value={newInviteUrl}
+              onClick={(e) => e.target.select()}
+              className="flex-1 h-9 px-3 rounded-lg bg-surface-elevated border border-border text-[12.5px] font-mono text-text-primary"
+            />
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => {
+                navigator.clipboard?.writeText(newInviteUrl);
+                setToast({ kind: "success", message: "Link copied" });
+              }}
+            >
+              Copy link
+            </Button>
+          </div>
+        </Card>
+      )}
 
       <div className="border-b border-border">
         <div className="flex items-center gap-1 overflow-x-auto -mb-px">
@@ -957,6 +1293,28 @@ const TrainerClientDetailPage = () => {
       </div>
 
       {tabContent[tab]}
+
+      <Modal
+        isOpen={deleteOpen}
+        onClose={() => !deleteBusy && setDeleteOpen(false)}
+        title="Delete Client"
+        size="sm"
+        footer={
+          <>
+            <Button variant="secondary" size="sm" disabled={deleteBusy} onClick={() => setDeleteOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="danger" size="sm" loading={deleteBusy} onClick={doDelete}>
+              Delete
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-text-secondary leading-relaxed">
+          Are you sure you want to delete <span className="font-semibold text-text-primary">{client.name}</span>?
+        </p>
+        <p className="text-sm text-text-muted mt-2">This action cannot be undone.</p>
+      </Modal>
 
       <Toast {...(toast || {})} onDismiss={() => setToast(null)} />
     </div>

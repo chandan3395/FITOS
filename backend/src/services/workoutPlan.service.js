@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const { WorkoutPlan } = require("../schemas/WorkoutPlan.schema");
 const { Client } = require("../schemas/Client.schema");
 const { WorkoutCompletion } = require("../schemas/WorkoutCompletion.schema");
+const { ActivityLog } = require("../schemas/ActivityLog.schema");
 const { validateWorkoutPayload } = require("../validators/workoutPayload.validator");
 const ApiError = require("../utils/ApiError");
 const activityService = require("./activity.service");
@@ -24,7 +25,7 @@ async function resolveClientForUser(user, clientId, { allowAdmin = false, allowC
   assertObjectId(clientId, "clientId");
 
   const client = await Client.findById(clientId);
-  if (!client) {
+  if (!client || client.isDeleted) {
     throw new ApiError(404, "Client not found");
   }
 
@@ -51,7 +52,7 @@ async function resolveCurrentClient(user) {
     throw new ApiError(403, "Forbidden");
   }
 
-  const client = await Client.findOne({ userId: user._id });
+  const client = await Client.findOne({ userId: user._id, isDeleted: { $ne: true } });
   if (!client) {
     throw new ApiError(404, "Client record not found");
   }
@@ -249,11 +250,83 @@ async function completeExercise(user, workoutPlanId, exerciseId) {
     return existing;
   }
 
-  return WorkoutCompletion.create({
+  const completion = await WorkoutCompletion.create({
     clientId: workoutPlan.clientId,
     workoutPlanId: workoutPlan._id,
     exerciseId: exercise._id
   });
+
+  // Activity: one EXERCISE_COMPLETED per exercise, plus a single
+  // WORKOUT_COMPLETED when the final exercise of the plan is checked off.
+  const client = await Client.findById(workoutPlan.clientId);
+  const trainerId = client?.trainerId;
+  if (trainerId) {
+    await activityService.record({
+      trainerId,
+      clientId:  workoutPlan.clientId,
+      actorId:   user._id,
+      actorRole: "CLIENT",
+      type:      "EXERCISE_COMPLETED",
+      entityId:  workoutPlan._id,
+      summary:   `${client?.name || "Client"} completed ${exercise.name}`,
+      metadata:  { planName: workoutPlan.planName, exerciseName: exercise.name },
+    });
+
+    const totalExercises = workoutPlan.exercises.length;
+    const completedCount = await WorkoutCompletion.countDocuments({
+      clientId: workoutPlan.clientId,
+      workoutPlanId: workoutPlan._id,
+    });
+    if (totalExercises > 0 && completedCount >= totalExercises) {
+      await activityService.record({
+        trainerId,
+        clientId:  workoutPlan.clientId,
+        actorId:   user._id,
+        actorRole: "CLIENT",
+        type:      "WORKOUT_COMPLETED",
+        entityId:  workoutPlan._id,
+        summary:   `${client?.name || "Client"} completed the "${workoutPlan.planName}" workout`,
+        metadata:  { planName: workoutPlan.planName, totalExercises },
+      });
+    }
+  }
+
+  return completion;
+}
+
+/**
+ * Record that the client viewed today's workout. Deduped to at most one
+ * TODAYS_WORKOUT_VIEWED per client per calendar day so a dashboard that
+ * reloads frequently doesn't flood the feed. No-op when the client has no
+ * active plan or trainer.
+ */
+async function logTodaysWorkoutViewed(user) {
+  const client = await resolveCurrentClient(user);
+  if (!client.trainerId) return { logged: false };
+
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const alreadyToday = await ActivityLog.findOne({
+    trainerId: client.trainerId,
+    clientId:  client._id,
+    type:      "TODAYS_WORKOUT_VIEWED",
+    createdAt: { $gte: startOfDay },
+  }).select("_id");
+
+  if (alreadyToday) return { logged: false };
+
+  await activityService.record({
+    trainerId: client.trainerId,
+    clientId:  client._id,
+    actorId:   user._id,
+    actorRole: "CLIENT",
+    type:      "TODAYS_WORKOUT_VIEWED",
+    entityId:  client._id,
+    summary:   `${client.name} viewed today's workout`,
+  });
+
+  return { logged: true };
 }
 
 module.exports = {
@@ -267,5 +340,6 @@ module.exports = {
   deleteWorkoutPlan,
   reassignWorkoutPlan,
   getWorkoutCompletionHistory,
-  completeExercise
+  completeExercise,
+  logTodaysWorkoutViewed
 };
