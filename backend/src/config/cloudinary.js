@@ -52,18 +52,17 @@ function publicIdFor(clientId, weekNumber, slot) {
 }
 
 /**
- * Build the signed payload the browser needs to upload one slot directly.
+ * Build the signed payload the browser needs to upload one asset directly.
  * The signature covers exactly the params the browser must echo back (plus
  * timestamp) — Cloudinary recomputes and compares server-side.
  *
  * We sign with `public_id` (full path), `overwrite` and `invalidate` so
- * replacing a slot reuses the same asset id (no orphans) and busts the CDN
- * cache. `folder` is intentionally *not* sent — the full path lives in
- * public_id, which keeps ids deterministic.
+ * replacing an asset reuses the same id (no orphans) and busts the CDN cache.
+ * `folder` is intentionally *not* signed — the full path lives in public_id,
+ * which keeps ids deterministic.
  */
-function signUpload({ clientId, weekNumber, slot }) {
+function buildSignedPayload(publicId, folder) {
   const timestamp = Math.round(Date.now() / 1000);
-  const publicId  = publicIdFor(clientId, weekNumber, slot);
 
   const paramsToSign = {
     invalidate: true,
@@ -80,10 +79,34 @@ function signUpload({ clientId, weekNumber, slot }) {
     apiKey:    API_KEY,
     cloudName: CLOUD_NAME,
     publicId,
-    folder:    folderFor(clientId, weekNumber),
+    folder,
     overwrite:  true,
     invalidate: true,
   };
+}
+
+/** Sign one progress-photo slot upload — (client, week, slot). */
+function signUpload({ clientId, weekNumber, slot }) {
+  return buildSignedPayload(
+    publicIdFor(clientId, weekNumber, slot),
+    folderFor(clientId, weekNumber)
+  );
+}
+
+// ── Meal check-in assets — keyed by (client, date, meal) ──────────────
+//   fitos/clients/<clientId>/meals/<date>/<meal>
+function mealFolderFor(clientId, date) {
+  return `${ROOT_FOLDER}/clients/${clientId}/meals/${date}`;
+}
+function mealPublicIdFor(clientId, date, meal) {
+  return `${mealFolderFor(clientId, date)}/${meal}`;
+}
+/** Sign one meal-photo slot upload — (client, date, meal). */
+function signMealUpload({ clientId, date, meal }) {
+  return buildSignedPayload(
+    mealPublicIdFor(clientId, date, meal),
+    mealFolderFor(clientId, date)
+  );
 }
 
 /** Canonical secure delivery URL for full-size viewing. */
@@ -128,6 +151,9 @@ module.exports = {
   folderFor,
   publicIdFor,
   signUpload,
+  mealFolderFor,
+  mealPublicIdFor,
+  signMealUpload,
   urlFor,
   thumbnailUrlFor,
   destroy,

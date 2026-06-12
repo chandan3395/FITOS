@@ -10,4 +10,11 @@ async function sign(req, res, next) {
   } catch (e) { next(e); }
 }
 
-module.exports = { sign };
+async function signMeal(req, res, next) {
+  try {
+    const payload = await uploadService.signMealPhoto(req.user, req.body);
+    return ApiResponse.ok(res, "Upload signed", payload);
+  } catch (e) { next(e); }
+}
+
+module.exports = { sign, signMeal };

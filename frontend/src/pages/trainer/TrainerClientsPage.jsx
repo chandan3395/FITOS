@@ -9,13 +9,16 @@ import { ROUTES } from "../../constants/routes";
 const FILTERS = [
   { id: "all",       label: "All" },
   { id: "active",    label: "Active" },
+  { id: "pending",   label: "Pending" },
   { id: "attention", label: "Attention Needed" },
   { id: "archived",  label: "Archived" },
 ];
 
 /** Map a backend client document → the row shape this grid renders. */
 function toRow(c) {
-  const status = c.status === "ARCHIVED" ? "archived" : "active";
+  const status =
+    c.status === "ARCHIVED" ? "archived" :
+    c.status === "PENDING"  ? "pending"  : "active";
   const weight = c.startingWeight ?? null;
   return {
     id:          c._id,
@@ -32,6 +35,7 @@ function toRow(c) {
 
 const STATUS_META = {
   active:   { label: "Active",   text: "text-emerald-400", bg: "bg-emerald-400/10", dot: "bg-emerald-400" },
+  pending:  { label: "Pending",  text: "text-amber-400",   bg: "bg-amber-400/10",   dot: "bg-amber-400" },
   archived: { label: "Archived", text: "text-zinc-500",    bg: "bg-zinc-800",       dot: "bg-zinc-600" },
 };
 
@@ -125,6 +129,7 @@ const TrainerClientsPage = () => {
   const counts = useMemo(() => ({
     all:       rows.length,
     active:    rows.filter((c) => c.bucket === "active").length,
+    pending:   rows.filter((c) => c.bucket === "pending").length,
     attention: 0,
     archived:  rows.filter((c) => c.bucket === "archived").length,
   }), [rows]);

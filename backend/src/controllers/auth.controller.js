@@ -12,6 +12,7 @@ const ApiResponse = require("../utils/ApiResponse");
 const ApiError = require("../utils/ApiError");
 const { env } = require("../config/env");
 const activityService = require("../services/activity.service");
+const accountLinking = require("../services/accountLinking.service");
 
 const REFRESH_COOKIE = "refreshToken";
 
@@ -79,14 +80,32 @@ async function adminLogin(req, res, next) {
   }
 }
 
+// Decode the base64-JSON OAuth `state` we set on the /google route.
+function decodeState(raw) {
+  try {
+    return JSON.parse(Buffer.from(String(raw || ""), "base64").toString("utf8")) || {};
+  } catch {
+    return {};
+  }
+}
+
+// Redirect helper: hand the access token to the SPA via the URL fragment
+// (never logged server-side) so GoogleCallbackPage can finish the sign-in.
+function redirectWithToken(res, accessToken, role) {
+  const params = new URLSearchParams({ token: accessToken, role });
+  return res.redirect(`${env.CLIENT_ORIGIN}/auth/google/callback#${params.toString()}`);
+}
+
 /**
  * Google OAuth callback handler.
  *
- * After Passport verifies the Google profile we issue our own JWT pair
- * and redirect the browser to a frontend page (`/auth/google/callback`)
- * with the access token in the URL fragment. The refresh token is already
- * set as an HttpOnly cookie by `issueTokens`. The fragment never leaves
- * the browser, so the access token is not logged server-side.
+ * Two modes, distinguished by whether the OAuth `state` carried an invite
+ * token (set when the client started from their activation link):
+ *
+ *   - No invite  → ordinary sign-in (trainer, or an already-linked client).
+ *   - Invite     → account-linking flow (see handleInviteLink): attach this
+ *                  Google account to the invited Client profile, confirming
+ *                  first if the invited and Google emails differ.
  */
 async function googleCallback(req, res, _next) {
   try {
@@ -97,15 +116,98 @@ async function googleCallback(req, res, _next) {
       return res.redirect(`${env.CLIENT_ORIGIN}/login?error=account_disabled`);
     }
 
+    const { invite: inviteToken } = decodeState(req.query.state);
+    if (inviteToken) {
+      return handleInviteLink(req, res, inviteToken);
+    }
+
     const accessToken = await issueTokens(req.user, res);
-    const params = new URLSearchParams({
-      token: accessToken,
-      role:  req.user.role,
-    });
-    return res.redirect(`${env.CLIENT_ORIGIN}/auth/google/callback#${params.toString()}`);
+    return redirectWithToken(res, accessToken, req.user.role);
   } catch (err) {
     // On failure, send the user back to the login page with an error flag.
     return res.redirect(`${env.CLIENT_ORIGIN}/login?error=google_failed`);
+  }
+}
+
+/**
+ * Invite-driven Google sign-in. The Client profile (created by the trainer)
+ * is the source of truth; the Google account is attached to it.
+ *
+ *   - emails match (or same already-linked user) → link immediately + sign in.
+ *   - emails differ                              → defer to a confirmation
+ *     screen carrying a signed link token (no linking happens yet).
+ *
+ * All failures redirect back to the activation page with an error code rather
+ * than throwing, so the client always lands somewhere meaningful.
+ */
+async function handleInviteLink(req, res, inviteToken) {
+  const activatePath = `${env.CLIENT_ORIGIN}/activate/${encodeURIComponent(inviteToken)}`;
+  try {
+    const { invite, client } = await accountLinking.resolveInviteAndClient(inviteToken);
+    const googleUser = req.user;
+
+    if (googleUser.role !== "CLIENT") {
+      return res.redirect(`${activatePath}?error=not_a_client`);
+    }
+
+    // Security: this Google account must not already back another profile.
+    await accountLinking.assertGoogleNotLinkedElsewhere(googleUser._id, client._id);
+
+    // Profile already linked to a *different* account → refuse.
+    if (client.userId && String(client.userId) !== String(googleUser._id)) {
+      return res.redirect(`${activatePath}?error=already_linked`);
+    }
+
+    const invitedEmail   = accountLinking.invitedEmailOf(invite, client);
+    const googleEmail    = String(googleUser.email || "").toLowerCase();
+    const emailsMatch    = Boolean(invitedEmail) && invitedEmail === googleEmail;
+    const sameLinkedUser = client.userId && String(client.userId) === String(googleUser._id);
+
+    // Match (or re-activation by the same linked user) → link now, sign in.
+    if (emailsMatch || sameLinkedUser) {
+      await accountLinking.performLink({ invite, client, googleUser });
+      const accessToken = await issueTokens(googleUser, res);
+      return redirectWithToken(res, accessToken, "CLIENT");
+    }
+
+    // Mismatch → defer. Sign a tamper-proof token identifying exactly what to
+    // link, and send the browser to the confirmation screen.
+    const linkToken = accountLinking.signLinkToken({
+      inviteToken,
+      clientId: client._id,
+      googleUserId: googleUser._id,
+    });
+    const params = new URLSearchParams({ linkToken, invitedEmail, googleEmail, clientName: client.name });
+    return res.redirect(`${activatePath}/link#${params.toString()}`);
+  } catch (err) {
+    const code =
+      err?.statusCode === 409 ? "account_in_use" :
+      err?.statusCode === 410 ? "expired" :
+      err?.statusCode === 404 ? "invite_invalid" :
+      "link_failed";
+    return res.redirect(`${activatePath}?error=${code}`);
+  }
+}
+
+/**
+ * POST /api/auth/invite/link/confirm
+ * Public — completes a deferred (email-mismatch) link after the client
+ * confirms on the confirmation screen. The signed `linkToken` (not raw ids)
+ * authorizes exactly which client + Google user to link.
+ */
+async function confirmLink(req, res, next) {
+  try {
+    const { linkToken } = req.body || {};
+    if (!linkToken) throw new ApiError(400, "Missing link token");
+
+    const { user } = await accountLinking.confirmDeferredLink(linkToken);
+    const accessToken = await issueTokens(user, res);
+    return ApiResponse.ok(res, "Account linked", {
+      accessToken,
+      user: buildSafeUser(user),
+    });
+  } catch (err) {
+    next(err);
   }
 }
 
@@ -270,6 +372,8 @@ async function activateInvite(req, res, next) {
         });
       }
       client.userId = user._id;
+      client.googleLinked = false;
+      client.status = "ACTIVE";
       await client.save();
 
       // Only record the activation event on a first-time activation;
@@ -306,6 +410,7 @@ function getCurrentUser(req, res) {
 module.exports = {
   adminLogin,
   googleCallback,
+  confirmLink,
   refresh,
   logout,
   createAdmin,

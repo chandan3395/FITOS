@@ -6,6 +6,7 @@ const { allowRoles } = require("../middleware/roles");
 const { env } = require("../config/env");
 const {
   adminLogin,
+  confirmLink,
   refresh,
   logout,
   createAdmin,
@@ -34,8 +35,16 @@ if (env.ENABLE_GOOGLE_AUTH) {
   const { googleCallback } = require("../controllers/auth.controller");
 
   router.get("/google", (req, res, next) => {
-    const role = req.query.role === "TRAINER" ? "TRAINER" : "CLIENT";
-    const state = Buffer.from(JSON.stringify({ role })).toString("base64");
+    // An invite token means this is a client activating from their invite
+    // link — force the CLIENT role and carry the token through OAuth `state`
+    // so the callback can link the Google account to the invited profile.
+    const inviteToken = req.query.invite ? String(req.query.invite) : null;
+    const role = inviteToken
+      ? "CLIENT"
+      : (req.query.role === "TRAINER" ? "TRAINER" : "CLIENT");
+    const statePayload = { role };
+    if (inviteToken) statePayload.invite = inviteToken;
+    const state = Buffer.from(JSON.stringify(statePayload)).toString("base64");
     passport.authenticate("google", {
       scope: ["profile", "email"],
       session: false,
@@ -73,5 +82,9 @@ router.get("/me", authenticate, getCurrentUser);
 // Client invite — public (the token is the secret)
 router.get("/invite/:token",           getInvite);
 router.post("/invite/:token/activate", activateInvite);
+
+// Confirm a Google-account link when the invited and Google emails differ.
+// Public — authorization comes from the signed linkToken in the body.
+router.post("/invite/link/confirm",    confirmLink);
 
 module.exports = router;

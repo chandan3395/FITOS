@@ -12,6 +12,7 @@ import { SkeletonDetail, ErrorState, EmptyState, Toast } from "../../components/
 import clientService from "../../services/clientService";
 import checkinService from "../../services/checkinService";
 import progressPhotoService from "../../services/progressPhotoService";
+import mealCheckinService from "../../services/mealCheckinService";
 import ComparePhotos from "../../components/progress/ComparePhotos";
 import WorkoutPlanTab from "./WorkoutPlanTab";
 import NutritionPlanTab from "./NutritionPlanTab";
@@ -20,6 +21,7 @@ const TABS = [
   { id: "overview",  label: "Overview" },
   { id: "checkins",  label: "Check-ins" },
   { id: "photos",    label: "Progress Photos" },
+  { id: "meals",     label: "Meal Check-ins" },
   { id: "workout",   label: "Workout Plan" },
   { id: "nutrition", label: "Nutrition Plan" },
   { id: "notes",     label: "Notes" },
@@ -448,6 +450,175 @@ const PhotosTab = ({ clientId, items, loading, error, onReload }) => {
   );
 };
 
+// ── MEAL CHECK-INS (trainer review) ─────────────────────────────
+const MEAL_BADGE = {
+  PENDING:  { label: "Pending review", cls: "bg-amber-400/10 text-amber-300" },
+  REVIEWED: { label: "Approved",       cls: "bg-emerald-400/10 text-emerald-300" },
+  FLAGGED:  { label: "Flagged",        cls: "bg-red-500/10 text-red-300" },
+};
+const MEAL_LABELS = { breakfast: "Breakfast", lunch: "Lunch", dinner: "Dinner", snack: "Snack" };
+const MEALS_ORDER = ["breakfast", "lunch", "dinner", "snack"];
+
+const fmtDay = (d) => {
+  if (!d) return "—";
+  const parsed = new Date(`${d}T00:00:00`);
+  return isNaN(parsed.getTime())
+    ? d
+    : parsed.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
+};
+
+const MealStatusBadge = ({ status }) => {
+  const meta = MEAL_BADGE[status] || MEAL_BADGE.PENDING;
+  return (
+    <span className={`inline-flex px-2.5 py-1 rounded-full text-[11px] font-semibold ${meta.cls}`}>
+      {meta.label}
+    </span>
+  );
+};
+
+const MealCheckinsTab = ({ items, loading, error, onReload }) => {
+  const [commentDraft, setCommentDraft] = useState({});
+  const [actionBusy, setActionBusy] = useState(null);
+  const [toast, setToast] = useState(null);
+
+  const saveComment = async (id) => {
+    setActionBusy(id);
+    try {
+      await mealCheckinService.comment(id, commentDraft[id] ?? "");
+      setToast({ kind: "success", message: "Comment saved · approved" });
+      onReload();
+    } catch (err) {
+      setToast({ kind: "error", message: err?.response?.data?.message || "Comment failed" });
+    } finally {
+      setActionBusy(null);
+    }
+  };
+
+  const setStatus = async (id, status) => {
+    setActionBusy(id);
+    try {
+      await mealCheckinService.setStatus(id, status);
+      setToast({ kind: "success", message: status === "REVIEWED" ? "Approved" : "Flagged" });
+      onReload();
+    } catch (err) {
+      setToast({ kind: "error", message: err?.response?.data?.message || "Status update failed" });
+    } finally {
+      setActionBusy(null);
+    }
+  };
+
+  const remove = async (m) => {
+    if (!confirm(`Delete the meal check-in for ${fmtDay(m.date)}? This cannot be undone.`)) return;
+    setActionBusy(m._id);
+    try {
+      await mealCheckinService.remove(m._id);
+      setToast({ kind: "success", message: "Meal check-in deleted" });
+      onReload();
+    } catch (err) {
+      setToast({ kind: "error", message: err?.response?.data?.message || "Delete failed" });
+    } finally {
+      setActionBusy(null);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <Card.Header>
+          <Card.Title>Meal Check-ins</Card.Title>
+          <Card.Description>
+            Daily meal photos your client uploads as proof of adherence. Approve, flag, or leave feedback.
+          </Card.Description>
+        </Card.Header>
+      </Card>
+
+      {loading
+        ? <SkeletonDetail />
+        : error
+          ? <ErrorState title="Couldn't load meal check-ins" message={error} onRetry={onReload} />
+          : items.length === 0
+            ? <EmptyState title="No meal check-ins yet" description="When your client logs their meals, the daily photos will appear here for review." />
+            : items.map((m) => {
+                const busy = actionBusy === m._id;
+                const mealCount = MEALS_ORDER.filter((meal) => m[meal]).length;
+                return (
+                  <Card key={m._id}>
+                    <div className="flex items-start justify-between mb-3 gap-3 flex-wrap">
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Card.Title>{fmtDay(m.date)}</Card.Title>
+                          <MealStatusBadge status={m.status} />
+                          <span className="text-[11px] text-text-muted">{mealCount} of 4 meals</span>
+                        </div>
+                        <p className="text-[12px] text-text-muted mt-1">
+                          {(() => {
+                            const name = m.uploadedBy?.name;
+                            const role = m.uploaderRole;
+                            if (name && role) return `Logged by ${name} (${role.charAt(0) + role.slice(1).toLowerCase()})`;
+                            if (name)         return `Logged by ${name}`;
+                            if (role)         return `Logged by ${role.charAt(0) + role.slice(1).toLowerCase()}`;
+                            return "Logged";
+                          })()} · {fmtDate(m.createdAt)}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {m.status !== "REVIEWED" && (
+                          <Button size="sm" variant="secondary" disabled={busy} onClick={() => setStatus(m._id, "REVIEWED")}>
+                            Approve
+                          </Button>
+                        )}
+                        {m.status !== "FLAGGED" && (
+                          <Button size="sm" variant="secondary" disabled={busy} onClick={() => setStatus(m._id, "FLAGGED")}>
+                            Flag
+                          </Button>
+                        )}
+                        <Button size="sm" variant="danger" disabled={busy} onClick={() => remove(m)}>
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {MEALS_ORDER.map((meal) => {
+                        const photo = m[meal];
+                        return (
+                          <div key={meal}>
+                            <p className="text-[11px] uppercase tracking-wider text-text-muted mb-1.5">{MEAL_LABELS[meal]}</p>
+                            <div className="aspect-square rounded-xl bg-surface-elevated border border-border overflow-hidden flex items-center justify-center text-text-muted text-[11px]">
+                              {photo
+                                ? <a href={photo.url} target="_blank" rel="noreferrer" className="block w-full h-full"><img src={photo.thumbnailUrl} alt={meal} className="w-full h-full object-cover" /></a>
+                                : <span>Not logged</span>
+                              }
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {m.note && (
+                      <p className="mt-3 text-[12.5px] text-text-secondary">
+                        <span className="text-text-muted">Client note:</span> {m.note}
+                      </p>
+                    )}
+
+                    <div className="mt-3 flex gap-2">
+                      <input
+                        defaultValue={m.comment || ""}
+                        onChange={(e) => setCommentDraft((d) => ({ ...d, [m._id]: e.target.value }))}
+                        placeholder="Add feedback for the client…"
+                        className="flex-1 h-9 px-3 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary"
+                      />
+                      <Button size="sm" disabled={busy} onClick={() => saveComment(m._id)}>Save Comment</Button>
+                    </div>
+                  </Card>
+                );
+              })
+      }
+      <Toast {...(toast || {})} onDismiss={() => setToast(null)} />
+    </div>
+  );
+};
+
 // ── Notes tab — renders the trainer-private notes captured at onboarding.
 const NotesPlanTab = ({ client }) => (
   <Card>
@@ -605,6 +776,7 @@ const TrainerClientDetailPage = () => {
   const [client, setClient]   = useState(null);
   const [checkins, setCins]   = useState([]);
   const [photos, setPhotos]   = useState([]);
+  const [meals, setMeals]     = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(null);
   const [archiveBusy, setArc] = useState(false);
@@ -617,12 +789,14 @@ const TrainerClientDetailPage = () => {
     try {
       const c = await clientService.getById(id);
       setClient(c);
-      const [cins, pics] = await Promise.all([
+      const [cins, pics, mls] = await Promise.all([
         checkinService.list({ clientId: id }).catch(() => []),
         progressPhotoService.listForClient(id).catch(() => []),
+        mealCheckinService.listForClient(id).catch(() => []),
       ]);
       setCins(cins);
       setPhotos(pics);
+      setMeals(mls);
     } catch (e) {
       const status = e?.response?.status;
       const msg = e?.response?.data?.message;
@@ -642,6 +816,10 @@ const TrainerClientDetailPage = () => {
 
   const reloadPhotos = useCallback(async () => {
     setPhotos(await progressPhotoService.listForClient(id).catch(() => []));
+  }, [id]);
+
+  const reloadMeals = useCallback(async () => {
+    setMeals(await mealCheckinService.listForClient(id).catch(() => []));
   }, [id]);
 
   const resendInvite = async () => {
@@ -689,13 +867,20 @@ const TrainerClientDetailPage = () => {
   }
 
   const lastCheckIn = checkins[0] || null;
-  const statusLabel = client.status === "ARCHIVED" ? "Archived" : "Active";
-  const statusColor = client.status === "ARCHIVED" ? "bg-zinc-800 text-zinc-400" : "bg-emerald-400/10 text-emerald-300";
+  const STATUS_META = {
+    ARCHIVED: { label: "Archived", color: "bg-zinc-800 text-zinc-400" },
+    PENDING:  { label: "Pending",  color: "bg-amber-400/10 text-amber-300" },
+    ACTIVE:   { label: "Active",   color: "bg-emerald-400/10 text-emerald-300" },
+  };
+  const statusMeta  = STATUS_META[client.status] || STATUS_META.ACTIVE;
+  const statusLabel = statusMeta.label;
+  const statusColor = statusMeta.color;
 
   const tabContent = {
     overview:  <OverviewTab client={client} lastCheckIn={lastCheckIn} />,
     checkins:  <CheckinsTab clientId={id} items={checkins} loading={false} error={null} onReload={reloadCheckins} />,
     photos:    <PhotosTab   clientId={id} items={photos}   loading={false} error={null} onReload={reloadPhotos}   />,
+    meals:     <MealCheckinsTab clientId={id} items={meals} loading={false} error={null} onReload={reloadMeals} />,
     workout:   <WorkoutPlanTab clientId={id} />,
     nutrition: <NutritionPlanTab clientId={id} />,
     notes:     <NotesPlanTab     client={client} />,
@@ -721,11 +906,20 @@ const TrainerClientDetailPage = () => {
               <p className="text-sm text-text-secondary mt-0.5">
                 {client.goal || "Goal not set"}{client.city ? ` · ${client.city}` : ""}
               </p>
+              {client.googleLinked && client.googleEmail && (
+                <p className="text-[12px] text-text-muted mt-1 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                  Linked Google: <span className="text-text-secondary">{client.googleEmail}</span>
+                  {client.email && client.googleEmail !== client.email.toLowerCase() && (
+                    <span className="text-amber-300">· invited as {client.email}</span>
+                  )}
+                </p>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2">
             <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-medium ${statusColor}`}>
-              {client.status === "ARCHIVED" ? <WarningIcon size={12} /> : <CheckCircleIcon size={12} />}
+              {client.status === "ACTIVE" ? <CheckCircleIcon size={12} /> : <WarningIcon size={12} />}
               {statusLabel}
             </span>
             <div className="flex flex-col items-end">

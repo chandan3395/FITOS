@@ -18,7 +18,7 @@
 const EMAIL_RX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_RX = /^[0-9+\s\-()]{7,20}$/;
 const GENDERS  = new Set(["MALE", "FEMALE", "OTHER"]);
-const STATUSES = new Set(["ACTIVE", "ARCHIVED"]);
+const STATUSES = new Set(["PENDING", "ACTIVE", "ARCHIVED"]);
 
 /** Field range table — single source of truth. */
 const RANGES = {
@@ -188,7 +188,7 @@ function validateClientPayload(body, opts = {}) {
   // ── status (optional enum — only used by PATCH) ───────────────
   if (isPresent(body.status)) {
     const status = String(body.status).trim().toUpperCase();
-    if (!STATUSES.has(status)) errors.status = "Status must be ACTIVE or ARCHIVED.";
+    if (!STATUSES.has(status)) errors.status = "Status must be PENDING, ACTIVE, or ARCHIVED.";
     else                       value.status = status;
   }
 

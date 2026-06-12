@@ -6,6 +6,8 @@ const ApiError = require("../utils/ApiError");
 const cloudinary = require("../config/cloudinary");
 
 const SLOTS = ["front", "side", "back"];
+const MEAL_SLOTS = ["breakfast", "lunch", "dinner", "snack"];
+const DATE_RX = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
  * Mirror of progressPhoto.service access rules — a caller may only obtain
@@ -54,4 +56,28 @@ async function signProgressPhoto(user, body) {
   return cloudinary.signUpload({ clientId: client._id, weekNumber, slot });
 }
 
-module.exports = { signProgressPhoto, SLOTS };
+/**
+ * POST /api/uploads/sign-meal
+ * Signs one meal-photo slot upload — (client, date, meal). Same access rules
+ * as meal-checkin writes: CLIENT signs for self; TRAINER/ADMIN pass clientId.
+ */
+async function signMealPhoto(user, body) {
+  let client;
+  if (user.role === "CLIENT") {
+    client = await resolveCurrentClient(user);
+  } else {
+    client = await assertClientAccess(body.clientId, user);
+  }
+
+  const date = String(body.date || "");
+  if (!DATE_RX.test(date)) throw new ApiError(400, "date (YYYY-MM-DD) is required");
+
+  const meal = String(body.meal || body.slot || "").toLowerCase();
+  if (!MEAL_SLOTS.includes(meal)) {
+    throw new ApiError(400, `meal must be one of: ${MEAL_SLOTS.join(", ")}`);
+  }
+
+  return cloudinary.signMealUpload({ clientId: client._id, date, meal });
+}
+
+module.exports = { signProgressPhoto, signMealPhoto, SLOTS, MEAL_SLOTS };

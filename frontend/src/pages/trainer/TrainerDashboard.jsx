@@ -76,10 +76,13 @@ const TrainerDashboard = () => {
     CLIENT_CREATED:          "bg-sky-400",
     INVITE_SENT:             "bg-violet-400",
     INVITE_ACTIVATED:        "bg-emerald-400",
+    ACCOUNT_LINKED:          "bg-primary",
+    EMAIL_MISMATCH_DETECTED: "bg-amber-400",
     WORKOUT_PUBLISHED:       "bg-primary",
     NUTRITION_PUBLISHED:     "bg-amber-400",
     CHECKIN_SUBMITTED:       "bg-emerald-400",
     PROGRESS_PHOTO_UPLOADED: "bg-violet-400",
+    MEAL_CHECKIN_UPLOADED:   "bg-primary",
   };
   const activity = useMemo(() => {
     return activities.slice(0, 5).map((a) => ({

@@ -2,7 +2,10 @@
 
 const mongoose = require("mongoose");
 
-const CLIENT_STATUSES = ["ACTIVE", "ARCHIVED"];
+// PENDING — created by a trainer, invite issued, not yet activated/linked.
+// ACTIVE  — the client has linked a Google account and can sign in.
+// ARCHIVED — soft-deleted by the trainer.
+const CLIENT_STATUSES = ["PENDING", "ACTIVE", "ARCHIVED"];
 const GENDER_OPTIONS  = ["MALE", "FEMALE", "OTHER"];
 
 /**
@@ -73,7 +76,17 @@ const clientSchema = new mongoose.Schema(
 
     // ── Lifecycle ────────────────────────────────────────────
     status: { type: String, enum: CLIENT_STATUSES, default: "ACTIVE" },
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+
+    // ── Account linking ──────────────────────────────────────
+    // The profile is the source of truth. When the client signs in with
+    // Google (possibly under a DIFFERENT email than they were invited with),
+    // that Google User is attached here. Relationships are always keyed by
+    // userId — never by email.
+    userId:       { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+    googleLinked: { type: Boolean, default: false },
+    // The email of the Google account that was linked (for the trainer's
+    // reference / mismatch audit). Distinct from `email`, the invited address.
+    googleEmail:  { type: String, lowercase: true, trim: true },
 
     // Timestamp of the most recent successful WhatsApp activation invite.
     // Drives the "Invite Sent: <date>" display in the client overview.

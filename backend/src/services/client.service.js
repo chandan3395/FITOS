@@ -105,7 +105,9 @@ async function createClient(user, body) {
   // because it's an authorization concern, not a client-data concern.
   const trainerId = await resolveTrainerId(user, body);
 
-  const data = { trainerId };
+  // New clients start PENDING. They flip to ACTIVE only once they activate
+  // their invite by linking a Google account (see accountLinking.service).
+  const data = { trainerId, status: "PENDING" };
   PERSISTED_CLIENT_FIELDS.forEach((field) => {
     if (value[field] !== undefined) data[field] = value[field];
   });
