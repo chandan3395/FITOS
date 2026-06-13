@@ -76,6 +76,12 @@ export default {
         "pulse-slow": "pulse-slow 2s ease-in-out infinite",
         "toast-in":   "toast-in 0.28s cubic-bezier(0.21,1.02,0.73,1) forwards",
         "toast-out":  "toast-out 0.32s cubic-bezier(0.55,0,0.55,0.2) forwards",
+        // ── Marketing site ──
+        "float":      "float 7s ease-in-out infinite",
+        "float-slow": "float 11s ease-in-out infinite",
+        "marquee":    "marquee 44s linear infinite",
+        "glow-pulse": "glow-pulse 7s ease-in-out infinite",
+        "draw-line":  "draw-line 1.2s ease forwards",
       },
 
       keyframes: {
@@ -102,6 +108,23 @@ export default {
         "pulse-slow": {
           "0%, 100%": { opacity: "1" },
           "50%":       { opacity: "0.35" },
+        },
+        // ── Marketing site ──
+        "float": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%":       { transform: "translateY(-12px)" },
+        },
+        "marquee": {
+          from: { transform: "translateX(0)" },
+          to:   { transform: "translateX(-50%)" },
+        },
+        "glow-pulse": {
+          "0%, 100%": { opacity: "0.45", transform: "scale(1)" },
+          "50%":       { opacity: "0.8", transform: "scale(1.06)" },
+        },
+        "draw-line": {
+          from: { "stroke-dashoffset": "1" },
+          to:   { "stroke-dashoffset": "0" },
         },
       },
     },

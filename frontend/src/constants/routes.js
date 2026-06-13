@@ -29,6 +29,11 @@ export const ROUTES = {
   CLIENT_PROGRESS:  "/client/progress",
   CLIENT_WORKOUT:   "/client/workout",
 
+  // Marketing / legal (public)
+  PRIVACY: "/privacy",
+  TERMS:   "/terms",
+  COOKIES: "/cookies",
+
   // Misc
   DESIGN_SYSTEM: "/design-system",
   NOT_FOUND:     "/not-found",
