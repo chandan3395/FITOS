@@ -31,9 +31,12 @@ const Reveal = ({
       className={className}
       style={{
         opacity: inView ? 1 : 0,
-        transform: inView ? "translate3d(0,0,0)" : `translate3d(${x}px, ${y}px, 0)`,
+        transform: inView ? "none" : `translate3d(${x}px, ${y}px, 0)`,
         transition: `opacity ${duration}ms cubic-bezier(.22,1,.36,1) ${delay}ms, transform ${duration}ms cubic-bezier(.22,1,.36,1) ${delay}ms`,
-        willChange: "opacity, transform",
+        // Only hint the compositor while the element is still off-screen. Leaving
+        // will-change on permanently promotes hundreds of layers and causes
+        // Chromium paint-leftover artifacts (the stray white box) during scroll.
+        willChange: inView ? "auto" : "opacity, transform",
         ...style,
       }}
       {...props}

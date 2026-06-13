@@ -5,20 +5,19 @@ const COLUMNS = [
   {
     title: "Product",
     links: [
-      { label: "Client Management", href: "#product" },
-      { label: "Workout Plans", href: "#workouts" },
-      { label: "Nutrition Plans", href: "#nutrition" },
-      { label: "Progress & Check-ins", href: "#accountability" },
-      { label: "Dashboard", href: "#dashboard" },
+      { label: "Client Management", href: "/#client" },
+      { label: "Workout Planning", href: "/#workout" },
+      { label: "Nutrition", href: "/#nutrition" },
+      { label: "Progress Tracking", href: "/#progress" },
+      { label: "Mobile App", href: "/#features" },
     ],
   },
   {
     title: "Company",
     links: [
-      { label: "Why FITOS", href: "#why" },
-      { label: "Testimonials", href: "#testimonials" },
-      { label: "Security", href: "#security" },
-      { label: "FAQ", href: "#faq" },
+      { label: "About", href: "/#about" },
+      { label: "Testimonials", href: "/#testimonials" },
+      { label: "FAQ", to: ROUTES.FAQ },
     ],
   },
   {

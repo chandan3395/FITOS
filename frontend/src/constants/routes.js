@@ -33,6 +33,7 @@ export const ROUTES = {
   PRIVACY: "/privacy",
   TERMS:   "/terms",
   COOKIES: "/cookies",
+  FAQ:     "/faq",
 
   // Misc
   DESIGN_SYSTEM: "/design-system",

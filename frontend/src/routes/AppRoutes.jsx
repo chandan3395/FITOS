@@ -6,6 +6,7 @@ import { ROUTES } from "../constants/routes";
 // path (the marketing site, legal pages, and sign-in must paint instantly).
 import LandingPage        from "../pages/marketing/LandingPage";
 import LegalPage          from "../pages/marketing/LegalPage";
+import FAQPage            from "../pages/marketing/FAQPage";
 import LoginPage          from "../pages/auth/LoginPage";
 import GoogleCallbackPage from "../pages/auth/GoogleCallbackPage";
 import ActivatePage       from "../pages/auth/ActivatePage";
@@ -51,6 +52,7 @@ const AppRoutes = () => (
       <Route path={ROUTES.PRIVACY}         element={<LegalPage kind="privacy" />} />
       <Route path={ROUTES.TERMS}           element={<LegalPage kind="terms" />} />
       <Route path={ROUTES.COOKIES}         element={<LegalPage kind="cookies" />} />
+      <Route path={ROUTES.FAQ}             element={<FAQPage />} />
       <Route path={ROUTES.LOGIN}           element={<LoginPage />} />
       <Route path={ROUTES.GOOGLE_CALLBACK} element={<GoogleCallbackPage />} />
       <Route path={ROUTES.ACTIVATE}        element={<ActivatePage />} />
