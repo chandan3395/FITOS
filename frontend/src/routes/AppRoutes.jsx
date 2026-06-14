@@ -7,6 +7,10 @@ import { ROUTES } from "../constants/routes";
 import LandingPage        from "../pages/marketing/LandingPage";
 import LegalPage          from "../pages/marketing/LegalPage";
 import FAQPage            from "../pages/marketing/FAQPage";
+import AboutPage          from "../pages/public/AboutPage";
+import ContactPage        from "../pages/public/ContactPage";
+import TermsPage          from "../pages/public/TermsPage";
+import PrivacyPage        from "../pages/public/PrivacyPage";
 import LoginPage          from "../pages/auth/LoginPage";
 import GoogleCallbackPage from "../pages/auth/GoogleCallbackPage";
 import ActivatePage       from "../pages/auth/ActivatePage";
@@ -49,8 +53,10 @@ const AppRoutes = () => (
     <Routes>
       {/* Public marketing site is the root; login lives at /login. */}
       <Route path={ROUTES.HOME}            element={<LandingPage />} />
-      <Route path={ROUTES.PRIVACY}         element={<LegalPage kind="privacy" />} />
-      <Route path={ROUTES.TERMS}           element={<LegalPage kind="terms" />} />
+      <Route path={ROUTES.ABOUT}           element={<AboutPage />} />
+      <Route path={ROUTES.CONTACT}         element={<ContactPage />} />
+      <Route path={ROUTES.PRIVACY}         element={<PrivacyPage />} />
+      <Route path={ROUTES.TERMS}           element={<TermsPage />} />
       <Route path={ROUTES.COOKIES}         element={<LegalPage kind="cookies" />} />
       <Route path={ROUTES.FAQ}             element={<FAQPage />} />
       <Route path={ROUTES.LOGIN}           element={<LoginPage />} />

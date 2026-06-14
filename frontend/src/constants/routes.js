@@ -30,6 +30,8 @@ export const ROUTES = {
   CLIENT_WORKOUT:   "/client/workout",
 
   // Marketing / legal (public)
+  ABOUT:   "/about",
+  CONTACT: "/contact",
   PRIVACY: "/privacy",
   TERMS:   "/terms",
   COOKIES: "/cookies",
