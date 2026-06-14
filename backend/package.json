@@ -8,7 +8,8 @@
     "start": "node src/server.js",
     "build": "echo \"No build step for Node.js backend\"",
     "test": "jest --colors",
-    "create-admin": "node scripts/create-first-admin.js"
+    "create-admin": "node scripts/create-first-admin.js",
+    "seed:demo": "node scripts/seedDemoEnvironment.js"
   },
   "jest": {
     "testEnvironment": "node",

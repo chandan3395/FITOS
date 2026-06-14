@@ -26,8 +26,16 @@ function googleSignInUrl(role = "TRAINER") {
 const GOOGLE_AUTH_ENABLED =
   import.meta.env.VITE_ENABLE_GOOGLE_AUTH !== "false";
 
+// Permanent demo accounts — one-click sign-in, no Google required. These
+// credentials are intentionally public: they back the seeded demo environment
+// (see backend/scripts/seedDemoEnvironment.js).
+const DEMO_ACCOUNTS = [
+  { label: "Trainer Demo", caption: "demo.trainer@fitos.com", email: "demo.trainer@fitos.com", password: "demo.trainer.fitos@143" },
+  { label: "Client Demo",  caption: "demo.client@fitos.com",  email: "demo.client@fitos.com",  password: "demo.client.fitos@143" },
+];
+
 const LoginPage = () => {
-  const { adminLogin, isAuthenticated, user, isReady } = useAuthContext();
+  const { adminLogin, login, isAuthenticated, user, isReady } = useAuthContext();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -36,9 +44,23 @@ const LoginPage = () => {
   const [email,     setEmail]       = useState("");
   const [password,  setPassword]    = useState("");
   const [loading,   setLoading]     = useState(false);
+  const [demoLoading, setDemoLoading] = useState(null);
   const [error,     setError]       = useState(
     searchParams.get("error") === "google_failed" ? "Google sign-in failed. Please try again." : null
   );
+
+  const onDemoLogin = async (account) => {
+    setError(null);
+    setDemoLoading(account.email);
+    try {
+      const u = await login({ email: account.email, password: account.password });
+      navigate(location.state?.from || dashboardFor(u?.role), { replace: true });
+    } catch (err) {
+      setError(err?.message || "Demo sign-in failed. The demo may not be seeded yet.");
+    } finally {
+      setDemoLoading(null);
+    }
+  };
 
   useEffect(() => {
     if (isReady && isAuthenticated && user) {
@@ -69,6 +91,35 @@ const LoginPage = () => {
       <div className="text-center mb-6">
         <h2 className="text-xl font-semibold text-text-primary mb-1">Welcome to FITOS</h2>
         <p className="text-sm text-text-secondary">Sign in or create your trainer account.</p>
+      </div>
+
+      {/* ── Try FITOS Demo — one-click email/password login, no Google ── */}
+      <div className="mb-6 rounded-xl border border-primary/20 bg-primary/[0.04] p-4">
+        <p className="text-[11px] font-semibold tracking-[0.08em] text-primary uppercase mb-3 text-center">
+          Try FITOS Demo
+        </p>
+        <div className="space-y-2">
+          {DEMO_ACCOUNTS.map((acct) => (
+            <button
+              key={acct.email}
+              type="button"
+              onClick={() => onDemoLogin(acct)}
+              disabled={Boolean(demoLoading)}
+              className="w-full flex items-center justify-between gap-3 rounded-lg bg-surface-elevated border border-border px-3 py-2.5 text-left hover:border-primary/40 transition-colors disabled:opacity-60"
+            >
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold text-text-primary">{acct.label}</span>
+                <span className="block text-[11px] text-text-muted truncate">{acct.caption}</span>
+              </span>
+              <span className="text-[11px] font-medium text-primary shrink-0">
+                {demoLoading === acct.email ? "Signing in…" : "Enter →"}
+              </span>
+            </button>
+          ))}
+        </div>
+        <p className="text-[10.5px] text-text-muted text-center mt-3">
+          Instant access — no Google sign-in required.
+        </p>
       </div>
 
       {GOOGLE_AUTH_ENABLED && (

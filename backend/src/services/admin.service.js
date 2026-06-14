@@ -58,6 +58,17 @@ async function listTrainers() {
 
 async function setTrainerActive(id, isActive) {
   if (!mongoose.isValidObjectId(id)) throw new ApiError(400, "Invalid trainer id");
+
+  // Protected accounts (the permanent demo trainer) cannot be disabled, so a
+  // stray click in the admin console can never break the public demo. Enabling
+  // is always allowed. Look the trainer up first to enforce this in the
+  // service layer (any caller — REST, CLI, batch — gets the guard).
+  const target = await User.findOne({ _id: id, role: "TRAINER" });
+  if (!target) throw new ApiError(404, "Trainer not found");
+  if (!isActive && target.isProtected) {
+    throw new ApiError(400, "This is a protected demo account and cannot be disabled");
+  }
+
   const trainer = await User.findOneAndUpdate(
     { _id: id, role: "TRAINER" },
     { $set: { isActive: !!isActive, refreshToken: null } }, // also invalidate refresh

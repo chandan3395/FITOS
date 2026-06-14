@@ -343,6 +343,12 @@ async function deleteClient(id, user) {
     throw err;
   });
 
+  // Protected demo client cannot be (soft) deleted — keeps the demo portal
+  // intact no matter who clicks delete.
+  if (client.isProtected) {
+    throw new ApiError(400, "This is a protected demo client and cannot be deleted");
+  }
+
   client.isDeleted = true;
   client.deletedAt = new Date();
   client.deletedBy = user._id;

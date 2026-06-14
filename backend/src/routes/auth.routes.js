@@ -6,6 +6,7 @@ const { allowRoles } = require("../middleware/roles");
 const { env } = require("../config/env");
 const {
   adminLogin,
+  login,
   confirmLink,
   refresh,
   logout,
@@ -19,9 +20,14 @@ const router = Router();
 
 router.post("/admin/create", authenticate, allowRoles("ADMIN"), createAdmin);
 
-// Admin login — the only email + password path. Trainers and clients
-// authenticate exclusively through Google OAuth below.
+// Admin login — dedicated admin email + password path. Preserved verbatim;
+// admin behaviour is unchanged (admins still sign in here, never via Google).
 router.post("/admin/login", adminLogin);
+
+// Generic email + password login for ADMIN/TRAINER/CLIENT. Powers the demo
+// accounts (and any account with a password) without requiring Google OAuth.
+// Google sign-in below continues to work unchanged.
+router.post("/login", login);
 
 // ── Google OAuth — gated by ENABLE_GOOGLE_AUTH feature flag.
 // When disabled, the implementation is preserved but never reached:

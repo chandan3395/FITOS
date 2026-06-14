@@ -92,6 +92,24 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  // Generic email + password login (ADMIN/TRAINER/CLIENT) — used by the demo
+  // access buttons and any non-admin password sign-in. Mirrors adminLogin.
+  const login = useCallback(async ({ email, password }) => {
+    setError(null);
+    setStatus(STATUS.LOADING);
+    try {
+      const u = await authService.login({ email, password });
+      setUser(u);
+      setStatus(STATUS.AUTHED);
+      return u;
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || "Login failed";
+      setError(msg);
+      setStatus(STATUS.GUEST);
+      throw new Error(msg);
+    }
+  }, []);
+
   const logout = useCallback(async () => {
     await authService.logout();
     setUser(null);
@@ -105,6 +123,7 @@ export const AuthProvider = ({ children }) => {
     isReady:         status !== STATUS.IDLE && status !== STATUS.LOADING,
     isAuthenticated: status === STATUS.AUTHED,
     adminLogin,
+    login,
     logout,
   };
 

@@ -50,6 +50,22 @@ const userSchema = new mongoose.Schema(
       default: null,
       select: false,
     },
+
+    // ── Demo environment ─────────────────────────────────────
+    // Marks the permanent demo accounts (demo.trainer@ / demo.client@).
+    // `isDemoAccount` lets the seed script find/repair them idempotently and
+    // scope every destructive action to demo-only data. `isProtected` is the
+    // safety latch: protected accounts cannot be disabled (admin service) or
+    // their linked client deleted (client service). Both default false so all
+    // existing users are unaffected.
+    isDemoAccount: {
+      type: Boolean,
+      default: false,
+    },
+    isProtected: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

@@ -13,6 +13,20 @@ async function adminLogin({ email, password }) {
   return user;
 }
 
+/**
+ * POST /api/auth/login
+ * Generic email + password sign-in for ADMIN / TRAINER / CLIENT (powers the
+ * demo accounts). Same response shape as adminLogin. Google OAuth and the
+ * dedicated admin login are unaffected.
+ */
+async function login({ email, password }) {
+  const res = await api.post("/auth/login", { email, password });
+  const { accessToken, user } = res.data?.data ?? {};
+  if (!accessToken) throw new Error("Login response missing accessToken");
+  setAccessToken(accessToken);
+  return user;
+}
+
 /** GET /api/auth/me — authenticated profile fetch */
 async function getCurrentUser() {
   const res = await api.get("/auth/me");
@@ -29,6 +43,6 @@ async function logout() {
   setAccessToken(null);
 }
 
-const authService = { adminLogin, getCurrentUser, logout };
+const authService = { adminLogin, login, getCurrentUser, logout };
 
 export default authService;

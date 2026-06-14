@@ -104,6 +104,14 @@ const clientSchema = new mongoose.Schema(
     // and is cleared when a fresh invite is regenerated.
     inviteNeedsRegeneration: { type: Boolean, default: false },
 
+    // ── Demo environment ─────────────────────────────────────
+    // Tags client profiles created by the demo seed script. `isDemoAccount`
+    // scopes the seeder's wipe-and-rebuild to demo-only data; `isProtected`
+    // blocks the (soft) delete path so the linked demo client can't be
+    // accidentally removed. Both default false — real clients are untouched.
+    isDemoAccount: { type: Boolean, default: false },
+    isProtected:   { type: Boolean, default: false },
+
     // ── Soft delete ──────────────────────────────────────────
     // Deleting a client is non-destructive: we flip `isDeleted` and stamp
     // who/when. The document — and every workout, nutrition plan, check-in,

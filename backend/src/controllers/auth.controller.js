@@ -80,6 +80,54 @@ async function adminLogin(req, res, next) {
   }
 }
 
+/**
+ * POST /api/auth/login
+ *
+ * Generic email + password sign-in for ANY role (ADMIN, TRAINER, CLIENT).
+ * Added so the permanent demo accounts (and any account that has set a
+ * password) can sign in without Google. This does NOT replace or modify
+ * `adminLogin` — that dedicated admin path is preserved verbatim — and it
+ * leaves Google OAuth fully intact.
+ *
+ * Accounts created via Google have no password (`password` is unset); for
+ * those we return a clear message rather than a generic failure so the user
+ * knows to use "Continue with Google" instead.
+ */
+async function login(req, res, next) {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      throw new ApiError(400, "Email and password are required");
+    }
+
+    const normalizedEmail = String(email).toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail }).select("+password");
+    if (!user) {
+      throw new ApiError(401, "Invalid credentials");
+    }
+    if (!user.isActive) {
+      throw new ApiError(403, "Account disabled");
+    }
+    // Google-only account (no password set) — guide them to the right path
+    // instead of a misleading "invalid credentials".
+    if (!user.password) {
+      throw new ApiError(401, "This account has no password set. Please sign in with Google.");
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      throw new ApiError(401, "Invalid credentials");
+    }
+
+    const accessToken = await issueTokens(user, res);
+
+    return ApiResponse.ok(res, "Login successful", { accessToken, user: buildSafeUser(user) });
+  } catch (err) {
+    next(err);
+  }
+}
+
 // Decode the base64-JSON OAuth `state` we set on the /google route.
 function decodeState(raw) {
   try {
@@ -421,6 +469,7 @@ function getCurrentUser(req, res) {
 
 module.exports = {
   adminLogin,
+  login,
   googleCallback,
   confirmLink,
   refresh,
