@@ -8,12 +8,9 @@ import {
   BrandOrb, ClientsPanel, WorkoutBuilder, MacroRings,
   ProgressCompare, CheckinMetrics, DashboardMockup,
 } from "../../components/marketing/Visuals";
-import { AlertFeed, PhoneMockup } from "../../components/marketing/MarketingScenes";
-import {
-  LayersIcon, BellIcon, ChatIcon, GridIcon, GaugeIcon, HeartPulseIcon,
-  IdCardIcon, MealIcon, DumbbellIcon, VideoCheckIcon, ClipboardCheckIcon,
-  WalletIcon, TrendingIcon, ArrowRightIcon, StarIcon,
-} from "../../components/marketing/MarketingIcons";
+import { AlertFeed } from "../../components/marketing/MarketingScenes";
+import FeatureShowcase from "../../components/marketing/FeatureShowcase";
+import { ArrowRightIcon, StarIcon } from "../../components/marketing/MarketingIcons";
 
 const IMG = {
   about: "/marketing/training.jpg",
@@ -21,11 +18,13 @@ const IMG = {
   t2: "/marketing/trainer-2.jpg",
   t3: "/marketing/trainer-3.jpg",
   t4: "/marketing/trainer-4.jpg",
+  t5: "/marketing/trainer-5.jpg",
+  t6: "/marketing/trainer-6.jpg",
 };
 
 /* ── shared bits ─────────────────────────────────────────────── */
-const Eyebrow = ({ children, center }) => (
-  <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary text-[11.5px] font-semibold tracking-[0.12em] uppercase ${center ? "" : ""}`}>
+const Eyebrow = ({ children }) => (
+  <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary text-[11.5px] font-semibold tracking-[0.12em] uppercase">
     <span className="w-1.5 h-1.5 rounded-full bg-primary" /> {children}
   </span>
 );
@@ -123,6 +122,32 @@ const About = () => (
   </section>
 );
 
+/* ── Automated Hound (moved up — right after About) ──────────── */
+const Hound = () => (
+  <section className="relative py-24 sm:py-28 overflow-hidden">
+    <BrandOrb className="w-[600px] h-[600px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-40" />
+    <div className="relative max-w-6xl mx-auto px-4 sm:px-6 grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+      <Reveal x={-24}>
+        <Eyebrow>Automated Hound Mechanism</Eyebrow>
+        <h2 className="mt-5 text-3xl sm:text-4xl xl:text-5xl font-bold tracking-tight text-text-primary leading-[1.06]">
+          Client follow-up at <span className="gradient-text">every stage.</span>
+        </h2>
+        <p className="mt-6 text-base sm:text-lg text-text-secondary leading-relaxed max-w-lg">
+          FITOS automatically detects missed activities, incomplete check-ins, skipped workouts
+          and nutrition gaps — then follows up with intelligent reminders to improve discipline
+          and adherence.
+        </p>
+        <div className="mt-6 flex flex-wrap gap-2">
+          {["Accountability", "Consistency", "Discipline"].map((p) => <Chip key={p}>{p}</Chip>)}
+        </div>
+      </Reveal>
+      <Reveal x={28} delay={120}>
+        <AlertFeed />
+      </Reveal>
+    </div>
+  </section>
+);
+
 /* ── Storytelling section (alternating, large visual, horizontal reveal) ── */
 const StorySection = ({ id, eyebrow, title, copy, points, visual, reverse, glow = "bg-primary/10" }) => (
   <section id={id} className="relative py-20 sm:py-24 scroll-mt-24">
@@ -147,142 +172,52 @@ const StorySection = ({ id, eyebrow, title, copy, points, visual, reverse, glow 
   </section>
 );
 
-/* ── Automated Hound ─────────────────────────────────────────── */
-const Hound = () => (
-  <section className="relative py-24 sm:py-28 overflow-hidden">
-    <BrandOrb className="w-[600px] h-[600px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-40" />
-    <div className="relative max-w-6xl mx-auto px-4 sm:px-6 grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-      <Reveal x={-24}>
-        <Eyebrow>Alert Mechanism</Eyebrow>
-        <h2 className="mt-5 text-3xl sm:text-4xl xl:text-5xl font-bold tracking-tight text-text-primary leading-[1.06]">
-          The Automated <span className="gradient-text">Hound.</span>
-        </h2>
-        <p className="mt-6 text-base sm:text-lg text-text-secondary leading-relaxed max-w-lg">
-          Client follow-up at every stage — automatically. The Hound watches for missed
-          check-ins, stalled progress, and expiring plans, then reaches out to reinforce
-          accountability, consistency, and discipline.
-        </p>
-        <div className="mt-6 flex flex-wrap gap-2">
-          {["Accountability", "Consistency", "Discipline"].map((p) => <Chip key={p}>{p}</Chip>)}
-        </div>
-      </Reveal>
-      <Reveal x={28} delay={120}>
-        <AlertFeed />
-      </Reveal>
-    </div>
-  </section>
-);
-
-/* ── Benefits (the one allowed 6-card grid) ──────────────────── */
-const BENEFITS = [
-  { icon: LayersIcon, t: "No more clutter", d: "Consolidate WhatsApp chats, spreadsheets, and notes into one platform." },
-  { icon: BellIcon, t: "Automatic reminders", d: "Keep clients consistent with scheduled alerts and follow-ups." },
-  { icon: ChatIcon, t: "In-app communication", d: "Chat directly with clients for updates, feedback, and motivation." },
-  { icon: GridIcon, t: "Organized dashboard", d: "View client progress, payments, and schedules in one place." },
-  { icon: GaugeIcon, t: "Improved efficiency", d: "Spend less time managing data and more time coaching." },
-  { icon: HeartPulseIcon, t: "Better retention", d: "Build stronger client relationships and improve retention." },
-];
-
-const Benefits = () => (
-  <section id="benefits" className="relative py-24 sm:py-28 scroll-mt-24">
-    <div className="max-w-6xl mx-auto px-4 sm:px-6">
-      <Reveal className="text-center">
-        <Eyebrow center>Benefits</Eyebrow>
-        <h2 className="mt-5 text-3xl sm:text-4xl font-bold tracking-tight text-text-primary">Why coaches choose FITOS.</h2>
-      </Reveal>
-      <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {BENEFITS.map((b, i) => (
-          <Reveal key={b.t} delay={(i % 3) * 90}>
-            <div className="group h-full rounded-2xl border border-border bg-card p-6 hover:border-line-hover hover:-translate-y-1 transition-all duration-300">
-              <span className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-5 group-hover:scale-110 transition-transform"><b.icon size={22} /></span>
-              <p className="text-lg font-semibold text-text-primary">{b.t}</p>
-              <p className="text-[13.5px] text-text-secondary mt-2 leading-relaxed">{b.d}</p>
-            </div>
-          </Reveal>
-        ))}
-      </div>
-    </div>
-  </section>
-);
-
-/* ── Features + Mobile app ───────────────────────────────────── */
-const FEATURES = [
-  { icon: IdCardIcon, t: "Retain client profiles", d: "Full history, goals & notes." },
-  { icon: MealIcon, t: "Meal tracking", d: "Daily meals & nutrition adherence." },
-  { icon: DumbbellIcon, t: "Workout tracking", d: "Assign plans, track every set." },
-  { icon: VideoCheckIcon, t: "Form check", d: "Clients send technique videos." },
-  { icon: ClipboardCheckIcon, t: "Check-ins", d: "Sleep, energy, stress & adherence." },
-  { icon: WalletIcon, t: "Payments & messaging", d: "Billing and chat, side by side." },
-  { icon: TrendingIcon, t: "Progress tracking", d: "Photos, trends & timelines." },
-];
-
-const Features = () => (
-  <section id="features" className="relative py-24 sm:py-28 scroll-mt-24 overflow-hidden">
-    <BrandOrb className="w-[34rem] h-[34rem] top-20 -left-40 opacity-40" />
-    <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
-      <Reveal className="text-center">
-        <Eyebrow center>Features</Eyebrow>
-        <h2 className="mt-5 text-3xl sm:text-4xl font-bold tracking-tight text-text-primary">Everything your coaching needs.</h2>
-      </Reveal>
-
-      <div className="mt-16 grid lg:grid-cols-2 gap-14 lg:gap-20 items-center">
-        <Reveal x={-24} className="flex justify-center order-1">
-          <PhoneMockup />
-        </Reveal>
-        <div className="order-2 grid sm:grid-cols-2 gap-x-8 gap-y-7">
-          {FEATURES.map((f, i) => (
-            <Reveal key={f.t} delay={(i % 2) * 80} x={20}>
-              <div className="flex items-start gap-3.5">
-                <span className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0"><f.icon size={19} /></span>
-                <div>
-                  <p className="text-[15px] font-semibold text-text-primary">{f.t}</p>
-                  <p className="text-[13px] text-text-secondary mt-0.5 leading-relaxed">{f.d}</p>
-                </div>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </div>
-    </div>
-  </section>
-);
-
-/* ── Testimonials (real photos) ──────────────────────────────── */
+/* ── Testimonials (infinite marquee, real photos, pause on hover) ── */
 const TESTIMONIALS = [
-  { q: "FITOS has revolutionized how I manage my clients. The progress tracking and payment features are game-changers.", n: "Sarah Miller", r: "Elite Personal Trainer", img: IMG.t2 },
-  { q: "My clients love the dashboard and I love having everything in one place. It's truly built for coaches.", n: "David Lee", r: "Online Fitness Coach", img: IMG.t3 },
-  { q: "Implementing FITOS increased our efficiency and client satisfaction. It's an indispensable tool for our gym.", n: "Jessica Chen", r: "Studio Owner", img: IMG.t4 },
+  { q: "FITOS revolutionized how I manage clients. Progress tracking and payments are game-changers.", n: "Sarah Miller", r: "Elite Personal Trainer", img: IMG.t2 },
+  { q: "Everything in one place. It's truly built for coaches.", n: "David Lee", r: "Online Fitness Coach", img: IMG.t1 },
+  { q: "Efficiency and client satisfaction went way up. Indispensable for our gym.", n: "Jessica Chen", r: "Studio Owner", img: IMG.t4 },
+  { q: "Building and assigning plans went from an hour to minutes.", n: "Marcus Doyle", r: "Strength Coach", img: IMG.t5 },
+  { q: "The Automated Hound keeps my clients accountable without me chasing them.", n: "Aisha Rahman", r: "Online Coach", img: IMG.t6 },
+  { q: "My team manages 400+ clients without anything slipping through the cracks.", n: "Tom Becker", r: "Gym Owner", img: IMG.t3 },
 ];
 
-const Testimonials = () => (
-  <section id="testimonials" className="relative py-24 sm:py-28 scroll-mt-24">
-    <div className="max-w-6xl mx-auto px-4 sm:px-6">
-      <Reveal className="text-center mb-14">
-        <Eyebrow center>Testimonials</Eyebrow>
-        <h2 className="mt-5 text-3xl sm:text-5xl font-bold tracking-tight text-text-primary">Hear from our successful trainers.</h2>
-      </Reveal>
-      <div className="grid md:grid-cols-3 gap-5">
-        {TESTIMONIALS.map((t, i) => (
-          <Reveal key={t.n} delay={i * 110}>
-            <figure className="group h-full rounded-2xl border border-border bg-card p-6 hover:border-line-hover hover:-translate-y-1 transition-all duration-300">
-              <div className="flex items-center gap-3.5">
-                <img src={t.img} alt={t.n} loading="lazy" className="w-12 h-12 rounded-full object-cover border border-border" />
-                <div>
-                  <p className="text-[15px] font-semibold text-text-primary">{t.n}</p>
-                  <p className="text-[11px] tracking-[0.12em] uppercase text-text-muted">{t.r}</p>
-                </div>
-              </div>
-              <div className="flex gap-0.5 text-primary mt-5">
-                {Array.from({ length: 5 }).map((_, s) => <StarIcon key={s} size={14} />)}
-              </div>
-              <blockquote className="mt-3 text-[14.5px] text-text-secondary leading-relaxed">“{t.q}”</blockquote>
-            </figure>
-          </Reveal>
-        ))}
+const TCard = ({ t }) => (
+  <figure className="w-[320px] shrink-0 mx-3 rounded-2xl border border-border bg-card p-6">
+    <div className="flex items-center gap-3.5">
+      <img src={t.img} alt={t.n} loading="lazy" className="w-11 h-11 rounded-full object-cover border border-border" />
+      <div>
+        <p className="text-[14px] font-semibold text-text-primary">{t.n}</p>
+        <p className="text-[10.5px] tracking-[0.1em] uppercase text-text-muted">{t.r}</p>
       </div>
     </div>
-  </section>
+    <div className="flex gap-0.5 text-primary mt-4">
+      {Array.from({ length: 5 }).map((_, s) => <StarIcon key={s} size={13} />)}
+    </div>
+    <blockquote className="mt-3 text-[13.5px] text-text-secondary leading-relaxed">“{t.q}”</blockquote>
+  </figure>
 );
+
+const Testimonials = () => {
+  const row = [...TESTIMONIALS, ...TESTIMONIALS];
+  return (
+    <section id="testimonials" className="relative py-24 sm:py-28 scroll-mt-24 overflow-hidden">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 text-center mb-14">
+        <Reveal>
+          <Eyebrow>Testimonials</Eyebrow>
+          <h2 className="mt-5 text-3xl sm:text-5xl font-bold tracking-tight text-text-primary">Hear from our successful trainers.</h2>
+        </Reveal>
+      </div>
+      <div className="relative group">
+        <div className="flex w-max animate-marquee group-hover:[animation-play-state:paused]">
+          {row.map((t, i) => <TCard key={i} t={t} />)}
+        </div>
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-bg to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-bg to-transparent" />
+      </div>
+    </section>
+  );
+};
 
 /* ── Final CTA ───────────────────────────────────────────────── */
 const FinalCta = () => (
@@ -309,6 +244,7 @@ const LandingPage = () => (
     <main>
       <Hero />
       <About />
+      <Hound />
 
       <StorySection
         id="client"
@@ -355,9 +291,7 @@ const LandingPage = () => (
         visual={<CheckinMetrics />}
       />
 
-      <Hound />
-      <Benefits />
-      <Features />
+      <FeatureShowcase />
       <Testimonials />
       <FinalCta />
     </main>

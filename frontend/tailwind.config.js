@@ -82,6 +82,8 @@ export default {
         "marquee":    "marquee 44s linear infinite",
         "glow-pulse": "glow-pulse 7s ease-in-out infinite",
         "draw-line":  "draw-line 1.2s ease forwards",
+        "screen-in":  "screen-in 0.5s cubic-bezier(.22,1,.36,1) both",
+        "progress-grow": "progress-grow linear forwards",
       },
 
       keyframes: {
@@ -125,6 +127,14 @@ export default {
         "draw-line": {
           from: { "stroke-dashoffset": "1" },
           to:   { "stroke-dashoffset": "0" },
+        },
+        "screen-in": {
+          from: { opacity: "0", transform: "translateY(12px) scale(0.985)" },
+          to:   { opacity: "1", transform: "translateY(0) scale(1)" },
+        },
+        "progress-grow": {
+          from: { width: "0%" },
+          to:   { width: "100%" },
         },
       },
     },
