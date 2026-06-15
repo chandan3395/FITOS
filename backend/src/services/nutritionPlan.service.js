@@ -1,11 +1,19 @@
 "use strict";
 
-const mongoose = require("mongoose");
 const { NutritionPlan } = require("../schemas/NutritionPlan.schema");
 const { Client } = require("../schemas/Client.schema");
 const { validateNutritionPayload } = require("../validators/nutritionPayload.validator");
 const ApiError = require("../utils/ApiError");
 const activityService = require("./activity.service");
+// Shared client-access helpers. Nutrition plans do NOT filter soft-deleted
+// clients, so the shared defaults (excludeDeleted: false) match the prior
+// behaviour and call sites are unchanged.
+const {
+  assertObjectId,
+  assertTrainer,
+  resolveClientForUser,
+  resolveCurrentClient,
+} = require("../utils/clientAccess");
 
 // Single source of truth for fields the validator may write into a plan.
 // Update this list when the schema gains new persisted fields.
@@ -15,39 +23,6 @@ const PERSISTED_PLAN_FIELDS = [
   "waterTarget", "mealsPerDay", "cheatMeals",
   "dietType", "foodAvoidances", "eatingHabits",
 ];
-
-function assertObjectId(id, label) {
-  if (!mongoose.isValidObjectId(id)) {
-    throw new ApiError(400, `Invalid ${label}`);
-  }
-}
-
-function assertTrainer(user) {
-  if (user.role !== "TRAINER") {
-    throw new ApiError(403, "Forbidden");
-  }
-}
-
-async function resolveClientForUser(user, clientId, { allowAdmin = false, allowClient = false } = {}) {
-  assertObjectId(clientId, "clientId");
-  const client = await Client.findById(clientId);
-  if (!client) throw new ApiError(404, "Client not found");
-
-  if (user.role === "TRAINER") {
-    if (String(client.trainerId) !== String(user._id)) throw new ApiError(403, "Forbidden");
-    return client;
-  }
-  if (allowAdmin && user.role === "ADMIN") return client;
-  if (allowClient && user.role === "CLIENT" && String(client.userId) === String(user._id)) return client;
-  throw new ApiError(403, "Forbidden");
-}
-
-async function resolveCurrentClient(user) {
-  if (user.role !== "CLIENT") throw new ApiError(403, "Forbidden");
-  const client = await Client.findOne({ userId: user._id });
-  if (!client) throw new ApiError(404, "Client record not found");
-  return client;
-}
 
 async function getPlanWithAccess(user, planId, { write = false } = {}) {
   assertObjectId(planId, "nutritionPlanId");

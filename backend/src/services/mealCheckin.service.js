@@ -2,30 +2,13 @@
 
 const mongoose = require("mongoose");
 const { MealCheckin, MEAL_SLOTS, MEALCHECKIN_STATUSES } = require("../schemas/MealCheckin.schema");
-const { Client } = require("../schemas/Client.schema");
 const ApiError = require("../utils/ApiError");
 const cloudinary = require("../config/cloudinary");
 const activityService = require("./activity.service");
+// Shared client-access helpers (ADMIN-always / no soft-delete filter variant).
+const { assertClientAccess, resolveCurrentClient } = require("../utils/clientAccess");
 
 const DATE_RX = /^\d{4}-\d{2}-\d{2}$/;
-
-// Access rules mirror progressPhoto.service exactly.
-async function assertClientAccess(clientId, user) {
-  if (!mongoose.isValidObjectId(clientId)) throw new ApiError(400, "Invalid clientId");
-  const client = await Client.findById(clientId);
-  if (!client) throw new ApiError(404, "Client not found");
-  if (user.role === "ADMIN") return client;
-  if (user.role === "TRAINER" && String(client.trainerId) === String(user._id)) return client;
-  if (user.role === "CLIENT"  && String(client.userId)    === String(user._id)) return client;
-  throw new ApiError(403, "Forbidden");
-}
-
-async function resolveCurrentClient(user) {
-  if (user.role !== "CLIENT") throw new ApiError(403, "Forbidden");
-  const client = await Client.findOne({ userId: user._id });
-  if (!client) throw new ApiError(404, "Client record not found");
-  return client;
-}
 
 /**
  * Normalise an incoming meal-photo payload. The browser uploaded the bytes

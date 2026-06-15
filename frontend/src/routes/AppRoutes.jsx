@@ -57,7 +57,7 @@ const AppRoutes = () => (
       <Route path={ROUTES.CONTACT}         element={<ContactPage />} />
       <Route path={ROUTES.PRIVACY}         element={<PrivacyPage />} />
       <Route path={ROUTES.TERMS}           element={<TermsPage />} />
-      <Route path={ROUTES.COOKIES}         element={<LegalPage kind="cookies" />} />
+      <Route path={ROUTES.COOKIES}         element={<LegalPage />} />
       <Route path={ROUTES.FAQ}             element={<FAQPage />} />
       <Route path={ROUTES.LOGIN}           element={<LoginPage />} />
       <Route path={ROUTES.GOOGLE_CALLBACK} element={<GoogleCallbackPage />} />

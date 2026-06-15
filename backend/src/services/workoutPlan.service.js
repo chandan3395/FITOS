@@ -1,6 +1,5 @@
 "use strict";
 
-const mongoose = require("mongoose");
 const { WorkoutPlan } = require("../schemas/WorkoutPlan.schema");
 const { Client } = require("../schemas/Client.schema");
 const { WorkoutCompletion } = require("../schemas/WorkoutCompletion.schema");
@@ -8,57 +7,17 @@ const { ActivityLog } = require("../schemas/ActivityLog.schema");
 const { validateWorkoutPayload } = require("../validators/workoutPayload.validator");
 const ApiError = require("../utils/ApiError");
 const activityService = require("./activity.service");
+const access = require("../utils/clientAccess");
 
-function assertObjectId(id, label) {
-  if (!mongoose.isValidObjectId(id)) {
-    throw new ApiError(400, `Invalid ${label}`);
-  }
-}
+const { assertObjectId, assertTrainer } = access;
 
-function assertTrainer(user) {
-  if (user.role !== "TRAINER") {
-    throw new ApiError(403, "Forbidden");
-  }
-}
-
-async function resolveClientForUser(user, clientId, { allowAdmin = false, allowClient = false } = {}) {
-  assertObjectId(clientId, "clientId");
-
-  const client = await Client.findById(clientId);
-  if (!client || client.isDeleted) {
-    throw new ApiError(404, "Client not found");
-  }
-
-  if (user.role === "TRAINER") {
-    if (String(client.trainerId) !== String(user._id)) {
-      throw new ApiError(403, "Forbidden");
-    }
-    return client;
-  }
-
-  if (allowAdmin && user.role === "ADMIN") {
-    return client;
-  }
-
-  if (allowClient && user.role === "CLIENT" && String(client.userId) === String(user._id)) {
-    return client;
-  }
-
-  throw new ApiError(403, "Forbidden");
-}
-
-async function resolveCurrentClient(user) {
-  if (user.role !== "CLIENT") {
-    throw new ApiError(403, "Forbidden");
-  }
-
-  const client = await Client.findOne({ userId: user._id, isDeleted: { $ne: true } });
-  if (!client) {
-    throw new ApiError(404, "Client record not found");
-  }
-
-  return client;
-}
+// Workout plans filter out soft-deleted clients on every access path, so the
+// shared helpers are wrapped here to force `excludeDeleted: true`. This keeps
+// every existing call site below byte-for-byte identical in behaviour.
+const resolveClientForUser = (user, clientId, opts = {}) =>
+  access.resolveClientForUser(user, clientId, { ...opts, excludeDeleted: true });
+const resolveCurrentClient = (user) =>
+  access.resolveCurrentClient(user, { excludeDeleted: true });
 
 async function getWorkoutPlanWithAccess(user, workoutPlanId, { write = false } = {}) {
   assertObjectId(workoutPlanId, "workoutPlanId");

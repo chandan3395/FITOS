@@ -2,25 +2,11 @@
 
 const mongoose = require("mongoose");
 const { CheckIn, CHECKIN_STATUSES } = require("../schemas/CheckIn.schema");
-const { Client } = require("../schemas/Client.schema");
 const ApiError = require("../utils/ApiError");
 const activityService = require("./activity.service");
-
-/**
- * Verifies the caller may write/read against the given clientId.
- * - TRAINER: must own the client.
- * - ADMIN:   bypass.
- * - CLIENT:  must BE the client (CLIENT.userId === req.user._id).
- */
-async function assertClientAccess(clientId, user) {
-  if (!mongoose.isValidObjectId(clientId)) throw new ApiError(400, "Invalid clientId");
-  const client = await Client.findById(clientId);
-  if (!client) throw new ApiError(404, "Client not found");
-  if (user.role === "ADMIN") return client;
-  if (user.role === "TRAINER" && String(client.trainerId) === String(user._id)) return client;
-  if (user.role === "CLIENT"  && String(client.userId)    === String(user._id)) return client;
-  throw new ApiError(403, "Forbidden");
-}
+// Shared client-access helpers (extracted from the per-service copies).
+// `assertClientAccess` here is the ADMIN-always / no-soft-delete-filter variant.
+const { assertClientAccess, resolveCurrentClient } = require("../utils/clientAccess");
 
 /**
  * POST /api/checkins
@@ -31,8 +17,7 @@ async function assertClientAccess(clientId, user) {
 async function create(user, body) {
   let client;
   if (user.role === "CLIENT") {
-    client = await Client.findOne({ userId: user._id });
-    if (!client) throw new ApiError(404, "Client record not found");
+    client = await resolveCurrentClient(user);
   } else {
     client = await assertClientAccess(body.clientId, user);
   }
@@ -127,9 +112,7 @@ async function review(id, user, body) {
  * GET /api/checkins/me — own check-ins for the CLIENT role. Newest first.
  */
 async function listForCurrentClient(user, { limit = 50 } = {}) {
-  if (user.role !== "CLIENT") throw new ApiError(403, "Forbidden");
-  const client = await Client.findOne({ userId: user._id });
-  if (!client) throw new ApiError(404, "Client record not found");
+  const client = await resolveCurrentClient(user);
   return CheckIn.find({ clientId: client._id })
     .sort({ createdAt: -1 })
     .limit(Math.min(limit, 200));
