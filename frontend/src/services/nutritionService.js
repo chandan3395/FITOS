@@ -1,4 +1,5 @@
 import api from "../lib/api";
+import { serializeSchedule } from "./../lib/nutritionTotals";
 
 async function listForClient(clientId, params = {}) {
   const res = await api.get(`/nutrition/client/${clientId}`, { params });
@@ -55,6 +56,7 @@ async function duplicate(clientId, plan) {
     dietType: plan.dietType,
     foodAvoidances: plan.foodAvoidances,
     eatingHabits: plan.eatingHabits,
+    schedule: serializeSchedule(plan.schedule),
   };
   return create(clientId, payload);
 }

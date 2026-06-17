@@ -5,6 +5,8 @@ import { SkeletonDetail, ErrorState, Toast } from "../../components/feedback/Sta
 import workoutService from "../../services/workoutService";
 import clientService from "../../services/clientService";
 import workoutTemplateService from "../../services/workoutTemplateService";
+import SetDetailsEditor from "../../components/workout/SetDetailsEditor";
+import { serializeSetDetails, setDetailsToDraft, setDetailsPublishErrors } from "../../lib/workoutSets";
 
 const inputClass = "w-full h-9 px-3 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-[#333]";
 const textareaClass = "w-full min-h-[84px] px-3 py-2 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-[#333]";
@@ -36,7 +38,8 @@ const draftFromPlan = (plan) => ({
     restSeconds: exercise.restSeconds ?? 60,
     dayNumber: exercise.dayNumber || 1,
     order: exercise.order || index + 1,
-    notes: exercise.notes || ""
+    notes: exercise.notes || "",
+    setDetails: setDetailsToDraft(exercise)
   }))
 });
 
@@ -72,10 +75,31 @@ const preparePayload = (draft, status) => {
         restSeconds: toNumber(exercise.restSeconds),
         dayNumber: day,
         order: nextOrder,
-        notes: exercise.notes || undefined
+        notes: exercise.notes || undefined,
+        // [] for uniform exercises (clears any prior per-set rows on update);
+        // the cleaned array for varied ones.
+        setDetails: serializeSetDetails(exercise) || []
       };
     })
   };
+};
+
+// Client-side mirror of the server publish rule so publish never fails
+// unexpectedly: needs >= 1 exercise, and every set of a per-set exercise needs
+// weight >= 0 and reps >= 1. Flat exercises are governed by the count rule only.
+const publishBlockReason = (draft) => {
+  if (!draft.exercises || draft.exercises.length === 0) {
+    return "Add at least one exercise before publishing.";
+  }
+  const problems = [];
+  for (const ex of draft.exercises) {
+    const bad = setDetailsPublishErrors(ex);
+    if (bad.length) {
+      problems.push(`${ex.name || "Exercise"}: ${bad.map((b) => `set ${b.setNumber} ${b.reason}`).join(", ")}`);
+    }
+  }
+  if (problems.length) return `Every set needs weight ≥ 0 and reps ≥ 1 — fix: ${problems.join("; ")}.`;
+  return null;
 };
 
 const fmtDate = (iso) => iso
@@ -104,7 +128,7 @@ const PlanBadge = ({ status }) => {
   );
 };
 
-const ExerciseEditor = ({ exercise, displayNumber, globalIndex, canMoveUp, canMoveDown, onChange, onRemove, onDuplicate, onMove }) => (
+const ExerciseEditor = ({ exercise, displayNumber, globalIndex, canMoveUp, canMoveDown, onChange, onPatch, onRemove, onDuplicate, onMove }) => (
   <div className="rounded-lg border border-border bg-surface p-4 space-y-3">
     <div className="flex items-center justify-between gap-3">
       <p className="text-sm font-semibold text-text-primary">Exercise {displayNumber}</p>
@@ -115,28 +139,11 @@ const ExerciseEditor = ({ exercise, displayNumber, globalIndex, canMoveUp, canMo
         <Button size="sm" variant="danger" onClick={() => onRemove(globalIndex)}>Remove</Button>
       </div>
     </div>
-    <div className="grid grid-cols-1 sm:grid-cols-6 gap-3">
-      <label className="sm:col-span-2">
-        <span className="text-[11px] uppercase tracking-wider text-text-muted">Name</span>
-        <input value={exercise.name} onChange={(e) => onChange(globalIndex, "name", e.target.value)} className={`${inputClass} mt-1`} placeholder="Bench press" />
-      </label>
-      <label>
-        <span className="text-[11px] uppercase tracking-wider text-text-muted">Sets</span>
-        <input type="number" min="1" max="20" value={exercise.sets} onChange={(e) => onChange(globalIndex, "sets", e.target.value)} className={`${inputClass} mt-1`} />
-      </label>
-      <label>
-        <span className="text-[11px] uppercase tracking-wider text-text-muted">Reps</span>
-        <input type="number" min="1" max="100" value={exercise.reps} onChange={(e) => onChange(globalIndex, "reps", e.target.value)} className={`${inputClass} mt-1`} />
-      </label>
-      <label>
-        <span className="text-[11px] uppercase tracking-wider text-text-muted">Weight</span>
-        <input type="number" min="0" step="0.5" value={exercise.weight} onChange={(e) => onChange(globalIndex, "weight", e.target.value)} className={`${inputClass} mt-1`} />
-      </label>
-      <label>
-        <span className="text-[11px] uppercase tracking-wider text-text-muted">Rest sec</span>
-        <input type="number" min="0" max="600" value={exercise.restSeconds} onChange={(e) => onChange(globalIndex, "restSeconds", e.target.value)} className={`${inputClass} mt-1`} />
-      </label>
-    </div>
+    <label className="block">
+      <span className="text-[11px] uppercase tracking-wider text-text-muted">Name</span>
+      <input value={exercise.name} onChange={(e) => onChange(globalIndex, "name", e.target.value)} className={`${inputClass} mt-1`} placeholder="Bench press" />
+    </label>
+    <SetDetailsEditor exercise={exercise} onPatch={(partial) => onPatch(globalIndex, partial)} />
     <textarea value={exercise.notes} onChange={(e) => onChange(globalIndex, "notes", e.target.value)} className={textareaClass} placeholder="Coaching notes, tempo, substitutions" />
   </div>
 );
@@ -327,6 +334,17 @@ const WorkoutPlanTab = ({ clientId }) => {
     }));
   };
 
+  // Multi-field patch — used by the shared SetDetailsEditor (sets count, mode
+  // toggle, per-set rows all update several fields at once).
+  const patchExercise = (index, partial) => {
+    setDraft((current) => ({
+      ...current,
+      exercises: current.exercises.map((exercise, i) => (
+        i === index ? { ...exercise, ...partial } : exercise
+      ))
+    }));
+  };
+
   const addExercise = (dayNumber) => {
     setDraft((current) => ({
       ...current,
@@ -383,9 +401,12 @@ const WorkoutPlanTab = ({ clientId }) => {
 
   const saveDraft = async (status) => {
     if (!draft) return;
-    if (status === "ACTIVE" && draft.exercises.length === 0) {
-      setToast({ kind: "error", message: "Add at least one exercise before publishing" });
-      return;
+    if (status === "ACTIVE") {
+      const reason = publishBlockReason(draft);
+      if (reason) {
+        setToast({ kind: "error", message: reason });
+        return;
+      }
     }
     setSaving(true);
     try {
@@ -678,6 +699,7 @@ const WorkoutPlanTab = ({ clientId }) => {
                           canMoveUp={dayIndex > 0}
                           canMoveDown={dayIndex < exercises.length - 1}
                           onChange={changeExercise}
+                          onPatch={patchExercise}
                           onRemove={removeExercise}
                           onDuplicate={duplicateExercise}
                           onMove={moveExercise}

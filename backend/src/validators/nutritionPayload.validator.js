@@ -8,6 +8,8 @@
  * Framework-agnostic so it can be unit-tested without Express or Mongoose.
  */
 
+const { validateSchedule } = require("./scheduleValidator");
+
 const STATUSES = new Set(["DRAFT", "ACTIVE", "ARCHIVED"]);
 
 const RANGES = {
@@ -98,6 +100,14 @@ function validateNutritionPayload(body, opts = {}) {
   if (isPresent(body.dietType))       checkStringField(value, errors, "dietType",       body.dietType,       60);
   if (isPresent(body.foodAvoidances)) checkStringField(value, errors, "foodAvoidances", body.foodAvoidances, 1000);
   if (isPresent(body.eatingHabits))   checkStringField(value, errors, "eatingHabits",   body.eatingHabits,   2000);
+
+  // ── Weekly schedule (optional; structure validated, meal-count enforced on
+  //    publish in the service layer). Absent schedule = legacy flat plan. ──
+  if (body.schedule !== undefined) {
+    const { value: schedule, errors: scheduleErrors } = validateSchedule(body.schedule);
+    if (Object.keys(scheduleErrors).length > 0) Object.assign(errors, scheduleErrors);
+    else value.schedule = schedule;
+  }
 
   if (Object.keys(errors).length > 0) return { ok: false, errors };
   return { ok: true, value };

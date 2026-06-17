@@ -4,6 +4,10 @@ import Button from "../../components/ui/Button";
 import { SkeletonDetail, ErrorState, Toast } from "../../components/feedback/States";
 import workoutTemplateService from "../../services/workoutTemplateService";
 import nutritionTemplateService from "../../services/nutritionTemplateService";
+import ScheduleEditor from "../../components/nutrition/ScheduleEditor";
+import { serializeSchedule, scheduleToDraft } from "../../lib/nutritionTotals";
+import SetDetailsEditor from "../../components/workout/SetDetailsEditor";
+import { serializeSetDetails, setDetailsToDraft } from "../../lib/workoutSets";
 
 // ── shared helpers ───────────────────────────────────────────
 const inputClass = "w-full h-9 px-3 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-[#333]";
@@ -52,6 +56,7 @@ const workoutDraftFrom = (t) => ({
     dayNumber: ex.dayNumber || 1,
     order: ex.order || i + 1,
     notes: ex.notes || "",
+    setDetails: setDetailsToDraft(ex),
   })),
 });
 
@@ -77,6 +82,7 @@ const buildWorkoutPayload = (draft) => {
         dayNumber: day,
         order: nextOrder,
         notes: ex.notes || undefined,
+        setDetails: serializeSetDetails(ex) || [],
       };
     }),
   };
@@ -89,19 +95,14 @@ const groupByDay = (exercises) => DAYS.map((day) => ({
     .filter(({ exercise }) => Number(exercise.dayNumber || 1) === day),
 }));
 
-const ExerciseRow = ({ exercise, displayNumber, globalIndex, onChange, onRemove }) => (
+const ExerciseRow = ({ exercise, displayNumber, globalIndex, onChange, onPatch, onRemove }) => (
   <div className="rounded-lg border border-border bg-surface p-3 space-y-2">
     <div className="flex items-center justify-between gap-3">
       <p className="text-sm font-semibold text-text-primary">Exercise {displayNumber}</p>
       <Button size="sm" variant="danger" onClick={() => onRemove(globalIndex)}>Remove</Button>
     </div>
-    <div className="grid grid-cols-2 sm:grid-cols-6 gap-2">
-      <input className={`${inputClass} sm:col-span-2`} placeholder="Name" value={exercise.name} onChange={(e) => onChange(globalIndex, "name", e.target.value)} />
-      <input className={inputClass} type="number" min="1" max="20"  placeholder="Sets" value={exercise.sets} onChange={(e) => onChange(globalIndex, "sets", e.target.value)} />
-      <input className={inputClass} type="number" min="1" max="100" placeholder="Reps" value={exercise.reps} onChange={(e) => onChange(globalIndex, "reps", e.target.value)} />
-      <input className={inputClass} type="number" min="0" step="0.5" placeholder="Weight" value={exercise.weight} onChange={(e) => onChange(globalIndex, "weight", e.target.value)} />
-      <input className={inputClass} type="number" min="0" max="600" placeholder="Rest sec" value={exercise.restSeconds} onChange={(e) => onChange(globalIndex, "restSeconds", e.target.value)} />
-    </div>
+    <input className={inputClass} placeholder="Name" value={exercise.name} onChange={(e) => onChange(globalIndex, "name", e.target.value)} />
+    <SetDetailsEditor exercise={exercise} onPatch={(partial) => onPatch(globalIndex, partial)} />
     <input className={inputClass} placeholder="Notes (optional)" value={exercise.notes} onChange={(e) => onChange(globalIndex, "notes", e.target.value)} />
   </div>
 );
@@ -142,6 +143,9 @@ const WorkoutTemplatesPanel = ({ pushToast }) => {
   const changeDraft = (k, v) => setDraft((c) => ({ ...c, [k]: v }));
   const changeExercise = (i, k, v) => setDraft((c) => ({
     ...c, exercises: c.exercises.map((ex, j) => j === i ? { ...ex, [k]: v } : ex),
+  }));
+  const patchExercise = (i, partial) => setDraft((c) => ({
+    ...c, exercises: c.exercises.map((ex, j) => j === i ? { ...ex, ...partial } : ex),
   }));
   const addExercise = (day) => setDraft((c) => ({
     ...c, exercises: [...c.exercises, { name: "", sets: 3, reps: 10, weight: 0, restSeconds: 60, dayNumber: day, order: 0, notes: "" }],
@@ -308,6 +312,7 @@ const WorkoutTemplatesPanel = ({ pushToast }) => {
                           displayNumber={dayIndex + 1}
                           globalIndex={globalIndex}
                           onChange={changeExercise}
+                          onPatch={patchExercise}
                           onRemove={removeExercise}
                         />
                       ))}
@@ -344,6 +349,7 @@ const emptyNutritionDraft = () => ({
   calories: "", protein: "", carbs: "", fats: "",
   waterTarget: "", mealsPerDay: "", cheatMeals: "",
   dietType: "", foodRestrictions: "", eatingHabits: "",
+  schedule: [],
 });
 
 const nutritionDraftFrom = (t) => ({
@@ -362,6 +368,7 @@ const nutritionDraftFrom = (t) => ({
   dietType: t.dietType ?? "",
   foodRestrictions: t.foodRestrictions ?? "",
   eatingHabits: t.eatingHabits ?? "",
+  schedule: scheduleToDraft(t.schedule),
 });
 
 const buildNutritionPayload = (d) => ({
@@ -379,6 +386,7 @@ const buildNutritionPayload = (d) => ({
   dietType: d.dietType || undefined,
   foodRestrictions: d.foodRestrictions || undefined,
   eatingHabits: d.eatingHabits || undefined,
+  schedule: serializeSchedule(d.schedule),
 });
 
 const NutritionTemplatesPanel = ({ pushToast }) => {
@@ -562,6 +570,14 @@ const NutritionTemplatesPanel = ({ pushToast }) => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
               <label><span className="text-[11px] uppercase tracking-wider text-text-muted">Food restrictions</span><input className={`${inputClass} mt-1`} value={draft.foodRestrictions} onChange={(e) => changeDraft("foodRestrictions", e.target.value)} placeholder="Shellfish, broccoli" /></label>
               <label><span className="text-[11px] uppercase tracking-wider text-text-muted">Eating habits guidance</span><textarea className={`${textareaClass} mt-1`} value={draft.eatingHabits} onChange={(e) => changeDraft("eatingHabits", e.target.value)} placeholder="Meal timing, structure…" /></label>
+            </div>
+
+            <div className="my-5 border-t border-border pt-5">
+              <ScheduleEditor
+                schedule={draft.schedule}
+                onChange={(next) => changeDraft("schedule", next)}
+                mealsPerDay={draft.mealsPerDay}
+              />
             </div>
 
             <label className="block mb-1">

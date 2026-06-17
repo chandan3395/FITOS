@@ -1,6 +1,7 @@
 "use strict";
 
 const mongoose = require("mongoose");
+const { daySchema } = require("./nutritionSchedule.subschema");
 
 const NUTRITION_TEMPLATE_STATUSES = ["ACTIVE", "ARCHIVED"];
 
@@ -29,6 +30,10 @@ const nutritionTemplateSchema = new mongoose.Schema(
     dietType:         { type: String, trim: true, maxlength: 60   },
     foodRestrictions: { type: String, trim: true, maxlength: 1000 },
     eatingHabits:     { type: String, trim: true, maxlength: 2000 },
+
+    // ── Structured weekly schedule (v2; optional) ────────────
+    // Snapshotted by value into a NutritionPlan on assign (no shared refs).
+    schedule: { type: [daySchema], default: [] },
   },
   { timestamps: true }
 );

@@ -6,6 +6,7 @@ const { WorkoutPlan } = require("../schemas/WorkoutPlan.schema");
 const { Client } = require("../schemas/Client.schema");
 const { validateWorkoutTemplatePayload } = require("../validators/workoutTemplatePayload.validator");
 const ApiError = require("../utils/ApiError");
+const { cloneSetDetails } = require("../utils/workoutSets");
 
 // Whitelist of persisted fields so service writes are explicit.
 const PERSISTED = ["name", "description", "durationWeeks", "notes", "status", "exercises"];
@@ -89,6 +90,7 @@ async function duplicate(user, templateId) {
     dayNumber: ex.dayNumber,
     order: ex.order,
     notes: ex.notes,
+    setDetails: cloneSetDetails(ex),
   }));
   return WorkoutTemplate.create({
     trainerId:     user._id,
@@ -131,6 +133,7 @@ async function assignToClient(user, templateId, clientId) {
     dayNumber:   ex.dayNumber,
     order:       ex.order,
     notes:       ex.notes,
+    setDetails:  cloneSetDetails(ex), // snapshot per-set rows by value
   }));
 
   // Template has both a description and a notes field; the plan schema

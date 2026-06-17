@@ -5,6 +5,8 @@
 // specific fields (name + description instead of planName + goal) and a
 // reduced status set (no DRAFT).
 
+const { validateSetDetails } = require("./setDetailsValidator");
+
 const STATUSES = new Set(["ACTIVE", "ARCHIVED"]);
 const OBJECT_ID_RE = /^[a-f\d]{24}$/i;
 
@@ -74,6 +76,13 @@ function validateExercise(exercise) {
     const notes = String(exercise.notes).trim();
     if (notes.length > 1000) errors.notes = "Notes must be 1000 characters or fewer.";
     else if (notes.length > 0) value.notes = notes;
+  }
+
+  // setDetails (optional v2 per-set array)
+  if (isPresent(exercise.setDetails)) {
+    const { value: sd, errors: sdErrors } = validateSetDetails(exercise.setDetails);
+    if (Object.keys(sdErrors).length) Object.assign(errors, sdErrors);
+    else value.setDetails = sd;
   }
 
   if (Object.keys(errors).length) return { ok: false, errors };

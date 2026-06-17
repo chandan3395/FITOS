@@ -1,9 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
 import { EmptyState, ErrorState, SkeletonDetail, Toast } from "../../components/feedback/States";
 import nutritionService from "../../services/nutritionService";
 import mealCheckinService from "../../services/mealCheckinService";
+import mealLogService from "../../services/mealLogService";
+import NutritionCard from "../../components/nutrition/NutritionCard";
+import MealLogList from "../../components/nutrition/MealLogList";
+import { localToday } from "../../lib/nutritionTotals";
 
 /**
  * ClientNutritionPage — the client's ACTIVE nutrition plan plus a daily
@@ -167,46 +171,129 @@ const MealCheckinSection = () => {
   );
 };
 
+const PlanNotes = ({ plan }) =>
+  plan.foodAvoidances || plan.eatingHabits || plan.notes ? (
+    <Card>
+      <Card.Header><Card.Title>Notes & Preferences</Card.Title></Card.Header>
+      <Card.Body className="space-y-4">
+        {plan.foodAvoidances && (
+          <div>
+            <p className="text-[11px] uppercase tracking-wider text-text-muted">Foods to avoid</p>
+            <p className="text-sm text-text-primary mt-1 whitespace-pre-wrap">{plan.foodAvoidances}</p>
+          </div>
+        )}
+        {plan.eatingHabits && (
+          <div>
+            <p className="text-[11px] uppercase tracking-wider text-text-muted">Eating habits</p>
+            <p className="text-sm text-text-primary mt-1 whitespace-pre-wrap">{plan.eatingHabits}</p>
+          </div>
+        )}
+        {plan.notes && (
+          <div>
+            <p className="text-[11px] uppercase tracking-wider text-text-muted">Coach notes</p>
+            <p className="text-sm text-text-primary mt-1 whitespace-pre-wrap">{plan.notes}</p>
+          </div>
+        )}
+      </Card.Body>
+    </Card>
+  ) : null;
+
 const ClientNutritionPage = () => {
-  const [plans, setPlans] = useState([]);
+  const local = useMemo(() => localToday(), []);
+  const [plan, setPlan] = useState(null);
+  const [summary, setSummary] = useState(null);
+  const [todayLog, setTodayLog] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [toast, setToast] = useState(null);
+
+  // Lightweight refetch of just the daily surfaces (no page skeleton flash) —
+  // used after a meal upload and after pulling to refresh. Re-renders the card
+  // straight from the refetched payload; no manual macro recompute.
+  const refetchToday = useCallback(async () => {
+    const [s, logs] = await Promise.all([
+      mealLogService.today(local).catch(() => null),
+      mealLogService.listMine({ date: local.date }).catch(() => []),
+    ]);
+    setSummary(s);
+    setTodayLog(logs[0] || null);
+  }, [local]);
 
   const load = useCallback(async () => {
     setLoading(true); setError(null);
-    try { setPlans(await nutritionService.listMine()); }
-    catch (e) { setError(e?.response?.data?.message || "Failed to load nutrition plan"); }
-    finally { setLoading(false); }
-  }, []);
+    try {
+      const [plans] = await Promise.all([nutritionService.listMine(), refetchToday()]);
+      setPlan(plans[0] || null); // most recent ACTIVE
+    } catch (e) {
+      setError(e?.response?.data?.message || "Failed to load nutrition plan");
+    } finally {
+      setLoading(false);
+    }
+  }, [refetchToday]);
 
   useEffect(() => { load(); }, [load]);
 
-  // Most recent first; backend already filters ACTIVE.
-  const plan = plans[0] || null;
+  // A scheduled (v2) plan drives the macro card + per-meal logging. A flat
+  // legacy plan (no schedule) keeps the simple targets view + photo check-in.
+  const hasSchedule = (plan?.schedule || []).length > 0;
+
+  // Merge the trainer's per-entry note (not in /today) onto today's meals.
+  const entries = todayLog?.entries || [];
+  const mealRows = (summary?.meals || []).map((m) => {
+    const entry = entries.find((e) => e.mealType === m.mealType);
+    return { ...m, note: entry?.note || null };
+  });
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold text-text-primary">My Nutrition</h2>
-        <p className="text-sm text-text-secondary mt-1">Daily macros, preferences, and meal check-ins.</p>
+        <p className="text-sm text-text-secondary mt-1">Daily macros, preferences, and meal logging.</p>
       </div>
 
-      {/* Plan */}
       {loading ? (
         <SkeletonDetail />
       ) : error ? (
         <ErrorState title="Couldn't load your nutrition plan" message={error} onRetry={load} />
       ) : !plan ? (
-        <Card>
-          <Card.Body>
-            <EmptyState
-              title="No nutrition plan yet"
-              description="Once your coach publishes a plan, your macro targets will appear here."
-            />
-          </Card.Body>
-        </Card>
+        <>
+          <Card>
+            <Card.Body>
+              <EmptyState
+                title="No nutrition plan yet"
+                description="Once your coach publishes a plan, your macro targets will appear here."
+              />
+            </Card.Body>
+          </Card>
+          <MealCheckinSection />
+        </>
+      ) : hasSchedule ? (
+        <>
+          {/* v2 — daily macro card (reviewed-only consumed) + per-meal logging */}
+          <NutritionCard summary={summary} />
+
+          <Card>
+            <Card.Header>
+              <Card.Title>Today&apos;s Meals</Card.Title>
+              <Card.Description>
+                Upload a photo of each meal. It stays &quot;pending&quot; until your coach reviews it — only reviewed meals count toward your totals above.
+              </Card.Description>
+            </Card.Header>
+            <Card.Body>
+              <MealLogList
+                meals={mealRows}
+                localDate={local.date}
+                onLogged={refetchToday}
+                pushToast={setToast}
+              />
+            </Card.Body>
+          </Card>
+
+          <PlanNotes plan={plan} />
+        </>
       ) : (
         <>
+          {/* Legacy flat plan — simple targets + photo check-in */}
           <Card>
             <Card.Header>
               <Card.Title>{plan.planName}</Card.Title>
@@ -226,36 +313,12 @@ const ClientNutritionPage = () => {
             </Card.Body>
           </Card>
 
-          {(plan.foodAvoidances || plan.eatingHabits || plan.notes) && (
-            <Card>
-              <Card.Header><Card.Title>Notes & Preferences</Card.Title></Card.Header>
-              <Card.Body className="space-y-4">
-                {plan.foodAvoidances && (
-                  <div>
-                    <p className="text-[11px] uppercase tracking-wider text-text-muted">Foods to avoid</p>
-                    <p className="text-sm text-text-primary mt-1 whitespace-pre-wrap">{plan.foodAvoidances}</p>
-                  </div>
-                )}
-                {plan.eatingHabits && (
-                  <div>
-                    <p className="text-[11px] uppercase tracking-wider text-text-muted">Eating habits</p>
-                    <p className="text-sm text-text-primary mt-1 whitespace-pre-wrap">{plan.eatingHabits}</p>
-                  </div>
-                )}
-                {plan.notes && (
-                  <div>
-                    <p className="text-[11px] uppercase tracking-wider text-text-muted">Coach notes</p>
-                    <p className="text-sm text-text-primary mt-1 whitespace-pre-wrap">{plan.notes}</p>
-                  </div>
-                )}
-              </Card.Body>
-            </Card>
-          )}
+          <PlanNotes plan={plan} />
+          <MealCheckinSection />
         </>
       )}
 
-      {/* Daily meal check-in — always available so the client can log adherence. */}
-      <MealCheckinSection />
+      <Toast {...(toast || {})} onDismiss={() => setToast(null)} />
     </div>
   );
 };

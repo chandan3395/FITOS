@@ -5,6 +5,8 @@ const { Client } = require("../schemas/Client.schema");
 const ApiError = require("../utils/ApiError");
 const cloudinary = require("../config/cloudinary");
 
+const { MEAL_TYPES } = require("../schemas/nutritionSchedule.subschema");
+
 const SLOTS = ["front", "side", "back"];
 const MEAL_SLOTS = ["breakfast", "lunch", "dinner", "snack"];
 const DATE_RX = /^\d{4}-\d{2}-\d{2}$/;
@@ -80,4 +82,35 @@ async function signMealPhoto(user, body) {
   return cloudinary.signMealUpload({ clientId: client._id, date, meal });
 }
 
-module.exports = { signProgressPhoto, signMealPhoto, SLOTS, MEAL_SLOTS };
+/**
+ * POST /api/uploads/sign-meal-log
+ * Signs one meal-LOG photo upload — (client, date, mealType) — for the
+ * Nutrition v2 structured-plan logging flow. Distinct Cloudinary folder from
+ * meal check-ins. Same access rules: CLIENT signs for self; TRAINER/ADMIN
+ * pass an explicit clientId.
+ */
+async function signMealLog(user, body) {
+  let client;
+  if (user.role === "CLIENT") {
+    client = await resolveCurrentClient(user);
+  } else {
+    client = await assertClientAccess(body.clientId, user);
+  }
+
+  const date = String(body.date || "");
+  if (!DATE_RX.test(date)) throw new ApiError(400, "date (YYYY-MM-DD) is required");
+
+  const raw = String(body.mealType || "").trim().toLowerCase();
+  const canonical = MEAL_TYPES.find((m) => m.toLowerCase() === raw);
+  if (!canonical) {
+    throw new ApiError(400, `mealType must be one of: ${MEAL_TYPES.join(", ")}`);
+  }
+
+  return cloudinary.signMealLogUpload({
+    clientId: client._id,
+    date,
+    mealType: canonical.toLowerCase(),
+  });
+}
+
+module.exports = { signProgressPhoto, signMealPhoto, signMealLog, SLOTS, MEAL_SLOTS };

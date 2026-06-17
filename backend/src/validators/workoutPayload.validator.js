@@ -15,6 +15,8 @@
  * should never decide "is this exercise name valid" on its own.
  */
 
+const { validateSetDetails } = require("./setDetailsValidator");
+
 const STATUSES = new Set(["DRAFT", "ACTIVE", "ARCHIVED"]);
 const OBJECT_ID_RE = /^[a-f\d]{24}$/i;
 
@@ -133,6 +135,13 @@ function validateExercise(exercise, opts = {}) {
     const notes = String(exercise.notes).trim();
     if (notes.length > 1000) errors.notes = "Notes must be 1000 characters or fewer.";
     else if (notes.length > 0) value.notes = notes;
+  }
+
+  // ── setDetails (optional v2 per-set array) ───────────────
+  if (isPresent(exercise.setDetails)) {
+    const { value: sd, errors: sdErrors } = validateSetDetails(exercise.setDetails);
+    if (Object.keys(sdErrors).length > 0) Object.assign(errors, sdErrors);
+    else value.setDetails = sd;
   }
 
   if (Object.keys(errors).length > 0) return { ok: false, errors };

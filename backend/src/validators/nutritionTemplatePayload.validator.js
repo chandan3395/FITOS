@@ -5,6 +5,8 @@
 // no status DRAFT, and a `foodRestrictions` field instead of the plan's
 // `foodAvoidances` — the field naming follows the trainer-facing spec.
 
+const { validateSchedule } = require("./scheduleValidator");
+
 const STATUSES = new Set(["ACTIVE", "ARCHIVED"]);
 
 const RANGES = {
@@ -89,6 +91,13 @@ function validateNutritionTemplatePayload(body, opts = {}) {
   if (isPresent(body.dietType))         checkString(value, errors, "dietType",         body.dietType,         60);
   if (isPresent(body.foodRestrictions)) checkString(value, errors, "foodRestrictions", body.foodRestrictions, 1000);
   if (isPresent(body.eatingHabits))     checkString(value, errors, "eatingHabits",     body.eatingHabits,     2000);
+
+  // ── Weekly schedule (optional; same structure as plans). ──
+  if (body.schedule !== undefined) {
+    const { value: schedule, errors: scheduleErrors } = validateSchedule(body.schedule);
+    if (Object.keys(scheduleErrors).length > 0) Object.assign(errors, scheduleErrors);
+    else value.schedule = schedule;
+  }
 
   if (Object.keys(errors).length > 0) return { ok: false, errors };
   return { ok: true, value };

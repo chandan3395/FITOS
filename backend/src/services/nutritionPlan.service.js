@@ -14,6 +14,7 @@ const {
   resolveClientForUser,
   resolveCurrentClient,
 } = require("../utils/clientAccess");
+const { dayTotals, weeklyTotals, scheduleMealCountErrors } = require("../utils/nutritionTotals");
 
 // Single source of truth for fields the validator may write into a plan.
 // Update this list when the schema gains new persisted fields.
@@ -22,7 +23,22 @@ const PERSISTED_PLAN_FIELDS = [
   "calories", "protein", "carbs", "fats",
   "waterTarget", "mealsPerDay", "cheatMeals",
   "dietType", "foodAvoidances", "eatingHabits",
+  "schedule",
 ];
+
+/**
+ * Decorate a plan for API responses with COMPUTED per-day totals and a weekly
+ * total. Daily targets are never stored — they are the sum of each day's
+ * meals. Accepts a Mongoose doc or a lean object; always returns a plain
+ * object. Legacy flat plans (empty schedule) get an empty schedule + zero
+ * weekly totals and keep their flat macro fields untouched.
+ */
+function decoratePlan(plan) {
+  if (!plan) return plan;
+  const obj = typeof plan.toObject === "function" ? plan.toObject() : plan;
+  const schedule = (obj.schedule || []).map((d) => ({ ...d, dailyTotals: dayTotals(d) }));
+  return { ...obj, schedule, weeklyTotals: weeklyTotals(obj.schedule || []) };
+}
 
 async function getPlanWithAccess(user, planId, { write = false } = {}) {
   assertObjectId(planId, "nutritionPlanId");
@@ -53,7 +69,8 @@ async function createNutritionPlan(user, clientId, body) {
   for (const key of PERSISTED_PLAN_FIELDS) {
     if (result.value[key] !== undefined) data[key] = result.value[key];
   }
-  return NutritionPlan.create(data);
+  const plan = await NutritionPlan.create(data);
+  return decoratePlan(plan);
 }
 
 async function listNutritionPlansForClient(user, clientId, filters = {}) {
@@ -62,18 +79,20 @@ async function listNutritionPlansForClient(user, clientId, filters = {}) {
   });
   const query = { clientId: client._id };
   if (filters.status) query.status = String(filters.status).trim().toUpperCase();
-  return NutritionPlan.find(query).sort({ createdAt: -1 }).lean();
+  const plans = await NutritionPlan.find(query).sort({ createdAt: -1 }).lean();
+  return plans.map(decoratePlan);
 }
 
 async function listNutritionPlansForCurrentClient(user) {
   const client = await resolveCurrentClient(user);
-  return NutritionPlan.find({ clientId: client._id, status: "ACTIVE" })
+  const plans = await NutritionPlan.find({ clientId: client._id, status: "ACTIVE" })
     .sort({ createdAt: -1 })
     .lean();
+  return plans.map(decoratePlan);
 }
 
 async function getNutritionPlanById(user, planId) {
-  return getPlanWithAccess(user, planId);
+  return decoratePlan(await getPlanWithAccess(user, planId));
 }
 
 async function updateNutritionPlan(user, planId, body) {
@@ -83,15 +102,31 @@ async function updateNutritionPlan(user, planId, body) {
   const plan = await getPlanWithAccess(user, planId, { write: true });
   applyValidatedFields(plan, result.value);
   await plan.save();
-  return plan;
+  return decoratePlan(plan);
 }
 
 async function publishNutritionPlan(user, planId) {
   const plan = await getPlanWithAccess(user, planId, { write: true });
-  // A nutrition plan must at least specify daily calories to be publishable.
-  if (plan.calories == null) {
+
+  // Structured (v2) plans: every POPULATED day must have exactly mealsPerDay
+  // meals. Legacy flat plans (no schedule): keep the original calorie rule.
+  const hasSchedule = Array.isArray(plan.schedule) && plan.schedule.length > 0;
+  if (hasSchedule) {
+    if (plan.mealsPerDay == null) {
+      throw new ApiError(400, "Set meals per day before publishing a scheduled plan");
+    }
+    const bad = scheduleMealCountErrors(plan.schedule, plan.mealsPerDay);
+    if (bad.length > 0) {
+      const detail = bad.map((b) => `${b.day} has ${b.count}`).join(", ");
+      throw new ApiError(
+        400,
+        `Each scheduled day may have at most ${plan.mealsPerDay} meals (${detail}).`
+      );
+    }
+  } else if (plan.calories == null) {
     throw new ApiError(400, "Cannot publish without a daily calorie target");
   }
+
   const wasActive = plan.status === "ACTIVE";
   plan.status = "ACTIVE";
   await plan.save();
@@ -109,14 +144,14 @@ async function publishNutritionPlan(user, planId) {
     });
   }
 
-  return plan;
+  return decoratePlan(plan);
 }
 
 async function archiveNutritionPlan(user, planId) {
   const plan = await getPlanWithAccess(user, planId, { write: true });
   plan.status = "ARCHIVED";
   await plan.save();
-  return plan;
+  return decoratePlan(plan);
 }
 
 async function deleteNutritionPlan(user, planId) {
@@ -137,12 +172,16 @@ async function reassignNutritionPlan(user, planId, targetClientId) {
   }
   const targetClient = await resolveClientForUser(user, targetClientId);
 
+  // Snapshot by value (plain object) so the clone shares no subdocument refs
+  // with the source plan — editing one never mutates the other.
+  const src = source.toObject();
   const data = { clientId: targetClient._id, status: "DRAFT" };
   for (const key of PERSISTED_PLAN_FIELDS) {
     if (key === "status") continue;
-    if (source[key] !== undefined && source[key] !== null) data[key] = source[key];
+    if (src[key] !== undefined && src[key] !== null) data[key] = src[key];
   }
-  return NutritionPlan.create(data);
+  const created = await NutritionPlan.create(data);
+  return decoratePlan(created);
 }
 
 module.exports = {

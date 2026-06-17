@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Card from "../../components/ui/Card";
 import { CheckCircleIcon, FlameIcon, CalendarIcon } from "../../components/design-system/Icons";
@@ -10,6 +10,10 @@ import nutritionService from "../../services/nutritionService";
 import checkinService from "../../services/checkinService";
 import progressPhotoService from "../../services/progressPhotoService";
 import activityService from "../../services/activityService";
+import mealLogService from "../../services/mealLogService";
+import NutritionCard from "../../components/nutrition/NutritionCard";
+import { localToday } from "../../lib/nutritionTotals";
+import { exerciseSummaryLine } from "../../lib/workoutSets";
 
 const todayDayNumber = () => {
   const jsDay = new Date().getDay();
@@ -69,28 +73,33 @@ const ClientDashboard = () => {
   const [checkins,    setCheckins]    = useState([]);
   const [photos,      setPhotos]      = useState([]);
   const [activities,  setActivities]  = useState([]);
+  const [nutritionToday, setNutritionToday] = useState(null);
   const [loading,     setLoading]     = useState(true);
   const [error,       setError]       = useState(null);
   const [busyId,      setBusyId]      = useState(null);
   const [toast,       setToast]       = useState(null);
 
+  // Client's LOCAL day for the nutrition "today" summary (never server UTC).
+  const local = useMemo(() => localToday(), []);
   const primaryPlan = workouts[0] || null;
 
   const load = useCallback(async () => {
     setLoading(true); setError(null);
     try {
-      const [w, n, c, p, a] = await Promise.all([
+      const [w, n, c, p, a, nt] = await Promise.all([
         workoutService.listMine().catch(() => []),
         nutritionService.listMine().catch(() => []),
         checkinService.listMine({ limit: 10 }).catch(() => []),
         progressPhotoService.listMine().catch(() => []),
         activityService.listMine({ limit: 8 }).catch(() => []),
+        mealLogService.today(local).catch(() => null),
       ]);
       setWorkouts(w);
       setNutrition(n);
       setCheckins(c);
       setPhotos(p);
       setActivities(a);
+      setNutritionToday(nt);
       const plan = w[0];
       if (plan) {
         setCompletions(await workoutService.completions(plan._id).catch(() => []));
@@ -102,7 +111,7 @@ const ClientDashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [local]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -146,6 +155,9 @@ const ClientDashboard = () => {
   const pctToday = todaysExercises.length ? Math.round((doneToday / todaysExercises.length) * 100) : 0;
 
   const nutritionPlan = nutrition[0] || null;
+  // Scheduled (v2) plans get the rich macro summary; flat/legacy plans keep
+  // the simple plan widget so nothing is lost.
+  const hasSchedule = (nutritionPlan?.schedule || []).length > 0;
   const lastCheckin   = checkins[0] || null;
   const lastPhoto     = photos[0]   || null;
 
@@ -234,7 +246,7 @@ const ClientDashboard = () => {
                             {ex.name}
                           </span>
                           <span className="block text-[12px] text-text-muted">
-                            {ex.sets || "—"} sets × {ex.reps || "—"} reps{ex.weight != null ? ` · ${ex.weight} kg` : ""}
+                            {exerciseSummaryLine(ex)}
                           </span>
                         </span>
                         <span className="text-[11px] font-medium text-text-muted shrink-0">
@@ -254,28 +266,34 @@ const ClientDashboard = () => {
 
         {/* Side column — Nutrition + Upcoming Check-In */}
         <div className="space-y-4">
-          {/* 3 — Active Nutrition Plan */}
-          <Card>
-            <Card.Header>
-              <div className="flex items-center justify-between">
-                <Card.Title>Nutrition Plan</Card.Title>
-                <Link to={ROUTES.CLIENT_NUTRITION} className="text-[12px] text-primary hover:text-primary-hover">Open →</Link>
-              </div>
-            </Card.Header>
-            <Card.Body>
-              {!nutritionPlan ? (
-                <p className="text-sm text-text-secondary">No nutrition plan yet.</p>
-              ) : (
-                <>
-                  <p className="text-base font-semibold text-text-primary truncate">{nutritionPlan.planName}</p>
-                  <p className="text-sm text-text-secondary mt-2">
-                    {nutritionPlan.calories != null ? `${nutritionPlan.calories} kcal/day` : "Macros TBD"}
-                    {nutritionPlan.dietType ? ` · ${nutritionPlan.dietType}` : ""}
-                  </p>
-                </>
-              )}
-            </Card.Body>
-          </Card>
+          {/* 3 — Active Nutrition. Scheduled plans show the shared macro
+              summary (same data + reviewed-only rule as the full card);
+              flat/legacy plans keep the simple plan widget. Both link out. */}
+          {hasSchedule ? (
+            <NutritionCard compact summary={nutritionToday} to={ROUTES.CLIENT_NUTRITION} />
+          ) : (
+            <Card>
+              <Card.Header>
+                <div className="flex items-center justify-between">
+                  <Card.Title>Nutrition Plan</Card.Title>
+                  <Link to={ROUTES.CLIENT_NUTRITION} className="text-[12px] text-primary hover:text-primary-hover">Open →</Link>
+                </div>
+              </Card.Header>
+              <Card.Body>
+                {!nutritionPlan ? (
+                  <p className="text-sm text-text-secondary">No nutrition plan yet.</p>
+                ) : (
+                  <>
+                    <p className="text-base font-semibold text-text-primary truncate">{nutritionPlan.planName}</p>
+                    <p className="text-sm text-text-secondary mt-2">
+                      {nutritionPlan.calories != null ? `${nutritionPlan.calories} kcal/day` : "Macros TBD"}
+                      {nutritionPlan.dietType ? ` · ${nutritionPlan.dietType}` : ""}
+                    </p>
+                  </>
+                )}
+              </Card.Body>
+            </Card>
+          )}
 
           {/* 5 — Upcoming Check-In */}
           <Card>

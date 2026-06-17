@@ -4,6 +4,7 @@ import Button from "../../components/ui/Button";
 import { CheckCircleIcon } from "../../components/design-system/Icons";
 import { EmptyState, ErrorState, SkeletonDetail, Toast } from "../../components/feedback/States";
 import workoutService from "../../services/workoutService";
+import { hasSetDetails, exerciseSummaryLine, restVaries, uniformRestSeconds, num } from "../../lib/workoutSets";
 
 const todayDayNumber = () => {
   const jsDay = new Date().getDay();
@@ -14,10 +15,43 @@ const fmtDateTime = (iso) => iso
   ? new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
   : "-";
 
-const exerciseLine = (exercise) => {
-  const weight = exercise.weight != null ? ` · ${exercise.weight} kg` : "";
+// Legacy/flat single-line, incl. the optional uniform rest.
+const flatExerciseLine = (exercise) => {
   const rest = exercise.restSeconds != null ? ` · ${exercise.restSeconds}s rest` : "";
-  return `${exercise.sets || "-"} sets × ${exercise.reps || "-"} reps${weight}${rest}`;
+  return `${exerciseSummaryLine(exercise)}${rest}`;
+};
+
+/**
+ * Read-only per-set breakdown for a VARIED exercise — a compact aligned list
+ * mirroring the trainer mini-table. Rest is shown per row only when it varies;
+ * a uniform rest is shown once below the list.
+ */
+const SetBreakdown = ({ exercise }) => {
+  const showPerRowRest = restVaries(exercise);
+  const restOnce = uniformRestSeconds(exercise);
+  return (
+    <div className="mt-2">
+      <div className="grid grid-cols-[2.5rem_1fr_1fr] gap-2 px-1 pb-1">
+        <span className="text-[10.5px] uppercase tracking-wider text-text-muted">Set</span>
+        <span className="text-[10.5px] uppercase tracking-wider text-text-muted">Weight</span>
+        <span className="text-[10.5px] uppercase tracking-wider text-text-muted">Reps{showPerRowRest ? " · Rest" : ""}</span>
+      </div>
+      <div className="space-y-1">
+        {exercise.setDetails.map((s, i) => (
+          <div key={i} className="grid grid-cols-[2.5rem_1fr_1fr] gap-2 items-baseline text-[13px]">
+            <span className="text-text-muted">{s.setNumber ?? i + 1}</span>
+            <span className="text-text-primary font-medium">{num(s.weight)} kg</span>
+            <span className="text-text-secondary">
+              {num(s.reps)} reps{showPerRowRest && num(s.restSeconds) > 0 ? ` · ${num(s.restSeconds)}s` : ""}
+            </span>
+          </div>
+        ))}
+      </div>
+      {restOnce > 0 && (
+        <p className="text-[11.5px] text-text-muted mt-1.5">{restOnce}s rest between sets</p>
+      )}
+    </div>
+  );
 };
 
 const ClientWorkoutPage = () => {
@@ -148,12 +182,16 @@ const ClientWorkoutPage = () => {
                     const completed = completionMap.has(String(exercise._id));
                     return (
                       <div key={exercise._id} className="rounded-lg border border-border bg-surface-elevated p-4 flex items-start justify-between gap-4">
-                        <div>
+                        <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
                             {completed && <CheckCircleIcon size={16} className="text-emerald-300" />}
                             <p className="text-sm font-semibold text-text-primary">{exercise.name}</p>
                           </div>
-                          <p className="text-[12px] text-text-secondary mt-1">{exerciseLine(exercise)}</p>
+                          {hasSetDetails(exercise) ? (
+                            <SetBreakdown exercise={exercise} />
+                          ) : (
+                            <p className="text-[12px] text-text-secondary mt-1">{flatExerciseLine(exercise)}</p>
+                          )}
                           {exercise.notes && <p className="text-[12px] text-text-muted mt-2">{exercise.notes}</p>}
                         </div>
                         <Button

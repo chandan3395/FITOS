@@ -12,6 +12,7 @@ const PERSISTED = [
   "calories", "protein", "carbs", "fats",
   "waterTarget", "mealsPerDay", "cheatMeals",
   "dietType", "foodRestrictions", "eatingHabits",
+  "schedule",
 ];
 
 function assertObjectId(id, label) {
@@ -114,6 +115,10 @@ async function assignToClient(user, templateId, clientId) {
     .filter(Boolean)
     .join("\n\n") || undefined;
 
+  // Snapshot the weekly schedule BY VALUE so future template edits can never
+  // mutate this assigned plan (the template→snapshot rule).
+  const schedule = template.toObject().schedule || [];
+
   return NutritionPlan.create({
     clientId:    client._id,
     planName:    template.name,
@@ -131,6 +136,8 @@ async function assignToClient(user, templateId, clientId) {
     dietType:       template.dietType,
     foodAvoidances: template.foodRestrictions,
     eatingHabits:   template.eatingHabits,
+
+    schedule,
   });
 }
 

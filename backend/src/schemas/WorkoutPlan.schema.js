@@ -1,6 +1,7 @@
 "use strict";
 
 const mongoose = require("mongoose");
+const { setDetailSchema } = require("./workoutSetDetail.subschema");
 
 const EXERCISE_FIELDS = {
   name: { type: String, required: true, trim: true },
@@ -10,7 +11,13 @@ const EXERCISE_FIELDS = {
   restSeconds: { type: Number, min: 0, max: 600 },
   dayNumber: { type: Number, min: 1 },
   order: { type: Number, min: 1 },
-  notes: { type: String, trim: true, maxlength: 1000 }
+  notes: { type: String, trim: true, maxlength: 1000 },
+
+  // ── Per-set details (v2; optional) ───────────────────────────
+  // When present, length === the exercise's number of sets and each row holds
+  // its own weight/reps/restSeconds. Absent for legacy flat exercises, which
+  // keep the flat sets/reps/weight fields above.
+  setDetails: { type: [setDetailSchema], default: undefined }
 };
 
 const WORKOUT_STATUSES = ["DRAFT", "ACTIVE", "ARCHIVED"];

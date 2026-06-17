@@ -8,8 +8,23 @@ const { validateWorkoutPayload } = require("../validators/workoutPayload.validat
 const ApiError = require("../utils/ApiError");
 const activityService = require("./activity.service");
 const access = require("../utils/clientAccess");
+const { exerciseSummary, setDetailsPublishErrors, cloneSetDetails } = require("../utils/workoutSets");
 
 const { assertObjectId, assertTrainer } = access;
+
+/**
+ * Decorate a plan for API responses with a COMPUTED per-exercise summary
+ * ({ setCount, weight: {min,max,varies,display} | null }) so the client can
+ * render a clean line without re-deriving from setDetails. Accepts a Mongoose
+ * doc or a lean object; always returns a plain object. Flat (legacy) exercises
+ * get a summary derived from their flat sets/weight fields.
+ */
+function decoratePlan(plan) {
+  if (!plan) return plan;
+  const obj = typeof plan.toObject === "function" ? plan.toObject() : plan;
+  const exercises = (obj.exercises || []).map((ex) => ({ ...ex, summary: exerciseSummary(ex) }));
+  return { ...obj, exercises };
+}
 
 // Workout plans filter out soft-deleted clients on every access path, so the
 // shared helpers are wrapped here to force `excludeDeleted: true`. This keeps
@@ -48,10 +63,11 @@ async function createWorkoutPlan(user, clientId, body) {
   }
 
   const client = await resolveClientForUser(user, clientId);
-  return WorkoutPlan.create({
+  const plan = await WorkoutPlan.create({
     clientId: client._id,
     ...result.value
   });
+  return decoratePlan(plan);
 }
 
 async function getWorkoutPlansForClient(user, clientId, filters = {}) {
@@ -65,18 +81,20 @@ async function getWorkoutPlansForClient(user, clientId, filters = {}) {
     query.status = String(filters.status).trim().toUpperCase();
   }
 
-  return WorkoutPlan.find(query).sort({ createdAt: -1 }).lean();
+  const plans = await WorkoutPlan.find(query).sort({ createdAt: -1 }).lean();
+  return plans.map(decoratePlan);
 }
 
 async function getWorkoutPlansForCurrentClient(user) {
   const client = await resolveCurrentClient(user);
-  return WorkoutPlan.find({ clientId: client._id, status: "ACTIVE" })
+  const plans = await WorkoutPlan.find({ clientId: client._id, status: "ACTIVE" })
     .sort({ createdAt: -1 })
     .lean();
+  return plans.map(decoratePlan);
 }
 
 async function getWorkoutPlanById(user, workoutPlanId) {
-  return getWorkoutPlanWithAccess(user, workoutPlanId);
+  return decoratePlan(await getWorkoutPlanWithAccess(user, workoutPlanId));
 }
 
 async function updateWorkoutPlan(user, workoutPlanId, body) {
@@ -88,14 +106,14 @@ async function updateWorkoutPlan(user, workoutPlanId, body) {
   const workoutPlan = await getWorkoutPlanWithAccess(user, workoutPlanId, { write: true });
   Object.assign(workoutPlan, result.value);
   await workoutPlan.save();
-  return workoutPlan;
+  return decoratePlan(workoutPlan);
 }
 
 async function archiveWorkoutPlan(user, workoutPlanId) {
   const workoutPlan = await getWorkoutPlanWithAccess(user, workoutPlanId, { write: true });
   workoutPlan.status = "ARCHIVED";
   await workoutPlan.save();
-  return workoutPlan;
+  return decoratePlan(workoutPlan);
 }
 
 async function publishWorkoutPlan(user, workoutPlanId) {
@@ -103,6 +121,21 @@ async function publishWorkoutPlan(user, workoutPlanId) {
   if (!workoutPlan.exercises || workoutPlan.exercises.length === 0) {
     throw new ApiError(400, "Cannot publish a plan with no exercises");
   }
+
+  // Set-detailed exercises (v2): every set must have weight >= 0 and reps >= 1.
+  // Flat (legacy) exercises are unaffected — they keep the "has >= 1 exercise"
+  // rule above (setDetailsPublishErrors returns [] for them).
+  const setErrors = [];
+  for (const ex of workoutPlan.exercises) {
+    const bad = setDetailsPublishErrors(ex);
+    if (bad.length > 0) {
+      setErrors.push(`${ex.name}: ${bad.map((b) => `set ${b.setNumber} ${b.reason}`).join(", ")}`);
+    }
+  }
+  if (setErrors.length > 0) {
+    throw new ApiError(400, `Every set needs a non-negative weight and reps ≥ 1 (${setErrors.join("; ")}).`);
+  }
+
   const wasActive = workoutPlan.status === "ACTIVE";
   workoutPlan.status = "ACTIVE";
   await workoutPlan.save();
@@ -122,7 +155,7 @@ async function publishWorkoutPlan(user, workoutPlanId) {
     });
   }
 
-  return workoutPlan;
+  return decoratePlan(workoutPlan);
 }
 
 /**
@@ -158,9 +191,10 @@ async function reassignWorkoutPlan(user, workoutPlanId, targetClientId) {
     dayNumber: ex.dayNumber,
     order: ex.order,
     notes: ex.notes,
+    setDetails: cloneSetDetails(ex), // snapshot per-set rows by value (no shared _ids)
   }));
 
-  return WorkoutPlan.create({
+  const created = await WorkoutPlan.create({
     clientId: targetClient._id,
     planName: sourcePlan.planName,
     goal: sourcePlan.goal,
@@ -169,6 +203,7 @@ async function reassignWorkoutPlan(user, workoutPlanId, targetClientId) {
     status: "DRAFT",
     exercises: cloneExercises,
   });
+  return decoratePlan(created);
 }
 
 async function getWorkoutCompletionHistory(user, workoutPlanId) {

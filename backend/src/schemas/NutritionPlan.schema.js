@@ -1,6 +1,7 @@
 "use strict";
 
 const mongoose = require("mongoose");
+const { daySchema } = require("./nutritionSchedule.subschema");
 
 const NUTRITION_STATUSES = ["DRAFT", "ACTIVE", "ARCHIVED"];
 
@@ -46,6 +47,11 @@ const nutritionPlanSchema = new mongoose.Schema(
     dietType:        { type: String, trim: true, maxlength: 60   },
     foodAvoidances:  { type: String, trim: true, maxlength: 1000 },
     eatingHabits:    { type: String, trim: true, maxlength: 2000 },
+
+    // ── Structured weekly schedule (v2; optional) ────────────
+    // Daily macro targets are derived from these meals, never stored.
+    // Empty for legacy flat plans, which keep the flat macro fields above.
+    schedule: { type: [daySchema], default: [] },
   },
   { timestamps: true }
 );

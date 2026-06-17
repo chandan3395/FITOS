@@ -109,6 +109,23 @@ function signMealUpload({ clientId, date, meal }) {
   );
 }
 
+// ── Meal-log assets (Nutrition v2) — keyed by (client, date, mealType) ──
+// Distinct folder from meal check-ins so the two never overwrite each other:
+//   fitos/clients/<clientId>/meal-logs/<date>/<mealType>
+function mealLogFolderFor(clientId, date) {
+  return `${ROOT_FOLDER}/clients/${clientId}/meal-logs/${date}`;
+}
+function mealLogPublicIdFor(clientId, date, mealType) {
+  return `${mealLogFolderFor(clientId, date)}/${mealType}`;
+}
+/** Sign one meal-log photo upload — (client, date, mealType). */
+function signMealLogUpload({ clientId, date, mealType }) {
+  return buildSignedPayload(
+    mealLogPublicIdFor(clientId, date, mealType),
+    mealLogFolderFor(clientId, date)
+  );
+}
+
 /** Canonical secure delivery URL for full-size viewing. */
 function urlFor(publicId) {
   return cloudinary.url(publicId, { secure: true, fetch_format: "auto", quality: "auto" });
@@ -154,6 +171,9 @@ module.exports = {
   mealFolderFor,
   mealPublicIdFor,
   signMealUpload,
+  mealLogFolderFor,
+  mealLogPublicIdFor,
+  signMealLogUpload,
   urlFor,
   thumbnailUrlFor,
   destroy,

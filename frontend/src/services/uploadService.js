@@ -24,6 +24,12 @@ async function signMeal({ clientId, date, meal }) {
   return res.data?.data;
 }
 
+/** Get a signed payload for one Nutrition v2 meal-LOG photo (client, date, mealType). */
+async function signMealLog({ clientId, date, mealType }) {
+  const res = await api.post("/uploads/sign-meal-log", { clientId, date, mealType });
+  return res.data?.data;
+}
+
 /**
  * Upload one compressed File directly to Cloudinary using a signed payload.
  * Uses a bare axios call (no auth header / no /api baseURL) since the
@@ -65,5 +71,14 @@ async function uploadMealSlot({ clientId, date, meal, file }) {
   return { publicId: result.public_id, url: result.secure_url };
 }
 
-const uploadService = { sign, signMeal, uploadToCloudinary, uploadSlot, uploadMealSlot };
+/** Compress + sign + upload one Nutrition v2 meal-LOG photo. Returns { publicId, url } or null. */
+async function uploadMealLog({ clientId, date, mealType, file }) {
+  if (!file) return null;
+  const compressed = await compressImage(file);
+  const sig = await signMealLog({ clientId, date, mealType });
+  const result = await uploadToCloudinary(compressed, sig);
+  return { publicId: result.public_id, url: result.secure_url };
+}
+
+const uploadService = { sign, signMeal, signMealLog, uploadToCloudinary, uploadSlot, uploadMealSlot, uploadMealLog };
 export default uploadService;

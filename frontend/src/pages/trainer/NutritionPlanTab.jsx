@@ -5,6 +5,14 @@ import { SkeletonDetail, ErrorState, Toast } from "../../components/feedback/Sta
 import nutritionService from "../../services/nutritionService";
 import clientService from "../../services/clientService";
 import nutritionTemplateService from "../../services/nutritionTemplateService";
+import ScheduleEditor from "../../components/nutrition/ScheduleEditor";
+import {
+  serializeSchedule,
+  scheduleToDraft,
+  scheduleMealCountErrors,
+  maxMealsInAnyDay,
+  num,
+} from "../../lib/nutritionTotals";
 
 const inputClass = "w-full h-9 px-3 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-[#333]";
 const textareaClass = "w-full min-h-[84px] px-3 py-2 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-[#333]";
@@ -26,6 +34,7 @@ const emptyDraft = () => ({
   dietType: "",
   foodAvoidances: "",
   eatingHabits: "",
+  schedule: [],
 });
 
 const draftFromPlan = (plan) => ({
@@ -43,6 +52,7 @@ const draftFromPlan = (plan) => ({
   dietType:       plan.dietType       ?? "",
   foodAvoidances: plan.foodAvoidances ?? "",
   eatingHabits:   plan.eatingHabits   ?? "",
+  schedule:       scheduleToDraft(plan.schedule),
 });
 
 const toNumber = (value) => {
@@ -65,7 +75,39 @@ const preparePayload = (draft, status) => ({
   dietType:       draft.dietType       || undefined,
   foodAvoidances: draft.foodAvoidances || undefined,
   eatingHabits:   draft.eatingHabits   || undefined,
+  schedule:       serializeSchedule(draft.schedule),
 });
+
+// Client-side mirror of the server publish rule so publishing never fails
+// unexpectedly. Scheduled plans: every populated day must have exactly
+// mealsPerDay meals AND every meal must have non-negative macros. Legacy flat
+// plans: a daily calorie target is required. Returns a message or null.
+const MACRO_KEYS = ["calories", "protein", "carbs", "fats"];
+const publishBlockReason = (draft) => {
+  const sched = draft.schedule || [];
+  const populated = sched.filter((d) => (d.meals || []).length > 0);
+  if (populated.length > 0) {
+    const mpd = Number(draft.mealsPerDay);
+    if (!mpd) return "Set meals per day before publishing a scheduled plan.";
+    const over = scheduleMealCountErrors(sched, mpd);
+    if (over.length) {
+      return `Each scheduled day may have at most ${mpd} meals — fix: ${over.map((s) => `${s.day} (${s.count})`).join(", ")}.`;
+    }
+    const badDays = new Set();
+    for (const d of populated) {
+      for (const m of d.meals) {
+        for (const k of MACRO_KEYS) {
+          const v = m[k];
+          if (v === "" || v === null || v === undefined || num(v) < 0) badDays.add(d.day);
+        }
+      }
+    }
+    if (badDays.size) return `Every meal needs non-negative macros — check: ${[...badDays].join(", ")}.`;
+    return null;
+  }
+  if (!draft.calories) return "Daily calorie target is required to publish.";
+  return null;
+};
 
 const BADGE_STYLE = {
   DRAFT:    { label: "Draft",     cls: "bg-zinc-800 text-zinc-300" },
@@ -233,11 +275,28 @@ const NutritionPlanTab = ({ clientId }) => {
 
   const changeDraft = (field, value) => setDraft((c) => ({ ...c, [field]: value }));
 
+  // Lowering mealsPerDay below an existing day's meal count must NOT silently
+  // delete meals — warn and keep the value; the trainer removes meals manually.
+  const changeMealsPerDay = (value) => {
+    const next = Number(value);
+    const maxExisting = maxMealsInAnyDay(draft?.schedule);
+    if (value !== "" && Number.isFinite(next) && next > 0 && next < maxExisting) {
+      setToast({
+        kind: "error",
+        message: `A day already has ${maxExisting} meals. Remove meals first — lowering meals/day won't delete them.`,
+      });
+    }
+    changeDraft("mealsPerDay", value);
+  };
+
   const saveDraft = async (status) => {
     if (!draft) return;
-    if (status === "ACTIVE" && !draft.calories) {
-      setToast({ kind: "error", message: "Daily calorie target is required to publish" });
-      return;
+    if (status === "ACTIVE") {
+      const reason = publishBlockReason(draft);
+      if (reason) {
+        setToast({ kind: "error", message: reason });
+        return;
+      }
     }
     setSaving(true);
     try {
@@ -413,7 +472,13 @@ const NutritionPlanTab = ({ clientId }) => {
                         <Button size="sm" variant="secondary" onClick={() => startEdit(plan)} disabled={busy}>Edit</Button>
                         <Button size="sm" variant="secondary" onClick={() => duplicatePlan(plan)} disabled={busy}>Duplicate</Button>
                         {plan.status !== "ACTIVE" && (
-                          <Button size="sm" onClick={() => publishPlan(plan)} disabled={busy || plan.calories == null}>Publish</Button>
+                          <Button
+                            size="sm"
+                            onClick={() => publishPlan(plan)}
+                            disabled={busy || (plan.calories == null && !(plan.schedule || []).some((d) => (d.meals || []).length > 0))}
+                          >
+                            Publish
+                          </Button>
                         )}
                         {plan.status !== "ARCHIVED" && (
                           <Button size="sm" variant="secondary" onClick={() => archivePlan(plan)} disabled={busy}>Archive</Button>
@@ -495,7 +560,7 @@ const NutritionPlanTab = ({ clientId }) => {
               </label>
               <label>
                 <span className="text-[11px] uppercase tracking-wider text-text-muted">Meals / day</span>
-                <input type="number" min="1" max="8" value={draft.mealsPerDay} onChange={(e) => changeDraft("mealsPerDay", e.target.value)} className={`${inputClass} mt-1`} placeholder="4" />
+                <input type="number" min="1" max="8" value={draft.mealsPerDay} onChange={(e) => changeMealsPerDay(e.target.value)} className={`${inputClass} mt-1`} placeholder="4" />
               </label>
               <label>
                 <span className="text-[11px] uppercase tracking-wider text-text-muted">Cheat meals / week</span>
@@ -513,6 +578,14 @@ const NutritionPlanTab = ({ clientId }) => {
                 <span className="text-[11px] uppercase tracking-wider text-text-muted">Eating habits</span>
                 <textarea value={draft.eatingHabits} onChange={(e) => changeDraft("eatingHabits", e.target.value)} className={`${textareaClass} mt-1`} placeholder="Current diet, meal timing, relationship with food…" />
               </label>
+            </div>
+
+            <div className="my-5 border-t border-border pt-5">
+              <ScheduleEditor
+                schedule={draft.schedule}
+                onChange={(next) => changeDraft("schedule", next)}
+                mealsPerDay={draft.mealsPerDay}
+              />
             </div>
 
             <label className="block mb-1">

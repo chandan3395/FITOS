@@ -9,7 +9,9 @@
     "build": "echo \"No build step for Node.js backend\"",
     "test": "jest --colors",
     "create-admin": "node scripts/create-first-admin.js",
-    "seed:demo": "node scripts/seedDemoEnvironment.js"
+    "seed:demo": "node scripts/seedDemoEnvironment.js",
+    "migrate:nutrition-v2": "node scripts/migrateNutritionScheduleV2.js",
+    "migrate:workout-v2": "node scripts/migrateWorkoutSetDetailsV2.js"
   },
   "jest": {
     "testEnvironment": "node",

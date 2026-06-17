@@ -1,6 +1,7 @@
 "use strict";
 
 const mongoose = require("mongoose");
+const { setDetailSchema } = require("./workoutSetDetail.subschema");
 
 // Templates are trainer-private blueprints — independent from any client
 // plan. They follow a much simpler lifecycle than plans (no DRAFT stage),
@@ -17,6 +18,9 @@ const EXERCISE_FIELDS = {
   dayNumber:   { type: Number, min: 1 },
   order:       { type: Number, min: 1 },
   notes:       { type: String, trim: true, maxlength: 1000 },
+
+  // Per-set details (v2; optional) — snapshotted by value on assign.
+  setDetails:  { type: [setDetailSchema], default: undefined },
 };
 
 const workoutTemplateSchema = new mongoose.Schema(
