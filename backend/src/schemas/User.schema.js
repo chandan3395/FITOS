@@ -51,6 +51,15 @@ const userSchema = new mongoose.Schema(
       select: false,
     },
 
+    // Messaging presence. "Online" is ephemeral and lives in the in-memory
+    // presence registry (socket layer); this timestamp is persisted on full
+    // disconnect so the conversation list can show "last seen <time>" for a
+    // participant who is currently offline. Unset until the user's first
+    // socket disconnect — readers fall back to "offline" with no last-seen.
+    lastSeenAt: {
+      type: Date,
+    },
+
     // ── Demo environment ─────────────────────────────────────
     // Marks the permanent demo accounts (demo.trainer@ / demo.client@).
     // `isDemoAccount` lets the seed script find/repair them idempotently and

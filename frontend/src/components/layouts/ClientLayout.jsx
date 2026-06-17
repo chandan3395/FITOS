@@ -5,8 +5,10 @@ import {
   ChartBarIcon,
   DumbbellIcon,
   CheckCircleIcon,
+  ChatIcon,
 } from "../design-system/Icons";
 import { useAuthContext } from "../../contexts/AuthContext";
+import { useUnread } from "../../contexts/UnreadContext";
 
 const initials = (name = "") => name.split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("") || "C";
 
@@ -15,6 +17,7 @@ const navItems = [
   { label: "Nutrition", to: ROUTES.CLIENT_NUTRITION, Icon: CheckCircleIcon },
   { label: "Progress",  to: ROUTES.CLIENT_PROGRESS,  Icon: ChartBarIcon },
   { label: "Workout",   to: ROUTES.CLIENT_WORKOUT,   Icon: DumbbellIcon },
+  { label: "Messages",  to: ROUTES.CLIENT_MESSAGES,  Icon: ChatIcon },
 ];
 
 const navClass = ({ isActive }) =>
@@ -27,6 +30,7 @@ const navClass = ({ isActive }) =>
 
 const ClientLayout = () => {
   const { user, logout } = useAuthContext();
+  const { total: unreadTotal } = useUnread();
   const navigate = useNavigate();
   const onLogout = async () => {
     await logout();
@@ -51,12 +55,20 @@ const ClientLayout = () => {
         </p>
 
         <nav className="flex-1 px-3 py-1 space-y-1 overflow-y-auto">
-          {navItems.map(({ label, to, Icon }) => (
-            <NavLink key={to} to={to} end className={navClass}>
-              <Icon size={17} className="shrink-0" />
-              <span>{label}</span>
-            </NavLink>
-          ))}
+          {navItems.map(({ label, to, Icon }) => {
+            const badge = label === "Messages" ? unreadTotal : 0;
+            return (
+              <NavLink key={to} to={to} end className={navClass}>
+                <Icon size={17} className="shrink-0" />
+                <span>{label}</span>
+                {badge > 0 && (
+                  <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-black text-[10px] font-bold leading-none">
+                    {badge > 99 ? "99+" : badge}
+                  </span>
+                )}
+              </NavLink>
+            );
+          })}
         </nav>
 
         <div className="border-t border-border px-4 py-3 flex items-center gap-3">

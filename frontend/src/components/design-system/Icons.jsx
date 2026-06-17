@@ -64,6 +64,13 @@ export const HomeIcon = ({ size = 22, className = "" }) => (
   </svg>
 );
 
+export const ChatIcon = ({ size = 22, className = "" }) => (
+  <svg width={size} height={size} viewBox="0 0 22 22" fill="none" className={className}>
+    <path d="M4 5.5A1.5 1.5 0 015.5 4h11A1.5 1.5 0 0118 5.5v8a1.5 1.5 0 01-1.5 1.5H8l-4 3v-3H5.5A1.5 1.5 0 014 13.5v-8z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+    <path d="M8 9h6M8 11.5h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+);
+
 export const DumbbellIcon = ({ size = 22, className = "" }) => (
   <svg width={size} height={size} viewBox="0 0 22 22" fill="none" className={className}>
     <path d="M6 8H4a1 1 0 00-1 1v4a1 1 0 001 1h2V8zM16 8h2a1 1 0 011 1v4a1 1 0 01-1 1h-2V8z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>

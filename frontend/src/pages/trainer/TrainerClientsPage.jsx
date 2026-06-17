@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Button from "../../components/ui/Button";
 import { SkeletonGrid, EmptyState, ErrorState } from "../../components/feedback/States";
 import clientService from "../../services/clientService";
+import { useUnread } from "../../contexts/UnreadContext";
 import { ROUTES } from "../../constants/routes";
 
 // ── view-model helpers ─────────────────────────────────────────
@@ -56,13 +57,20 @@ const ChangeBadge = ({ change }) => {
   return <span className={up ? "text-red-400" : "text-emerald-400"}>{up ? "+" : ""}{change.toFixed(1)}kg</span>;
 };
 
-const ClientGridCard = ({ c, onOpen }) => {
+const ClientGridCard = ({ c, onOpen, unread = 0 }) => {
   const sm = STATUS_META[c.status] ?? STATUS_META.archived;
   return (
     <button onClick={onOpen} className="text-left card card-hover p-5 flex flex-col gap-4 animate-fade-in">
       <div className="flex items-start gap-3">
-        <div className={`w-10 h-10 rounded-2xl shrink-0 flex items-center justify-center text-[13px] font-bold ${colorFor(c.name)}`}>
-          {initials(c.name)}
+        <div className="relative shrink-0">
+          <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-[13px] font-bold ${colorFor(c.name)}`}>
+            {initials(c.name)}
+          </div>
+          {unread > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-black text-[10px] font-bold leading-none ring-2 ring-card">
+              {unread > 99 ? "99+" : unread}
+            </span>
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-[14px] font-semibold text-text-primary leading-tight truncate">{c.name}</p>
@@ -95,6 +103,7 @@ const ClientGridCard = ({ c, onOpen }) => {
 // ── page ──────────────────────────────────────────────────────
 const TrainerClientsPage = () => {
   const navigate = useNavigate();
+  const { unreadForClient } = useUnread();
 
   const [rawClients, setRawClients] = useState([]);
   const [loading, setLoading]       = useState(true);
@@ -207,7 +216,7 @@ const TrainerClientsPage = () => {
             : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {filtered.map((c) => (
-                  <ClientGridCard key={c.id} c={c} onOpen={() => navigate(`/trainer/client/${c.id}`)} />
+                  <ClientGridCard key={c.id} c={c} unread={unreadForClient(c.id)} onOpen={() => navigate(`/trainer/client/${c.id}`)} />
                 ))}
               </div>
             )

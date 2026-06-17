@@ -41,6 +41,7 @@ const ClientDashboard        = lazy(() => import("../pages/client/ClientDashboar
 const ClientNutritionPage    = lazy(() => import("../pages/client/ClientNutritionPage"));
 const ClientProgressPage     = lazy(() => import("../pages/client/ClientProgressPage"));
 const ClientWorkoutPage      = lazy(() => import("../pages/client/ClientWorkoutPage"));
+const ClientMessagesPage     = lazy(() => import("../pages/client/ClientMessagesPage"));
 
 const RouteFallback = () => (
   <div className="min-h-screen flex items-center justify-center bg-bg">
@@ -93,6 +94,7 @@ const AppRoutes = () => (
         <Route path="nutrition" element={<ClientNutritionPage />} />
         <Route path="progress"  element={<ClientProgressPage />} />
         <Route path="workout"   element={<ClientWorkoutPage />} />
+        <Route path="messages"  element={<ClientMessagesPage />} />
       </Route>
 
       {/* 404 */}

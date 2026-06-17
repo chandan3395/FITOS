@@ -16,6 +16,7 @@ const nutritionRouter     = require("./nutrition.routes");
 const workoutTemplateRouter   = require("./workoutTemplate.routes");
 const nutritionTemplateRouter = require("./nutritionTemplate.routes");
 const activityRouter      = require("./activity.routes");
+const conversationRouter  = require("./conversation.routes");
 
 const router = Router();
 
@@ -34,5 +35,6 @@ router.use("/nutrition",            nutritionRouter);
 router.use("/workout-templates",    workoutTemplateRouter);
 router.use("/nutrition-templates",  nutritionTemplateRouter);
 router.use("/activity",         activityRouter);
+router.use("/conversations",    conversationRouter);
 
 module.exports = router;

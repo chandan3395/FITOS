@@ -28,6 +28,7 @@ export const ROUTES = {
   CLIENT_NUTRITION: "/client/nutrition",
   CLIENT_PROGRESS:  "/client/progress",
   CLIENT_WORKOUT:   "/client/workout",
+  CLIENT_MESSAGES:  "/client/messages",
 
   // Marketing / legal (public)
   ABOUT:   "/about",

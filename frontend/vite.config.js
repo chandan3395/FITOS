@@ -17,6 +17,14 @@ export default defineConfig({
         target: "http://localhost:5000",
         changeOrigin: true,
       },
+      // Socket.IO (messaging) attaches to the backend at /socket.io. ws:true
+      // lets the dev server proxy the WebSocket upgrade so the client can
+      // connect same-origin in dev (mirrors the /api proxy above).
+      "/socket.io": {
+        target: "http://localhost:5000",
+        changeOrigin: true,
+        ws: true,
+      },
     },
   },
 });
