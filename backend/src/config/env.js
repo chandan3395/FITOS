@@ -30,6 +30,11 @@ const env = {
   NODE_ENV: process.env.NODE_ENV || "development",
   PORT: parseInt(process.env.PORT, 10) || 5000,
   CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || "http://localhost:5173",
+
+  // Custom-scheme deep link the Flutter mobile app listens on to receive the
+  // JWT after Google OAuth. Optional — defaults to the documented scheme so the
+  // mobile flow works out of the box; web (CLIENT_ORIGIN) is unaffected.
+  MOBILE_CALLBACK: process.env.MOBILE_CALLBACK || "fitos://auth-callback",
   MONGO_URI: process.env.MONGO_URI,
   JWT_SECRET: process.env.JWT_SECRET,
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET,

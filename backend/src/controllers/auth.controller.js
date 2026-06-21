@@ -11,6 +11,7 @@ const generateRefreshToken = require("../utils/generateRefreshToken");
 const ApiResponse = require("../utils/ApiResponse");
 const ApiError = require("../utils/ApiError");
 const { env } = require("../config/env");
+const { buildOAuthRedirectUrl } = require("../utils/oauthRedirect");
 const activityService = require("../services/activity.service");
 const accountLinking = require("../services/accountLinking.service");
 
@@ -137,11 +138,21 @@ function decodeState(raw) {
   }
 }
 
-// Redirect helper: hand the access token to the SPA via the URL fragment
-// (never logged server-side) so GoogleCallbackPage can finish the sign-in.
-function redirectWithToken(res, accessToken, role) {
-  const params = new URLSearchParams({ token: accessToken, role });
-  return res.redirect(`${env.CLIENT_ORIGIN}/auth/google/callback#${params.toString()}`);
+// Redirect helper: hand the access token to the client that started the OAuth
+// flow (never logged server-side). Web gets it on the URL fragment so
+// GoogleCallbackPage can finish sign-in; mobile (platform=mobile, carried
+// through OAuth `state`) gets it on the fitos:// deep link. `req` is required so
+// the helper can read req.query.platform.
+function redirectWithToken(req, res, accessToken, role) {
+  return res.redirect(
+    buildOAuthRedirectUrl({
+      platform: req.query.platform,
+      accessToken,
+      role,
+      clientOrigin: env.CLIENT_ORIGIN,
+      mobileCallback: env.MOBILE_CALLBACK,
+    })
+  );
 }
 
 /**
@@ -176,13 +187,18 @@ async function googleCallback(req, res, _next) {
       return res.redirect(`${env.CLIENT_ORIGIN}/account-disabled`);
     }
 
-    const { invite: inviteToken } = decodeState(req.query.state);
+    const { invite: inviteToken, platform } = decodeState(req.query.state);
+    // Google only round-trips the `state` parameter, not arbitrary query params,
+    // so re-expose the originating platform on req.query for redirectWithToken
+    // (and for the invite-link path below).
+    if (platform) req.query.platform = platform;
+
     if (inviteToken) {
       return handleInviteLink(req, res, inviteToken);
     }
 
     const accessToken = await issueTokens(req.user, res);
-    return redirectWithToken(res, accessToken, req.user.role);
+    return redirectWithToken(req, res, accessToken, req.user.role);
   } catch (err) {
     // On failure, send the user back to the login page with an error flag.
     return res.redirect(`${env.CLIENT_ORIGIN}/login?error=google_failed`);
@@ -227,7 +243,7 @@ async function handleInviteLink(req, res, inviteToken) {
     if (emailsMatch || sameLinkedUser) {
       await accountLinking.performLink({ invite, client, googleUser });
       const accessToken = await issueTokens(googleUser, res);
-      return redirectWithToken(res, accessToken, "CLIENT");
+      return redirectWithToken(req, res, accessToken, "CLIENT");
     }
 
     // Mismatch → defer. Sign a tamper-proof token identifying exactly what to

@@ -48,8 +48,13 @@ if (env.ENABLE_GOOGLE_AUTH) {
     const role = inviteToken
       ? "CLIENT"
       : (req.query.role === "TRAINER" ? "TRAINER" : "CLIENT");
+    // The Flutter app starts the flow with ?platform=mobile. Google only
+    // round-trips `state`, so carry it there to read back in the callback and
+    // redirect to the fitos:// deep link. Absent/anything else → web (default).
+    const platform = req.query.platform === "mobile" ? "mobile" : null;
     const statePayload = { role };
     if (inviteToken) statePayload.invite = inviteToken;
+    if (platform) statePayload.platform = platform;
     const state = Buffer.from(JSON.stringify(statePayload)).toString("base64");
     passport.authenticate("google", {
       scope: ["profile", "email"],
