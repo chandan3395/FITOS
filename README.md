@@ -100,8 +100,8 @@ fitos/
 
 ### Prerequisites
 
-- Node.js >= 18
-- npm >= 9
+- Node.js >= 20.19 (required by the backend dependency tree — mongoose 9, mongodb-memory-server 11)
+- npm >= 10
 
 ### 1. Clone the repo
 
