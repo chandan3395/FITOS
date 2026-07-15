@@ -3,6 +3,7 @@
 const { Router } = require("express");
 const authenticate = require("../middleware/auth");
 const { allowRoles } = require("../middleware/roles");
+const { authLimiter } = require("../middleware/rateLimit");
 const { env } = require("../config/env");
 const {
   adminLogin,
@@ -22,12 +23,12 @@ router.post("/admin/create", authenticate, allowRoles("ADMIN"), createAdmin);
 
 // Admin login — dedicated admin email + password path. Preserved verbatim;
 // admin behaviour is unchanged (admins still sign in here, never via Google).
-router.post("/admin/login", adminLogin);
+router.post("/admin/login", authLimiter, adminLogin);
 
 // Generic email + password login for ADMIN/TRAINER/CLIENT. Powers the demo
 // accounts (and any account with a password) without requiring Google OAuth.
 // Google sign-in below continues to work unchanged.
-router.post("/login", login);
+router.post("/login", authLimiter, login);
 
 // ── Google OAuth — gated by ENABLE_GOOGLE_AUTH feature flag.
 // When disabled, the implementation is preserved but never reached:
@@ -85,14 +86,14 @@ if (env.ENABLE_GOOGLE_AUTH) {
   router.get("/google/failure",   disabled);
 }
 
-router.post("/refresh", refresh);
+router.post("/refresh", authLimiter, refresh);
 router.post("/logout",  logout);
 
 router.get("/me", authenticate, getCurrentUser);
 
 // Client invite — public (the token is the secret)
 router.get("/invite/:token",           getInvite);
-router.post("/invite/:token/activate", activateInvite);
+router.post("/invite/:token/activate", authLimiter, activateInvite);
 
 // Confirm a Google-account link when the invited and Google emails differ.
 // Public — authorization comes from the signed linkToken in the body.

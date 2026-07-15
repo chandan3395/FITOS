@@ -31,8 +31,12 @@ const mongoose = require("mongoose");
 require("dotenv").config({ path: path.join(__dirname, "../.env") });
 
 const { ProgressPhoto } = require("../src/schemas/ProgressPhoto.schema");
-const { UPLOAD_ROOT }   = require("../src/middleware/upload");
 const cloudinary        = require("../src/config/cloudinary");
+
+// The local-disk upload path was removed from the app (photos live on
+// Cloudinary now); this one-shot script keeps its own copy of the legacy
+// uploads location so it can still resolve old files if ever re-run.
+const UPLOAD_ROOT = path.join(__dirname, "../uploads");
 
 const DRY_RUN = process.argv.includes("--dry") || process.argv.includes("--dry-run");
 const SLOTS = [["front", "frontPhoto"], ["side", "sidePhoto"], ["back", "backPhoto"]];

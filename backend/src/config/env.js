@@ -29,6 +29,14 @@ function validateEnv() {
 const env = {
   NODE_ENV: process.env.NODE_ENV || "development",
   PORT: parseInt(process.env.PORT, 10) || 5000,
+
+  // Optional pino level override (trace|debug|info|warn|error|fatal).
+  // Unset → "info" in production, "debug" otherwise (see config/logger.js).
+  LOG_LEVEL: process.env.LOG_LEVEL,
+
+  // Optional — when set, Sentry error monitoring is initialised at startup
+  // and its Express error handler runs before ours. Unset → fully inert.
+  SENTRY_DSN: process.env.SENTRY_DSN,
   CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || "http://localhost:5173",
 
   // Custom-scheme deep link the Flutter mobile app listens on to receive the

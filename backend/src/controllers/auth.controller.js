@@ -26,6 +26,8 @@ const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: IS_PROD,
   sameSite: IS_PROD ? "none" : "lax",
+  // Persist across browser restarts, matching the 7-day refresh-token TTL.
+  maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
 function buildSafeUser(user) {
@@ -308,6 +310,14 @@ async function refresh(req, res, next) {
 
     const accessToken = generateAccessToken(user._id, user.role);
 
+    // Rotate the refresh token on every use: a leaked token stops working
+    // as soon as the legitimate client refreshes, instead of staying valid
+    // for the full 7-day TTL.
+    const newRefreshToken = generateRefreshToken(user._id);
+    user.refreshToken = newRefreshToken;
+    await user.save();
+    res.cookie(REFRESH_COOKIE, newRefreshToken, COOKIE_OPTIONS);
+
     return ApiResponse.ok(res, "Token refreshed", { accessToken });
   } catch (err) {
     next(err);
@@ -322,7 +332,12 @@ async function logout(req, res, next) {
       await User.findOneAndUpdate({ refreshToken: token }, { refreshToken: null });
     }
 
-    res.clearCookie(REFRESH_COOKIE, COOKIE_OPTIONS);
+    // clearCookie expires the cookie via `expires: new Date(1)`, but a
+    // maxAge in the options would override that and re-issue the (empty)
+    // cookie for 7 days — so drop it here.
+    const clearOptions = { ...COOKIE_OPTIONS };
+    delete clearOptions.maxAge;
+    res.clearCookie(REFRESH_COOKIE, clearOptions);
     return ApiResponse.ok(res, "Logged out successfully");
   } catch (err) {
     next(err);

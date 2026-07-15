@@ -171,11 +171,12 @@ GET http://localhost:5000/api/health
 ```
 
 ```json
-{
-  "success": true,
-  "message": "FITOS backend running"
-}
+{ "status": "ok", "db": "connected" }
 ```
+
+Returns `200` when the MongoDB connection is live, `503` with
+`{ "status": "degraded", "db": "disconnected" }` otherwise — so uptime
+probes (and Render's health check) detect a dead DB connection.
 
 ---
 
@@ -192,3 +193,62 @@ All secrets live in `backend/.env` (never exposed to the frontend bundle):
 
 Frontend (`frontend/.env.local`) exposes only `VITE_`-prefixed flags:
 `VITE_ENABLE_GOOGLE_AUTH`.
+
+---
+
+## Production Deployment
+
+Target platforms: **backend on Render**, **frontend on Vercel**. CI
+(`.github/workflows/ci.yml`) lints, tests, and builds both on every push/PR.
+
+### Backend — Render (Web Service)
+
+- **Build command:** `npm install` &nbsp;·&nbsp; **Start command:** `npm start`
+  &nbsp;·&nbsp; **Root directory:** `backend`
+- **Health check path:** `/api/health` (200 only when the DB is connected)
+- The app sets `trust proxy` for Render's proxy, so per-IP rate limiting and
+  Secure cookies work out of the box.
+
+Environment variables (see `backend/.env.example` for the full annotated list):
+
+| Variable | Secret? | Notes |
+| --- | --- | --- |
+| `NODE_ENV` | no | set to `production` (JSON logs, Secure cookies) |
+| `PORT` | no | Render injects one; the app reads it |
+| `MONGO_URI` | **yes** | Atlas connection string |
+| `JWT_SECRET`, `JWT_REFRESH_SECRET` | **yes** | long random strings, different from each other |
+| `CLIENT_ORIGIN` | no | deployed frontend origin — see CORS note below |
+| `MOBILE_CALLBACK` | no | optional; Flutter deep-link scheme |
+| `ENABLE_GOOGLE_AUTH` | no | `true`/`false` feature flag |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | **yes** | required when Google auth is enabled |
+| `GOOGLE_CALLBACK_URL` | no | `https://<backend-domain>/api/auth/google/callback` (must also be registered in the Google console) |
+| `CLOUDINARY_CLOUD_NAME` | no | required |
+| `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | **yes** | required |
+| `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_VERIFY_TOKEN` | **yes** | optional — invite sending is disabled when unset |
+| `LOG_LEVEL` | no | optional pino level (default `info` in production) |
+| `SENTRY_DSN` | **yes** | optional — enables Sentry error monitoring when set |
+
+### Frontend — Vercel
+
+- **Root directory:** `frontend` &nbsp;·&nbsp; **Build command:** `npm run build`
+  &nbsp;·&nbsp; **Output directory:** `dist` (auto-detected for Vite)
+- Environment variables (build-time, not secret — they are baked into the bundle):
+  - `VITE_API_URL` — full backend API base **including `/api`**, e.g.
+    `https://fitos-hrbl.onrender.com/api`
+  - `VITE_ENABLE_GOOGLE_AUTH` — optional flag, defaults to enabled
+- `frontend/vercel.json` ships the SPA rewrite plus security headers
+  (CSP, `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`).
+  ⚠️ The CSP `connect-src` hardcodes the backend origin
+  (`fitos-hrbl.onrender.com`) — if the backend moves, update `vercel.json`
+  alongside `VITE_API_URL`, or API calls and the Socket.IO connection will be
+  blocked by the browser.
+
+### CORS + auth cookie requirement
+
+`CLIENT_ORIGIN` on the backend **must exactly match the deployed frontend
+origin** (scheme + host, e.g. `https://fitos.vercel.app`). It drives the CORS
+allow-list and the OAuth redirect base. In production the refresh cookie is
+issued with `SameSite=None; Secure`, which browsers only accept over
+**HTTPS** — so both deployments must be HTTPS (Render and Vercel are by
+default), and a mismatched `CLIENT_ORIGIN` breaks login/refresh with CORS
+errors even when the API is otherwise reachable.
