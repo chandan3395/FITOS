@@ -19,6 +19,7 @@
  */
 
 const { v2: cloudinary } = require("cloudinary");
+const logger = require("./logger");
 
 const CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME;
 const API_KEY    = process.env.CLOUDINARY_API_KEY;
@@ -156,8 +157,7 @@ async function destroy(publicId) {
   try {
     return await cloudinary.uploader.destroy(publicId, { invalidate: true });
   } catch (e) {
-    // eslint-disable-next-line no-console
-    console.error("[cloudinary] destroy failed", publicId, e?.message);
+    logger.error("[cloudinary] destroy failed", { publicId, message: e?.message });
     return null;
   }
 }

@@ -65,8 +65,12 @@ const activityLogSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Newest-first lookup for "Recent Activity" widget.
+// Newest-first lookup for the trainer's "Recent Activity" widget.
 activityLogSchema.index({ trainerId: 1, createdAt: -1 });
+// Newest-first lookup for the CLIENT's own feed (listForClientUser queries by
+// clientId + type, sorted by createdAt). Without this the client dashboard
+// feed is a collection scan.
+activityLogSchema.index({ clientId: 1, createdAt: -1 });
 
 const ActivityLog = mongoose.model("ActivityLog", activityLogSchema);
 

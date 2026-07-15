@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const { ActivityLog, ACTIVITY_TYPES } = require("../schemas/ActivityLog.schema");
 const { Client } = require("../schemas/Client.schema");
 const ApiError = require("../utils/ApiError");
+const logger = require("../config/logger");
 
 // Event types a CLIENT is allowed to see in their own Recent Activity feed.
 // Trainer-private events (email-mismatch audit, email/details edits made by
@@ -36,8 +37,7 @@ async function record({ trainerId, type, clientId, actorId, actorRole, entityId,
   try {
     if (!trainerId) return null;
     if (!ACTIVITY_TYPES.includes(type)) {
-      // eslint-disable-next-line no-console
-      console.warn("[activity] unknown type", type);
+      logger.warn("[activity] unknown type", { type });
       return null;
     }
     if (!summary) return null;
@@ -52,8 +52,7 @@ async function record({ trainerId, type, clientId, actorId, actorRole, entityId,
       metadata:  metadata  || {},
     });
   } catch (e) {
-    // eslint-disable-next-line no-console
-    console.error("[activity] record failed", e?.message);
+    logger.error("[activity] record failed", { message: e?.message });
     return null;
   }
 }
