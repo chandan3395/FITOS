@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link, NavLink, Navigate, useLocation } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
 import { useAuthContext } from "../../contexts/AuthContext";
 import api, { API_BASE_URL } from "../../lib/api";
 
+import ByotLayout from "../../components/layouts/ByotLayout";
+import PortalPageHeader from "./PortalPageHeader";
 import ProgressPage from "./progress/ProgressPage";
 import HomeProgress from "./progress/HomeProgress";
 import WorkoutPage from "./workout/WorkoutPage";
@@ -14,12 +16,7 @@ import useUnsavedNutrition from "./nutrition/useUnsavedNutrition";
 const button =
   "inline-flex justify-center rounded-xl bg-primary text-on-primary font-semibold px-5 py-3 disabled:opacity-50";
 const card = "rounded-2xl border border-border bg-surface p-6";
-const links = [
-  ["Home", "dashboard"],
-  ["Nutrition", "nutrition"],
-  ["Progress", "progress"],
-  ["Workout", "workout"],
-];
+
 const errors = {
   account_conflict:
     "This Google account already belongs to an existing FITOS role. Its role and data have been preserved. Use another Google account for BYOT.",
@@ -232,14 +229,10 @@ export default function ByotPortal() {
   else if (module === "dashboard")
     content = (
       <>
-        <p className="text-primary mb-2">YOUR PERSONAL SPACE</p>
-        <h1 className="text-3xl font-bold mb-2">Welcome, {user.name}</h1>
-        <p className="text-text-secondary mb-8">Your goals. Your pace.</p>
-        <div className="grid md:grid-cols-2 gap-5">
-          <DailyWorkout home />
-          <HomeProgress />
-          <HomeNutrition />
-          <HomeProgress reminder />
+        <PortalPageHeader title="Home" description={`Welcome, ${user.name}. Here’s your day at a glance.`} action={<Link to="/byot/nutrition" className={button}>Log food</Link>} />
+        <div className="mt-6 grid lg:grid-cols-2 items-start gap-4">
+          <div className="space-y-4 min-w-0"><DailyWorkout home /><HomeNutrition /></div>
+          <div className="space-y-4 min-w-0"><HomeProgress /><HomeProgress reminder /></div>
         </div>
       </>
     );
@@ -247,35 +240,5 @@ export default function ByotPortal() {
   else if (module === "workout") content = <WorkoutPage onDirty={setWorkoutDirty} />;
   else if (module === "nutrition") content = <NutritionPage onDirty={setNutritionDirty} />;
   else content = <Navigate to="/byot/dashboard" replace />;
-  return (
-    <div className="min-h-screen bg-bg text-text-primary pb-24 md:pb-0">
-      <header className="bg-primary text-on-primary border-b border-border px-5 py-4 flex items-center justify-between gap-4">
-        <Link to="/byot" className="font-bold text-xl">
-          FITOS <span className="text-bronze">BYOT</span>
-        </Link>
-        <button className="text-sm border border-border rounded-lg px-4 py-2" onClick={signOut}>
-          Sign out
-        </button>
-      </header>
-      <div className="max-w-7xl mx-auto md:flex">
-        <nav
-          aria-label="BYOT navigation"
-          className="fixed bottom-0 inset-x-0 z-20 bg-surface border-t border-border flex justify-around md:static md:border-t-0 md:border-r md:w-52 md:shrink-0 md:flex-col md:justify-start md:p-5 md:gap-2"
-        >
-          {links.map(([label, path]) => (
-            <NavLink
-              key={path}
-              to={`/byot/${path}`}
-              className={({ isActive }) =>
-                `px-3 py-4 text-sm rounded-lg ${isActive ? "text-primary bg-primary/10 font-semibold underline underline-offset-4" : "text-text-secondary"}`
-              }
-            >
-              {label}
-            </NavLink>
-          ))}
-        </nav>
-        <main className="p-5 sm:p-8 flex-1 min-w-0">{content}</main>
-      </div>
-    </div>
-  );
+  return <ByotLayout user={user} onSignOut={signOut}>{content}</ByotLayout>;
 }

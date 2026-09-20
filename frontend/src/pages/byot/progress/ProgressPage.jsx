@@ -1,3 +1,4 @@
+import PortalPageHeader from "../PortalPageHeader";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   getHistory,
@@ -181,8 +182,8 @@ export default function ProgressPage({ onDirty }) {
     }
   }
   return (
-    <div className="space-y-7 min-w-0">
-      <h1 className="text-3xl font-bold">Progress</h1>
+    <div className="space-y-5 min-w-0">
+      <PortalPageHeader title="Progress" description="Record measurements, photos and weekly check-ins." action={<a href="#progress-entry" className={primary}>Add entry</a>} />
       {summaryError ? (
         <div role="alert">
           <p>{summaryError}</p>
@@ -201,7 +202,7 @@ export default function ProgressPage({ onDirty }) {
       )}
       <section
         className="rounded-2xl border border-border bg-surface p-5 space-y-5"
-        aria-label="Progress entry"
+        id="progress-entry" aria-label="Progress entry"
       >
         <h2 className="text-xl font-semibold">Measurements and personal check-in</h2>
         <div className="flex flex-wrap items-end gap-3">
@@ -224,9 +225,7 @@ export default function ProgressPage({ onDirty }) {
           </button>
         </div>
         <p className="text-sm text-text-secondary">
-          Save weight or body measurements independently, or save an incomplete check-in draft. Only
-          completing a check-in with weight and all three verified photos changes your reminder.
-          Historical dates keep their original calendar date.
+          Save measurements anytime. A completed check-in needs weight and all three photos.
         </p>
         {busy && <p role="status">Saving or loading…</p>}
         {error && <p role="alert">{error}</p>}
@@ -244,7 +243,7 @@ export default function ProgressPage({ onDirty }) {
               }}
               className="space-y-4"
             >
-              <fieldset disabled={busy || photoBusy} className="grid sm:grid-cols-2 gap-4 min-w-0">
+              <fieldset disabled={busy || photoBusy} className="grid grid-cols-2 lg:grid-cols-4 gap-3 min-w-0">
                 {fields.map(([key, label, min, max]) => (
                   <label key={key} className="block min-w-0 text-sm">
                     {label}
@@ -268,7 +267,7 @@ export default function ProgressPage({ onDirty }) {
                     />
                   </label>
                 ))}
-                <label className="sm:col-span-2">
+                <label className="col-span-full">
                   Notes (optional)
                   <textarea
                     className={input}
@@ -467,8 +466,7 @@ export default function ProgressPage({ onDirty }) {
       >
         <h2 className="text-xl font-semibold">Compare two photo dates</h2>
         <p className="text-sm text-text-secondary">
-          Choose from loaded history. Both photos use the same orientation and preserve their
-          proportions.
+          Compare the same view across two saved dates.
         </p>
         <label>
           Orientation

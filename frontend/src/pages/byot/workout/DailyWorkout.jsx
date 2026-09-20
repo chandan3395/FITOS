@@ -78,16 +78,16 @@ export default function DailyWorkout({ date = "", onDate, home = false }) {
           )}
           <p className="my-3 text-sm text-text-secondary">
             {data.exists
-              ? "Saved workout. Routine edits will not change this snapshot."
+              ? "Saved workout. Routine edits won’t change it."
               : data.date === data.today
-                ? "Preview. Starting or completing an exercise saves this day's workout."
+                ? "Start or complete an exercise to save today’s workout."
                 : ""}
           </p>
           {messages[data.state] && <p className="my-4">{messages[data.state]}</p>}
           {data.exercises.length > 0 && (
-            <ul className="space-y-3 mt-4">
+            <ul className={home ? "space-y-2 mt-4" : "grid gap-3 sm:grid-cols-2 mt-4"}>
               {data.exercises.map((exercise) => (
-                <li key={exercise.id} className="rounded-xl border border-border p-3">
+                <li key={exercise.id} className={`rounded-xl border border-border ${home ? "p-2" : "p-3"}`}>
                   <label className="flex items-start gap-3 min-h-11 cursor-pointer">
                     <input
                       type="checkbox"
@@ -135,7 +135,7 @@ export default function DailyWorkout({ date = "", onDate, home = false }) {
         </>
       )}
       {home && (
-        <Link to="/byot/workout" className="inline-block text-primary mt-5 py-2">
+        <Link to="/byot/workout" className="inline-block text-primary mt-3 px-2 py-2">
           Open Workout →
         </Link>
       )}

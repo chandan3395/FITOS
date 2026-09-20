@@ -3,7 +3,7 @@ export default function NutritionSummary({ actual, target, planned, compact = fa
   return (
     <div className="space-y-3" aria-label="Nutrition totals">
       <div
-        className={`grid ${compact ? "grid-cols-2" : "grid-cols-1 sm:grid-cols-2 xl:grid-cols-4"} gap-3`}
+        className={`grid ${compact ? "grid-cols-2" : "grid-cols-2 xl:grid-cols-4"} gap-3`}
       >
         {nutrients.map(([key, label, unit]) => {
           const difference =
@@ -38,7 +38,7 @@ export default function NutritionSummary({ actual, target, planned, compact = fa
       </div>
       {!target && (
         <p className="text-sm text-text-secondary">
-          No target set. You can enter your own targets; your food counts immediately either way.
+          No target set. Add your own targets when you’re ready.
         </p>
       )}
     </div>

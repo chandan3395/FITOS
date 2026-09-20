@@ -4,9 +4,9 @@ export default function TargetEditor({ value, onChange, label = "Daily targets (
     <fieldset className="border border-border rounded-xl p-4">
       <legend className="px-2 font-medium">{label}</legend>
       <p className="text-sm text-text-secondary mb-3">
-        Choose your own targets. Leave any field blank if you do not want a target for it.
+        Leave a field blank for no target.
       </p>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid max-w-3xl grid-cols-2 lg:grid-cols-4 gap-3">
         {nutrients.map(([key, text, unit]) => (
           <label key={key} className="text-sm min-w-0">
             {text} target ({unit})

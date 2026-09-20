@@ -141,11 +141,10 @@ export default function RoutineEditor({ onDirty }) {
   return (
     <form onSubmit={save} className="space-y-5" aria-label="Weekly routine editor">
       <p className="text-text-secondary">
-        Routine changes apply to workouts not yet started. Saved daily workouts keep their original
-        exercises and planned details.
+        Routine changes apply to workouts not yet started.
       </p>
       <fieldset disabled={busy} className="space-y-5 min-w-0">
-        <label className="block">
+        <label className="block max-w-md">
           Routine name
           <input
             className={input}
@@ -155,7 +154,7 @@ export default function RoutineEditor({ onDirty }) {
             onChange={(e) => edit({ ...draft, name: e.target.value })}
           />
         </label>
-        <label className="block">
+        <label className="block max-w-md">
           Editing weekday
           <select
             className={`${input} capitalize`}
@@ -171,7 +170,7 @@ export default function RoutineEditor({ onDirty }) {
         </label>
         <div className="rounded-2xl border border-border bg-surface p-4 space-y-4">
           <h2 className="text-xl font-semibold capitalize">{selected}</h2>
-          <label className="block">
+          <label className="block max-w-md">
             Day label (optional)
             <input
               className={input}
@@ -180,7 +179,7 @@ export default function RoutineEditor({ onDirty }) {
               onChange={(e) => dayEdit({ ...day, label: e.target.value })}
             />
           </label>
-          <label className="block">
+          <label className="block max-w-md">
             Day type
             <select className={input} value={day.kind} onChange={(e) => changeKind(e.target.value)}>
               <option value="unconfigured">Not configured</option>

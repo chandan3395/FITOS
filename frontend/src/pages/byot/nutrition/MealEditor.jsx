@@ -9,7 +9,8 @@ export default function MealEditor({ meals, onChange }) {
     onChange(next);
   }
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
+      <p className="text-xs text-text-secondary">Enter nutrition values for the full serving.</p>
       {!meals.length && (
         <p className="rounded-xl border border-dashed border-border p-5 text-text-secondary">
           No meals yet. Add a meal and enter the foods yourself.
@@ -22,7 +23,7 @@ export default function MealEditor({ meals, onChange }) {
           aria-label={`Meal ${index + 1}`}
         >
           <div className="flex flex-wrap items-end gap-2">
-            <label className="text-sm flex-1 min-w-[130px]">
+            <label className="text-sm flex-1 min-w-[130px] max-w-md">
               Meal name
               <input
                 className={input}

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import service from "../../../services/byotNutritionService";
+import PortalPageHeader from "../PortalPageHeader";
 import MealEditor from "./MealEditor";
 import TargetEditor from "./TargetEditor";
 import NutritionSummary from "./NutritionSummary";
@@ -166,21 +167,9 @@ export default function NutritionPage({ onDirty }) {
     setPlan({ ...plan, days: plan.days.map((item) => (item.day === day ? value : item)) });
   const target = log && Object.hasOwn(log, "target") ? log.target : data?.log.target;
   return (
-    <div className="space-y-6">
-      <div>
-        <p className="text-primary text-sm mb-2">YOUR FOOD, YOUR RECORD</p>
-        <h1 className="text-3xl font-bold">Nutrition</h1>
-        <p className="mt-3 text-text-secondary">
-          Build your weekly plan and keep a separate record of what you actually eat.
-        </p>
-      </div>
-      <p className="rounded-xl border border-border bg-card p-4 text-sm text-text-secondary">
-        All calories and macros are entered by you and apply to the{" "}
-        <strong className="text-text-primary">complete food entry</strong> and its stated
-        quantity—not automatically per 100 g. Changing a quantity does not calculate new nutrition
-        values.
-      </p>
-      <div className="flex flex-wrap gap-2" aria-label="Nutrition views">
+    <div className="space-y-4">
+      <PortalPageHeader title="Nutrition" description="Plan your week and log what you eat." action={<button type="submit" form="byot-nutrition-form" className={primary} disabled={loading || saving || !(tab === "plan" ? planDirty : logDirty)}>Save changes</button>} />
+      <div className="byot-segments" aria-label="Nutrition views">
         <button
           className={tab === "plan" ? primary : button}
           disabled={saving}
@@ -219,8 +208,8 @@ export default function NutritionPage({ onDirty }) {
       )}
       {loading && <p role="status">Loading nutrition…</p>}
       {data && plan && log && (
-        <form onSubmit={save} className="space-y-6">
-          <fieldset disabled={saving || loading} className="min-w-0 space-y-6">
+        <form id="byot-nutrition-form" onSubmit={save} className="space-y-4">
+          <fieldset disabled={saving || loading} className="min-w-0 space-y-4">
             {tab === "plan" ? (
               <>
                 <div className="flex flex-wrap gap-2" aria-label="Weekdays">
@@ -243,8 +232,7 @@ export default function NutritionPage({ onDirty }) {
                   label={`${day[0].toUpperCase() + day.slice(1)} targets (optional)`}
                 />
                 <p className="text-sm text-text-secondary">
-                  These current weekday targets are captured when you first save that day’s actual
-                  log. Existing logs keep their captured targets.
+                  Targets apply to new logs. Saved logs keep their original targets.
                 </p>
                 <div className="rounded-xl border border-border bg-card p-4">
                   <h3 className="font-semibold mb-2">
@@ -325,7 +313,8 @@ export default function NutritionPage({ onDirty }) {
               </>
             ) : (
               <>
-                <label className="block text-sm max-w-xs">
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                <label className="block text-sm">
                   Log date
                   <input
                     className={input}
@@ -349,21 +338,18 @@ export default function NutritionPage({ onDirty }) {
                     }}
                   />
                 </label>
-                <h2 className="text-2xl font-semibold capitalize">
-                  {data.weekday} · {data.date}
-                </h2>
-                <p className="text-sm text-text-secondary">
-                  Local dates use {data.timezone}. Historical entries stay on their saved dates.
-                </p>
+                <div>
+                  <h2 className="text-lg font-semibold">{new Intl.DateTimeFormat("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${data.date}T12:00:00Z`))}</h2>
+                  <p className="text-xs text-text-secondary">{data.timezone}</p>
+                </div>
+                </div>
                 <NutritionSummary
                   actual={data.log.totals}
                   target={data.log.target}
                   planned={plannedToday.totals}
                 />
                 <p className="text-sm text-text-secondary">
-                  Saved actual totals above. Planned totals show the{" "}
-                  <strong>current weekly schedule</strong> for {data.weekday}, including when
-                  viewing an older date.
+                  Actual totals are saved values; planned totals use your current {data.weekday} plan.
                 </p>
                 <details className="rounded-xl border border-border bg-card p-4">
                   <summary className="cursor-pointer min-h-11 font-medium">

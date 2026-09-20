@@ -139,7 +139,7 @@ async function saved(page, type) {
         "200.5"
       );
       await page.getByLabel("Log date", { exact: true }).fill("2024-02-29");
-      await page.getByRole("heading", { name: "thursday · 2024-02-29", exact: true }).waitFor();
+      await page.getByRole("heading", { name: /^Thursday,? 29 February$/ }).waitFor();
       await page.getByRole("button", { name: "Add meal", exact: true }).click();
       await fillFood(meal(page, 1), 0, "Historical food", "50");
       // Explicitly fail one save and verify both retryability and draft retention.

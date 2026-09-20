@@ -1,3 +1,4 @@
+import PortalPageHeader from "../PortalPageHeader";
 import { useState } from "react";
 import DailyWorkout, { secondary } from "./DailyWorkout";
 import RoutineEditor from "./RoutineEditor";
@@ -5,14 +6,9 @@ export default function WorkoutPage({ onDirty }) {
   const [tab, setTab] = useState("daily");
   const [date, setDate] = useState("");
   return (
-    <div className="space-y-6 min-w-0">
-      <header>
-        <h1 className="text-3xl font-bold">Workout</h1>
-        <p className="text-text-secondary mt-2">
-          Your weekly plan. Your daily progress. No performance logging required.
-        </p>
-      </header>
-      <div className="flex flex-wrap gap-3" aria-label="Workout views">
+    <div className="space-y-5 min-w-0">
+      <PortalPageHeader title="Workout" description="Build your routine and track daily completion." action={<button className={secondary} onClick={() => setTab(tab === "daily" ? "weekly" : "daily")}>{tab === "daily" ? "Edit routine" : "View workout"}</button>} />
+      <div className="byot-segments" aria-label="Workout views">
         {[
           ["daily", "Daily Workout"],
           ["weekly", "Weekly Routine"],

@@ -2,9 +2,9 @@ import { Link } from "react-router-dom";
 import useProgressSummary from "./useProgressSummary";
 export const format = (n) =>
   new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(n);
-export function WeightSummary({ data }) {
+export function WeightSummary({ data, compact = false }) {
   return (
-    <div className="space-y-2">
+    <div className={compact ? "space-y-2 text-sm" : "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 text-sm"}>
       <p>
         {data.latestWeight ? (
           <>
@@ -54,7 +54,7 @@ export default function HomeProgress({ reminder = false }) {
         </>
       ) : (
         <>
-          <WeightSummary data={data} />
+          <WeightSummary data={data} compact />
           <p>Latest completed check-in: {data.latestCompletedDate || "None yet"}</p>
         </>
       )}
