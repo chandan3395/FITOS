@@ -13,8 +13,8 @@ import { Link } from "react-router-dom";
  */
 
 const NAVY = "var(--accent)";
-const BLUE = "#356B83";
-const AMBER = "var(--bronze-text)";
+const BLUE = "var(--text-2)";
+const AMBER = "var(--text-1)";
 const TRACK = "var(--line)"; // theme border — unfilled ring/bar track
 
 const pct = (val, target) => (target > 0 ? Math.min(val / target, 1) : 0);
@@ -33,7 +33,7 @@ const DropIcon = () => (
 );
 
 const ActivePill = () => (
-  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-400/10 text-emerald-800 text-[11px] font-semibold">
+  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-400/10 text-success text-[11px] font-semibold">
     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Active
   </span>
 );
@@ -163,12 +163,12 @@ const NutritionCard = ({ summary, compact = false, to }) => {
 
       <div className="flex items-center gap-2 mt-6 flex-wrap">
         {summary?.waterTarget != null && (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-sky-500/10 text-sky-800 text-[12px] font-medium">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-sky-500/10 text-info text-[12px] font-medium">
             <DropIcon /> {summary.waterTarget} L water
           </span>
         )}
         {summary?.mealsPerDay != null && (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-400/10 text-amber-800 text-[12px] font-medium">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-400/10 text-warning text-[12px] font-medium">
             {summary.mealsPerDay} meals / day
           </span>
         )}

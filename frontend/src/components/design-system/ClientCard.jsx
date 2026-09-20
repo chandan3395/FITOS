@@ -4,7 +4,7 @@ const statusMeta = {
   active: {
     dot:   "bg-emerald-400",
     label: "Active",
-    text:  "text-emerald-800",
+    text:  "text-success",
     bg:    "bg-emerald-400/10",
   },
   inactive: {
@@ -16,7 +16,7 @@ const statusMeta = {
   paused: {
     dot:   "bg-amber-400",
     label: "Paused",
-    text:  "text-amber-800",
+    text:  "text-warning",
     bg:    "bg-amber-400/10",
   },
 };
@@ -24,11 +24,11 @@ const statusMeta = {
 /** Deterministic colour from initials */
 const avatarColors = [
   "bg-indigo-500/20 text-indigo-700",
-  "bg-violet-500/20 text-violet-700",
-  "bg-sky-500/20    text-sky-800",
+  "bg-violet-500/20 text-info",
+  "bg-sky-500/20    text-info",
   "bg-rose-500/20   text-rose-700",
   "bg-teal-500/20   text-teal-700",
-  "bg-amber-500/20  text-amber-800",
+  "bg-amber-500/20  text-warning",
 ];
 
 const colorFor = (name = "") => {

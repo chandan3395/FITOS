@@ -11,9 +11,9 @@ import mealLogService from "../../services/mealLogService";
  */
 
 const STATUS = {
-  pending:         { label: "Pending review", cls: "bg-amber-400/10 text-amber-800" },
-  reviewed:        { label: "Reviewed",        cls: "bg-emerald-400/10 text-emerald-800" },
-  action_required: { label: "Action required", cls: "bg-red-500/10 text-red-700" },
+  pending:         { label: "Pending review", cls: "bg-amber-400/10 text-warning" },
+  reviewed:        { label: "Reviewed",        cls: "bg-emerald-400/10 text-success" },
+  action_required: { label: "Action required", cls: "bg-red-500/10 text-danger" },
 };
 
 const round = (n) => Math.round(Number(n) || 0);
@@ -70,7 +70,7 @@ const MealLogList = ({ meals = [], localDate, onLogged, pushToast }) => {
                 <p className="text-[12px] text-text-muted mt-1.5">{macroLine(meal.plannedMacros || {})}</p>
 
                 {meal.logStatus === "action_required" && meal.note && (
-                  <p className="mt-2 text-[12.5px] text-red-700">
+                  <p className="mt-2 text-[12.5px] text-danger">
                     <span className="text-text-muted">Coach:</span> {meal.note}
                   </p>
                 )}

@@ -24,7 +24,7 @@ const MetricCard = ({
 }) => {
   const trendMeta = {
     up:      { color: "text-primary",  Icon: TrendUpIcon },
-    down:    { color: "text-red-700",  Icon: TrendDownIcon },
+    down:    { color: "text-danger",  Icon: TrendDownIcon },
     neutral: { color: "text-text-muted", Icon: null },
   };
 

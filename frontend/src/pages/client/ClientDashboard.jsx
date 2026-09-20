@@ -183,7 +183,7 @@ const ClientDashboard = () => {
               <p className="text-sm text-text-secondary mt-0.5">{DAY_NAMES[currentDay]} · Let&apos;s make it count.</p>
             </div>
           </div>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-400/10 text-emerald-800 text-[12px] font-medium">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-400/10 text-success text-[12px] font-medium">
             <CheckCircleIcon size={12} /> Active
           </span>
         </div>
@@ -359,7 +359,7 @@ const ClientDashboard = () => {
               <div className="flex items-center justify-between">
                 <span className="text-text-muted text-[12px]">Active workouts</span>
                 <span className="text-text-primary font-medium flex items-center gap-1.5">
-                  <FlameIcon size={13} className="text-amber-800" /> {workouts.length}
+                  <FlameIcon size={13} className="text-warning" /> {workouts.length}
                 </span>
               </div>
             </div>

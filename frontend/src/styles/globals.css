@@ -7,34 +7,41 @@
 /* ─── Design tokens ──────────────────────────────────────── */
 @layer base {
   :root {
-    color-scheme: light;
-    --color-page: 247 245 240;
-    --color-surface: 255 255 255;
-    --color-navy: 24 36 56;
-    --color-navy-hover: 36 54 80;
-    --color-secondary: 98 108 126;
-    --color-bronze: 168 137 92;
-    --color-bronze-text: 128 100 62;
-    --color-neutral: 239 238 233;
-    --color-border: 220 221 220;
-    --color-control: 128 133 140;
+    color-scheme: dark;
+    --color-page: 15 17 19;
+    --color-navigation: 9 11 12;
+    --color-surface: 23 26 28;
+    --color-neutral: 32 36 38;
+    --color-border: 52 56 58;
+    --color-control: 52 56 58;
+    --color-text: 242 237 231;
+    --color-secondary: 161 156 152;
+    --color-accent: 234 196 159;
+    --color-accent-hover: 213 179 146;
+    --color-on-accent: 17 17 17;
+    --color-shadow: 0 0 0;
+    --color-success: 134 199 157;
+    --color-warning: 222 183 111;
+    --color-danger: 239 145 145;
+    --color-info: 151 185 211;
     --bg: rgb(var(--color-page));
     --surface-1: rgb(var(--color-surface));
     --surface-2: rgb(var(--color-surface));
     --surface-3: rgb(var(--color-neutral));
     --line: rgb(var(--color-border));
     --line-hover: rgb(var(--color-control));
-    --line-focus: rgb(var(--color-navy));
-    --text-1: rgb(var(--color-navy));
+    --line-focus: rgb(var(--color-accent));
+    --text-1: rgb(var(--color-text));
     --text-2: rgb(var(--color-secondary));
     --text-3: rgb(var(--color-secondary));
-    --accent: rgb(var(--color-navy));
-    --bronze-text: rgb(var(--color-bronze-text));
-    --accent-hover: rgb(var(--color-navy-hover));
-    --success-bg: #F0FDF4; --success-line: #86B99A; --success-text: #166534;
-    --warning-bg: #FFFBEB; --warning-line: #B59352; --warning-text: #92400E;
-    --danger-bg: #FEF2F2; --danger-line: #C78181; --danger-text: #B91C1C;
-    --info-bg: #EFF6FF; --info-line: #7898C7; --info-text: #1D4ED8;
+    --accent: rgb(var(--color-accent));
+    --bronze-text: rgb(var(--color-accent));
+    --on-accent: rgb(var(--color-on-accent));
+    --accent-hover: rgb(var(--color-accent-hover));
+    --success-bg: rgb(var(--color-success) / 0.1); --success-line: rgb(var(--color-success) / 0.4); --success-text: rgb(var(--color-success));
+    --warning-bg: rgb(var(--color-warning) / 0.1); --warning-line: rgb(var(--color-warning) / 0.4); --warning-text: rgb(var(--color-warning));
+    --danger-bg: rgb(var(--color-danger) / 0.1); --danger-line: rgb(var(--color-danger) / 0.4); --danger-text: rgb(var(--color-danger));
+    --info-bg: rgb(var(--color-info) / 0.1); --info-line: rgb(var(--color-info) / 0.4); --info-text: rgb(var(--color-info));
   }
 
   *,
@@ -78,7 +85,7 @@
   }
 
   ::selection {
-    background: rgb(var(--color-navy) / 0.15);
+    background: rgb(var(--color-accent) / 0.15);
     color: var(--text-1);
   }
 }
@@ -90,7 +97,7 @@
     background: var(--surface-2);
     border: 1px solid var(--line);
     border-radius: 16px;
-    box-shadow: 0 2px 10px rgba(24, 36, 56, 0.06);
+    box-shadow: 0 2px 10px rgb(var(--color-shadow) / 0.2);
   }
 
   .card-hover {
@@ -101,12 +108,12 @@
     border-color: var(--line-hover);
     background: var(--surface-3);
     transform: translateY(-2px);
-    box-shadow: 0 12px 32px rgba(24, 36, 56, 0.09);
+    box-shadow: 0 12px 32px rgb(var(--color-shadow) / 0.3);
   }
 
   /* Frosted glass surface (used by Card glass variant / overlays) */
   .glass {
-    background: rgba(255, 255, 255, 0.94);
+    background: rgb(var(--color-neutral) / 0.94);
     backdrop-filter: blur(14px) saturate(140%);
     -webkit-backdrop-filter: blur(14px) saturate(140%);
     border: 1px solid var(--line);
@@ -163,7 +170,7 @@
 
   /* Subtle brand-tinted radial wash for hero / empty surfaces */
   .brand-glow {
-    background-image: radial-gradient(60% 80% at 50% 0%, rgba(168, 137, 92, 0.05), transparent 70%);
+    background-image: radial-gradient(60% 80% at 50% 0%, rgb(var(--color-accent) / 0.05), transparent 70%);
   }
 }
 
@@ -178,9 +185,9 @@
   input::placeholder, textarea::placeholder { color: var(--text-2); opacity: 1; }
   input, select, textarea { accent-color: var(--accent); }
   :is(button, a, summary).border-border { border-color: var(--line-hover); }
-  input:-webkit-autofill { -webkit-text-fill-color: var(--text-1); box-shadow: 0 0 0 1000px white inset; }
+  input:-webkit-autofill { -webkit-text-fill-color: var(--text-1); box-shadow: 0 0 0 1000px var(--surface-1) inset; }
   :is(input, select, textarea, button, a, [tabindex]):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-  :is(button, a):focus-visible { box-shadow: 0 0 0 2px white; }
+  :is(button, a):focus-visible { box-shadow: 0 0 0 2px var(--bg); }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }

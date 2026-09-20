@@ -62,14 +62,14 @@ export const AlertFeed = ({ className = "" }) => {
                 transition: `all .55s cubic-bezier(.22,1,.36,1) ${i * 130}ms`,
               }}
             >
-              <span className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${r.done ? "bg-primary/12 text-primary" : "bg-amber-400/10 text-amber-800"}`}>
+              <span className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${r.done ? "bg-primary/12 text-primary" : "bg-amber-400/10 text-warning"}`}>
                 {r.done ? <CheckCircleIcon size={17} /> : <span className="w-2 h-2 rounded-full bg-amber-300 animate-glow-pulse" />}
               </span>
               <div className="min-w-0 flex-1">
                 <p className="text-[13px] font-semibold text-text-primary truncate">{r.trigger}</p>
                 <p className="text-[11.5px] text-text-muted truncate">{r.client} · {r.action}</p>
               </div>
-              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${r.done ? "bg-primary/10 text-primary" : "bg-amber-400/10 text-amber-800"}`}>
+              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${r.done ? "bg-primary/10 text-primary" : "bg-amber-400/10 text-warning"}`}>
                 {r.done ? "Done" : "Queued"}
               </span>
             </div>
@@ -86,7 +86,7 @@ const Ring = ({ pct, inView, size = 104, stroke = 8 }) => {
   const c = 2 * Math.PI * r;
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(24,36,56,0.08)" strokeWidth={stroke} />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--line)" strokeWidth={stroke} />
       <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--accent)" strokeWidth={stroke} strokeLinecap="round"
         strokeDasharray={c} strokeDashoffset={inView ? c * (1 - pct / 100) : c}
         style={{ transition: "stroke-dashoffset 1.4s cubic-bezier(.22,1,.36,1) .2s" }} />
@@ -101,7 +101,7 @@ export const PhoneMockup = ({ className = "" }) => {
   return (
     <div ref={ref} className={`relative mx-auto w-[260px] sm:w-[280px] ${className}`}>
       <div className="pointer-events-none absolute -inset-10 rounded-full blur-[80px] bg-bronze/5" />
-      <div className="relative rounded-[2.75rem] bg-surface border border-white/12 p-2.5 shadow-card-lg">
+      <div className="relative rounded-[2.75rem] bg-surface border border-border p-2.5 shadow-card-lg">
         <span className="absolute -left-[3px] top-24 h-9 w-[3px] rounded-l bg-primary/15" />
         <span className="absolute -left-[3px] top-36 h-14 w-[3px] rounded-l bg-primary/15" />
         <span className="absolute -right-[3px] top-32 h-16 w-[3px] rounded-r bg-primary/15" />
@@ -118,7 +118,7 @@ export const PhoneMockup = ({ className = "" }) => {
                 <p className="text-[10px] text-text-muted uppercase tracking-wider">Today</p>
                 <p className="text-sm font-bold text-text-primary">Priya Sharma</p>
               </div>
-              <span className="w-9 h-9 rounded-full bg-sky-500/20 text-sky-800 flex items-center justify-center text-[11px] font-bold">PS</span>
+              <span className="w-9 h-9 rounded-full bg-sky-500/20 text-info flex items-center justify-center text-[11px] font-bold">PS</span>
             </div>
 
             <div className="rounded-2xl border border-border bg-card/80 p-4 flex items-center gap-4 mb-3">
@@ -131,7 +131,7 @@ export const PhoneMockup = ({ className = "" }) => {
               </div>
               <div className="flex-1 space-y-2">
                 <div className="flex items-center justify-between"><span className="text-[11px] text-text-muted">Weight</span><span className="text-[12px] font-semibold text-primary">−6.2 kg</span></div>
-                <div className="flex items-center justify-between"><span className="text-[11px] text-text-muted">Streak</span><span className="text-[12px] font-semibold text-text-primary flex items-center gap-1"><FlameIcon size={12} className="text-amber-800" /> 18d</span></div>
+                <div className="flex items-center justify-between"><span className="text-[11px] text-text-muted">Streak</span><span className="text-[12px] font-semibold text-text-primary flex items-center gap-1"><FlameIcon size={12} className="text-warning" /> 18d</span></div>
                 <div className="flex items-center justify-between"><span className="text-[11px] text-text-muted">Sessions</span><span className="text-[12px] font-semibold text-text-primary">4 / 5</span></div>
               </div>
             </div>
@@ -139,7 +139,7 @@ export const PhoneMockup = ({ className = "" }) => {
             <div className="rounded-2xl border border-border bg-card/80 p-4 mb-3">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[11px] text-text-secondary font-medium">This week</span>
-                <span className="text-[10px] text-emerald-800">+12%</span>
+                <span className="text-[10px] text-success">+12%</span>
               </div>
               <div className="flex items-end gap-1.5 h-14">
                 {week.map((h, i) => (

@@ -12,7 +12,7 @@ const fmt = (iso) => iso ? new Date(iso).toLocaleDateString(undefined, { month: 
 
 const StatusBadge = ({ active }) => {
   const meta = active
-    ? { text: "Active",   color: "text-emerald-800", bg: "bg-emerald-400/10", dot: "bg-emerald-400" }
+    ? { text: "Active",   color: "text-success", bg: "bg-emerald-400/10", dot: "bg-emerald-400" }
     : { text: "Inactive", color: "text-text-secondary",    bg: "bg-surface-elevated",       dot: "bg-zinc-600" };
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium ${meta.color} ${meta.bg}`}>

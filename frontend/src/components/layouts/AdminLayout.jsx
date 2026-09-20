@@ -31,7 +31,7 @@ const AdminLayout = () => {
   return (
     <div className="flex min-h-screen bg-bg">
       {/* Sidebar */}
-      <aside className="hidden md:flex fixed inset-y-0 left-0 z-20 w-64 flex-col bg-surface border-r border-border">
+      <aside className="hidden md:flex fixed inset-y-0 left-0 z-20 w-64 flex-col bg-navigation border-r border-border">
         <div className="flex items-center gap-2.5 h-16 px-5 border-b border-border">
           <FitosWordmark className="text-[17px] text-text-primary" />
           <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
@@ -72,7 +72,7 @@ const AdminLayout = () => {
       </aside>
 
       <div className="flex-1 min-w-0 flex flex-col md:ml-64">
-        <header className="sticky top-0 z-10 h-16 flex items-center gap-4 px-4 md:px-8 bg-surface/80 backdrop-blur-md border-b border-border">
+        <header className="sticky top-0 z-10 h-16 flex items-center gap-4 px-4 md:px-8 bg-navigation/95 backdrop-blur-md border-b border-border">
           <h1 className="text-[15px] font-semibold text-text-primary">Admin Portal</h1>
           <button onClick={onLogout} className="md:hidden min-h-11 px-3 border border-border rounded-lg">Sign out</button>
 
@@ -103,7 +103,7 @@ const AdminLayout = () => {
           </div>
         </header>
 
-        <nav aria-label="Mobile admin navigation" className="md:hidden grid grid-cols-2 gap-2 p-3 border-b border-border">
+        <nav aria-label="Mobile admin navigation" className="md:hidden grid grid-cols-2 gap-2 p-3 bg-navigation border-b border-border">
           {navItems.map(({ label, to }) => <NavLink key={to} to={to} end className={navClass}>{label}</NavLink>)}
         </nav>
         <main className="flex-1 min-w-0 px-4 md:px-8 py-7 animate-fade-in">

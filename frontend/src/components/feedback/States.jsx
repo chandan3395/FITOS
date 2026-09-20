@@ -79,7 +79,7 @@ export const ErrorState = ({ title = "Couldn't load this", message, onRetry }) =
   <Card>
     <div className="py-10 flex flex-col items-center text-center">
       <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-red-700">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-danger">
           <path d="M12 8v5M12 16.5h.01" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
           <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
         </svg>
@@ -106,10 +106,10 @@ const TOAST_DURATIONS = {
 };
 
 const TOAST_META = {
-  success: "bg-green-50 border-green-700/40 text-green-800",
-  info:    "bg-blue-50 border-blue-700/40 text-blue-800",
-  warning: "bg-amber-50 border-amber-700/40 text-amber-800",
-  error:   "bg-red-50 border-red-700/40 text-red-800",
+  success: "bg-success/10 border-green-700/40 text-success",
+  info:    "bg-info/10 border-blue-700/40 text-info",
+  warning: "bg-warning/10 border-amber-700/40 text-warning",
+  error:   "bg-danger/10 border-red-700/40 text-danger",
 };
 
 const EXIT_MS = 320; // keep in sync with the toast-out keyframe duration

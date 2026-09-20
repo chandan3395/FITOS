@@ -94,7 +94,7 @@ const LinkAccountPage = () => {
       </div>
 
       {error && (
-        <div className="mb-4 text-[12.5px] text-red-700 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+        <div className="mb-4 text-[12.5px] text-danger bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
           {error}
         </div>
       )}

@@ -36,7 +36,7 @@ const TrainerLayout = () => {
   return (
     <div className="flex min-h-screen bg-bg">
       {/* Sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-20 w-64 hidden md:flex flex-col bg-surface border-r border-border">
+      <aside className="fixed inset-y-0 left-0 z-20 w-64 hidden md:flex flex-col bg-navigation border-r border-border">
         {/* Logo */}
         <div className="flex items-center gap-2.5 h-16 px-5 border-b border-border">
           <FitosWordmark className="text-[17px] text-text-primary" />
@@ -82,7 +82,7 @@ const TrainerLayout = () => {
 
       {/* Main */}
       <div className="flex-1 min-w-0 flex flex-col md:ml-64">
-        <header className="sticky top-0 z-10 h-16 flex items-center gap-4 px-4 md:px-8 bg-surface/80 backdrop-blur-md border-b border-border">
+        <header className="sticky top-0 z-10 h-16 flex items-center gap-4 px-4 md:px-8 bg-navigation/95 backdrop-blur-md border-b border-border">
           <h1 className="text-[15px] font-semibold text-text-primary">Trainer Portal</h1>
 
           <div className="ml-auto flex items-center gap-3">
@@ -103,7 +103,7 @@ const TrainerLayout = () => {
           </div>
         </header>
 
-        <nav aria-label="Mobile portal navigation" className="md:hidden grid grid-cols-2 gap-2 p-3 border-b border-border bg-surface">
+        <nav aria-label="Mobile portal navigation" className="md:hidden grid grid-cols-2 gap-2 p-3 border-b border-border bg-navigation">
           {navItems.map(({ label, to, Icon }) => (
             <NavLink key={to} to={to} end className={navClass}>
               <Icon size={17} className="shrink-0" /><span>{label}</span>

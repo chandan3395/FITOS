@@ -199,7 +199,7 @@ export const RequireAuth = ({ roles, children }) => {
           <button
             type="button"
             onClick={retrySession}
-            className="mt-5 min-h-11 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="mt-5 min-h-11 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             Try again
           </button>

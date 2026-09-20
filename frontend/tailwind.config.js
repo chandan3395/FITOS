@@ -5,20 +5,21 @@ export default {
   theme: {
     extend: {
       colors: {
+        navigation: "rgb(var(--color-navigation) / <alpha-value>)",
         bg: "rgb(var(--color-page) / <alpha-value>)",
         surface: { DEFAULT: "rgb(var(--color-surface) / <alpha-value>)", 1: "rgb(var(--color-surface) / <alpha-value>)", 2: "rgb(var(--color-surface) / <alpha-value>)", 3: "rgb(var(--color-neutral) / <alpha-value>)", 4: "rgb(var(--color-neutral) / <alpha-value>)" },
         card: "rgb(var(--color-surface) / <alpha-value>)",
         "surface-elevated": "rgb(var(--color-neutral) / <alpha-value>)",
-        line: { DEFAULT: "rgb(var(--color-border) / <alpha-value>)", hover: "rgb(var(--color-control) / <alpha-value>)", focus: "rgb(var(--color-navy) / <alpha-value>)" },
+        line: { DEFAULT: "rgb(var(--color-border) / <alpha-value>)", hover: "rgb(var(--color-control) / <alpha-value>)", focus: "rgb(var(--color-accent) / <alpha-value>)" },
         border: "rgb(var(--color-border) / <alpha-value>)",
         control: "rgb(var(--color-control) / <alpha-value>)",
-        primary: { DEFAULT: "rgb(var(--color-navy) / <alpha-value>)", hover: "rgb(var(--color-navy-hover) / <alpha-value>)", muted: "rgb(var(--color-navy) / 0.08)" },
-        "on-primary": "rgb(var(--color-surface) / <alpha-value>)",
-        "text-primary": "rgb(var(--color-navy) / <alpha-value>)",
+        primary: { DEFAULT: "rgb(var(--color-accent) / <alpha-value>)", hover: "rgb(var(--color-accent-hover) / <alpha-value>)", muted: "rgb(var(--color-accent) / 0.08)" },
+        "on-primary": "rgb(var(--color-on-accent) / <alpha-value>)",
+        "text-primary": "rgb(var(--color-text) / <alpha-value>)",
         "text-secondary": "rgb(var(--color-secondary) / <alpha-value>)",
         "text-muted": "rgb(var(--color-secondary) / <alpha-value>)",
-        bronze: { DEFAULT: "rgb(var(--color-bronze) / <alpha-value>)", text: "rgb(var(--color-bronze-text) / <alpha-value>)" },
-        success: "#166534", warning: "#92400E", danger: "#B91C1C", info: "#1D4ED8",
+        bronze: { DEFAULT: "rgb(var(--color-accent) / <alpha-value>)", text: "rgb(var(--color-accent) / <alpha-value>)" },
+        success: "rgb(var(--color-success) / <alpha-value>)", warning: "rgb(var(--color-warning) / <alpha-value>)", danger: "rgb(var(--color-danger) / <alpha-value>)", info: "rgb(var(--color-info) / <alpha-value>)",
       },
 
       fontFamily: {
@@ -40,12 +41,12 @@ export default {
       },
 
       boxShadow: {
-        "card-sm": "0 1px 2px rgba(24,36,56,0.08)",
-        card:      "0 2px 10px rgba(24,36,56,0.08)",
-        "card-lg": "0 16px 48px rgba(24,36,56,0.08)",
+        "card-sm": "0 1px 2px rgb(var(--color-shadow) / 0.25)",
+        card:      "0 2px 10px rgb(var(--color-shadow) / 0.25)",
+        "card-lg": "0 16px 48px rgb(var(--color-shadow) / 0.25)",
         // Legacy shadow aliases now resolve to restrained neutral shadows.
-        "glow-sm": "0 0 0 1px rgba(24,36,56,0.08), 0 4px 16px rgba(24,36,56,0.08)",
-        glow:      "0 0 0 1px rgba(24,36,56,0.08), 0 10px 34px rgba(24,36,56,0.08)",
+        "glow-sm": "0 0 0 1px rgb(var(--color-shadow) / 0.25), 0 4px 16px rgb(var(--color-shadow) / 0.25)",
+        glow:      "0 0 0 1px rgb(var(--color-shadow) / 0.25), 0 10px 34px rgb(var(--color-shadow) / 0.25)",
       },
 
       animation: {

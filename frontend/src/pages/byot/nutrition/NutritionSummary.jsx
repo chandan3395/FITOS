@@ -26,7 +26,7 @@ export default function NutritionSummary({ actual, target, planned, compact = fa
                   <p className="text-sm text-text-secondary">
                     Target: {format(target[key])} {unit}
                   </p>
-                  <p className={difference < 0 ? "text-amber-800 text-sm" : "text-primary text-sm"}>
+                  <p className={difference < 0 ? "text-warning text-sm" : "text-primary text-sm"}>
                     {format(Math.abs(difference))} {unit}{" "}
                     {difference < 0 ? "over target" : "remaining"}
                   </p>

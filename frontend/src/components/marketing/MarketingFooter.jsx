@@ -33,19 +33,19 @@ const COLUMNS = [
 ];
 
 const Social = ({ label, d }) => (
-  <a href="#" aria-label={label} className="w-9 h-9 rounded-lg border border-white/25 flex items-center justify-center text-on-primary/80 hover:text-on-primary hover:border-line-hover transition-colors">
+  <a href="#" aria-label={label} className="w-9 h-9 rounded-lg border border-border flex items-center justify-center text-text-primary/80 hover:text-text-primary hover:border-line-hover transition-colors">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">{d}</svg>
   </a>
 );
 
 const MarketingFooter = () => (
-  <footer className="relative border-t border-white/25 bg-primary">
+  <footer className="relative border-t border-border bg-navigation">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14">
       <div className="grid grid-cols-2 md:grid-cols-5 gap-10">
         {/* Brand */}
         <div className="col-span-2">
-          <FitosWordmark className="mb-3 text-lg text-on-primary" />
-          <p className="text-sm text-on-primary/80 max-w-xs leading-relaxed">
+          <FitosWordmark className="mb-3 text-lg text-text-primary" />
+          <p className="text-sm text-text-primary/80 max-w-xs leading-relaxed">
             The coaching CRM that runs your entire fitness business — clients, programming, accountability, and growth in one place.
           </p>
           <div className="flex items-center gap-2 mt-5">
@@ -58,14 +58,14 @@ const MarketingFooter = () => (
         {/* Link columns */}
         {COLUMNS.map((col) => (
           <div key={col.title}>
-            <p className="text-[11px] font-semibold tracking-[0.1em] text-on-primary/80 uppercase mb-4">{col.title}</p>
+            <p className="text-[11px] font-semibold tracking-[0.1em] text-text-primary/80 uppercase mb-4">{col.title}</p>
             <ul className="space-y-2.5">
               {col.links.map((l) => (
                 <li key={l.label}>
                   {l.to ? (
-                    <Link to={l.to} className="text-[13.5px] text-on-primary/80 hover:text-on-primary transition-colors">{l.label}</Link>
+                    <Link to={l.to} className="text-[13.5px] text-text-primary/80 hover:text-text-primary transition-colors">{l.label}</Link>
                   ) : (
-                    <a href={l.href} className="text-[13.5px] text-on-primary/80 hover:text-on-primary transition-colors">{l.label}</a>
+                    <a href={l.href} className="text-[13.5px] text-text-primary/80 hover:text-text-primary transition-colors">{l.label}</a>
                   )}
                 </li>
               ))}
@@ -75,11 +75,11 @@ const MarketingFooter = () => (
       </div>
 
       {/* Contact strip */}
-      <div className="mt-12 pt-8 border-t border-white/25 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <p className="text-[13px] text-on-primary/80">
-          Questions? <a href="mailto:support@fitos.com" className="text-on-primary underline hover:text-on-primary">support@fitos.com</a>
+      <div className="mt-12 pt-8 border-t border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <p className="text-[13px] text-text-primary/80">
+          Questions? <a href="mailto:support@fitos.com" className="text-text-primary underline hover:text-text-primary">support@fitos.com</a>
         </p>
-        <p className="text-[12.5px] text-on-primary/80">© 2026 FITOS. All rights reserved.</p>
+        <p className="text-[12.5px] text-text-primary/80">© 2026 FITOS. All rights reserved.</p>
       </div>
     </div>
   </footer>

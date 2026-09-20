@@ -111,7 +111,7 @@ const publishBlockReason = (draft) => {
 
 const BADGE_STYLE = {
   DRAFT:    { label: "Draft",     cls: "bg-surface-elevated text-text-secondary" },
-  ACTIVE:   { label: "Published", cls: "bg-emerald-400/10 text-emerald-800" },
+  ACTIVE:   { label: "Published", cls: "bg-emerald-400/10 text-success" },
   ARCHIVED: { label: "Archived",  cls: "bg-surface-elevated text-text-secondary" },
 };
 

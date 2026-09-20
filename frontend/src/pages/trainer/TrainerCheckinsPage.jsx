@@ -127,14 +127,14 @@ const TrainerCheckinsPage = () => {
                     <Card key={s._id}>
                       <div className="flex items-start justify-between gap-4 flex-wrap">
                         <div className="flex items-center gap-3">
-                          <div className="w-11 h-11 rounded-2xl bg-sky-500/20 text-sky-800 flex items-center justify-center text-sm font-bold">
+                          <div className="w-11 h-11 rounded-2xl bg-sky-500/20 text-info flex items-center justify-center text-sm font-bold">
                             {initials(clientName)}
                           </div>
                           <div>
                             <p className="text-base font-semibold text-text-primary">{clientName}</p>
                             <p className="text-[12px] text-text-muted">{formatDate(s.createdAt)}</p>
                             {s.status === "FLAGGED" && (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-red-400/10 text-red-700 text-[11px] font-medium mt-2">
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-red-400/10 text-danger text-[11px] font-medium mt-2">
                                 <WarningIcon size={11} /> Flagged
                               </span>
                             )}
@@ -163,7 +163,7 @@ const TrainerCheckinsPage = () => {
                       </div>
 
                       <div className="mt-5 grid grid-cols-3 sm:grid-cols-6 gap-4 pt-4 border-t border-border">
-                        <Metric label="Weight (kg)" value={s.weight} accent={s.status === "FLAGGED" ? "text-red-700" : "text-text-primary"} />
+                        <Metric label="Weight (kg)" value={s.weight} accent={s.status === "FLAGGED" ? "text-danger" : "text-text-primary"} />
                         <Metric label="Sleep"  value={s.sleep != null ? `${s.sleep}h` : null} />
                         <Metric label="Water"  value={s.water != null ? `${s.water}L` : null} />
                         <Metric label="Energy" value={s.energy != null ? `${s.energy}/5` : null} />

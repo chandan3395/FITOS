@@ -16,9 +16,9 @@ import checkinService from "../../services/checkinService";
 import activityService from "../../services/activityService";
 
 const QUICK_ACTIONS = [
-  { label: "Add Client",       Icon: UsersIcon,       accent: "bg-emerald-500/10 text-emerald-800", to: `${ROUTES.TRAINER_CLIENTS}/new` },
+  { label: "Add Client",       Icon: UsersIcon,       accent: "bg-emerald-500/10 text-success", to: `${ROUTES.TRAINER_CLIENTS}/new` },
   { label: "Review Check-ins", Icon: CheckCircleIcon, accent: "bg-primary/10 text-primary",         to: ROUTES.TRAINER_CHECKINS },
-  { label: "All Clients",      Icon: ChartBarIcon,    accent: "bg-violet-500/10 text-violet-700",   to: ROUTES.TRAINER_CLIENTS },
+  { label: "All Clients",      Icon: ChartBarIcon,    accent: "bg-violet-500/10 text-info",   to: ROUTES.TRAINER_CLIENTS },
 ];
 
 function formatRelative(iso) {
@@ -255,7 +255,7 @@ const TrainerDashboard = () => {
                         <p className="text-sm font-semibold text-text-primary">{cl.name}</p>
                         <p className="text-[12px] text-text-muted">{cl.goal || "No goal set"}</p>
                       </div>
-                      <span className="text-[11px] text-amber-800 font-medium">
+                      <span className="text-[11px] text-warning font-medium">
                         {cl.daysSince === null ? "No check-ins" : `${cl.daysSince}d`}
                       </span>
                     </div>

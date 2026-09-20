@@ -35,18 +35,18 @@ function toRow(c) {
 }
 
 const STATUS_META = {
-  active:   { label: "Active",   text: "text-emerald-800", bg: "bg-emerald-400/10", dot: "bg-emerald-400" },
-  pending:  { label: "Pending",  text: "text-amber-800",   bg: "bg-amber-400/10",   dot: "bg-amber-400" },
+  active:   { label: "Active",   text: "text-success", bg: "bg-emerald-400/10", dot: "bg-emerald-400" },
+  pending:  { label: "Pending",  text: "text-warning",   bg: "bg-amber-400/10",   dot: "bg-amber-400" },
   archived: { label: "Archived", text: "text-text-secondary",    bg: "bg-surface-elevated",       dot: "bg-zinc-600" },
 };
 
 const AVATAR_COLORS = [
   "bg-indigo-500/20 text-indigo-300",
-  "bg-violet-500/20 text-violet-700",
-  "bg-sky-500/20 text-sky-800",
+  "bg-violet-500/20 text-info",
+  "bg-sky-500/20 text-info",
   "bg-rose-500/20 text-rose-700",
   "bg-teal-500/20 text-teal-700",
-  "bg-amber-500/20 text-amber-800",
+  "bg-amber-500/20 text-warning",
 ];
 const colorFor = (name = "") => AVATAR_COLORS[[...name].reduce((a, c) => a + c.charCodeAt(0), 0) % AVATAR_COLORS.length];
 const initials = (name = "") => name.split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
@@ -54,7 +54,7 @@ const initials = (name = "") => name.split(" ").slice(0, 2).map((w) => w[0]?.toU
 const ChangeBadge = ({ change }) => {
   if (!change) return <span className="text-text-muted">—</span>;
   const up = change > 0;
-  return <span className={up ? "text-red-700" : "text-emerald-800"}>{up ? "+" : ""}{change.toFixed(1)}kg</span>;
+  return <span className={up ? "text-danger" : "text-success"}>{up ? "+" : ""}{change.toFixed(1)}kg</span>;
 };
 
 const ClientGridCard = ({ c, onOpen, unread = 0 }) => {

@@ -75,7 +75,7 @@ const Modal = ({
           internally instead of overflowing the panel / pushing page scroll. */}
       <div
         className={[
-          "relative w-full bg-surface border border-border rounded-2xl shadow-glow animate-fade-in",
+          "relative w-full bg-surface-elevated border border-border rounded-2xl shadow-glow animate-fade-in",
           "flex flex-col max-h-[calc(100vh-2rem)] overflow-hidden",
           sizes[size],
           className,

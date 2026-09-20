@@ -50,7 +50,7 @@ const PrimaryButton = ({
       {...props}
     >
       {loading ? (
-        <SpinnerIcon size={15} className="border-white/30 border-t-white" />
+        <SpinnerIcon size={15} className="border-border border-t-white" />
       ) : (
         icon && <span className="shrink-0">{icon}</span>
       )}

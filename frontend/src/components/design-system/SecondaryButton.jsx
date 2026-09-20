@@ -33,7 +33,7 @@ const SecondaryButton = ({
   ...props
 }) => {
   const colorClasses = destructive
-    ? "border-red-500/30 text-red-700 hover:bg-red-500/8 hover:border-red-500/50 active:bg-red-500/12"
+    ? "border-red-500/30 text-danger hover:bg-red-500/8 hover:border-red-500/50 active:bg-red-500/12"
     : "border-border text-text-primary hover:bg-primary/5 hover:border-border active:bg-primary/10";
 
   return (
@@ -56,7 +56,7 @@ const SecondaryButton = ({
       {...props}
     >
       {loading ? (
-        <SpinnerIcon size={15} className="border-white/25 border-t-white" />
+        <SpinnerIcon size={15} className="border-border border-t-white" />
       ) : (
         icon && <span className="shrink-0">{icon}</span>
       )}

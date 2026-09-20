@@ -24,7 +24,7 @@ const MobileBottomNavigation = ({
 }) => {
   return (
     <nav
-      className="flex items-center bg-surface border-t border-border"
+      className="flex items-center bg-navigation border-t border-border"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       aria-label="Main navigation"
     >

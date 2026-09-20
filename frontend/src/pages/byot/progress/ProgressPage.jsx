@@ -345,7 +345,7 @@ export default function ProgressPage({ onDirty }) {
                   Complete personal check-in
                 </button>
                 <button
-                  className={`${button} text-danger hover:bg-red-50`}
+                  className={`${button} text-danger hover:bg-danger/10`}
                   disabled={busy || photoBusy || dirty}
                   onClick={() => action("deleteCheckin")}
                 >
@@ -355,7 +355,7 @@ export default function ProgressPage({ onDirty }) {
             )}
             {record.exists && (
               <button
-                className={`${button} text-danger hover:bg-red-50`}
+                className={`${button} text-danger hover:bg-danger/10`}
                 disabled={busy || photoBusy || dirty}
                 onClick={() => action("delete")}
               >

@@ -149,7 +149,7 @@ const TodaysWorkoutStatus = ({ clientId }) => {
                       </p>
                     </div>
                     {completed ? (
-                      <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-emerald-800 shrink-0">
+                      <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-success shrink-0">
                         <CheckCircleIcon size={14} /> Completed
                       </span>
                     ) : (
@@ -204,11 +204,11 @@ const OverviewTab = ({ client, lastCheckIn, onSaveField }) => {
       {emailMismatch && (
         <Card className="border-amber-400/30 bg-amber-400/[0.04]">
           <div className="flex items-start gap-3">
-            <div className="w-9 h-9 rounded-xl bg-amber-400/15 text-amber-800 flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-amber-400/15 text-warning flex items-center justify-center shrink-0">
               <WarningIcon size={18} />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-amber-800">Email Mismatch Detected</p>
+              <p className="text-sm font-semibold text-warning">Email Mismatch Detected</p>
               <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-4 text-[13px]">
                 <div>
                   <p className="text-[11px] uppercase tracking-[0.08em] text-text-muted">Invited Email</p>
@@ -220,7 +220,7 @@ const OverviewTab = ({ client, lastCheckIn, onSaveField }) => {
                 </div>
                 <div>
                   <p className="text-[11px] uppercase tracking-[0.08em] text-text-muted">Status</p>
-                  <p className="text-emerald-800 mt-0.5 flex items-center gap-1.5">
+                  <p className="text-success mt-0.5 flex items-center gap-1.5">
                     <CheckCircleIcon size={13} /> Account Linked Successfully
                   </p>
                 </div>
@@ -257,7 +257,7 @@ const OverviewTab = ({ client, lastCheckIn, onSaveField }) => {
         <Card>
           <Card.Header><Card.Title>Weight Change</Card.Title></Card.Header>
           <Card.Body>
-            <p className={`text-2xl font-bold ${change && Number(change) < 0 ? "text-emerald-800" : "text-text-primary"}`}>
+            <p className={`text-2xl font-bold ${change && Number(change) < 0 ? "text-success" : "text-text-primary"}`}>
               {change ? `${change} kg` : "—"}
             </p>
             <p className="text-[12px] text-text-muted mt-1">Since program start</p>
@@ -266,7 +266,7 @@ const OverviewTab = ({ client, lastCheckIn, onSaveField }) => {
         <Card>
           <Card.Header><Card.Title>Streak</Card.Title></Card.Header>
           <Card.Body>
-            <p className="text-2xl font-bold text-amber-800 flex items-center gap-2">
+            <p className="text-2xl font-bold text-warning flex items-center gap-2">
               <FlameIcon size={20} /> —
             </p>
             <p className="text-[12px] text-text-muted mt-1">Available after first check-in</p>
@@ -436,7 +436,7 @@ const CheckinsTab = ({ clientId, items, loading, error, onReload }) => {
                         <p className="text-sm font-semibold text-text-primary">{fmtDate(c.createdAt)}</p>
                         <p className="text-[11px] text-text-muted uppercase">{c.status}</p>
                       </div>
-                      {c.status === "FLAGGED" && <span className="text-red-700 text-[11px] font-medium">⚠ Flagged</span>}
+                      {c.status === "FLAGGED" && <span className="text-danger text-[11px] font-medium">⚠ Flagged</span>}
                     </div>
                     <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 text-sm">
                       <div><span className="text-text-muted text-[11px]">Weight</span><br/>{c.weight ?? "—"}</div>
@@ -459,9 +459,9 @@ const CheckinsTab = ({ clientId, items, loading, error, onReload }) => {
 
 // ── PROGRESS PHOTOS ─────────────────────────────────────────────
 const PHOTO_BADGE = {
-  PENDING:  { label: "Pending review", cls: "bg-amber-400/10 text-amber-800" },
-  REVIEWED: { label: "Reviewed",       cls: "bg-emerald-400/10 text-emerald-800" },
-  FLAGGED:  { label: "Flagged",        cls: "bg-red-500/10 text-red-700" },
+  PENDING:  { label: "Pending review", cls: "bg-amber-400/10 text-warning" },
+  REVIEWED: { label: "Reviewed",       cls: "bg-emerald-400/10 text-success" },
+  FLAGGED:  { label: "Flagged",        cls: "bg-red-500/10 text-danger" },
 };
 
 const PhotoStatusBadge = ({ status }) => {
@@ -664,9 +664,9 @@ const PhotosTab = ({ clientId, items, loading, error, onReload }) => {
 
 // ── MEAL CHECK-INS (trainer review) ─────────────────────────────
 const MEAL_BADGE = {
-  PENDING:  { label: "Pending review", cls: "bg-amber-400/10 text-amber-800" },
-  REVIEWED: { label: "Approved",       cls: "bg-emerald-400/10 text-emerald-800" },
-  FLAGGED:  { label: "Flagged",        cls: "bg-red-500/10 text-red-700" },
+  PENDING:  { label: "Pending review", cls: "bg-amber-400/10 text-warning" },
+  REVIEWED: { label: "Approved",       cls: "bg-emerald-400/10 text-success" },
+  FLAGGED:  { label: "Flagged",        cls: "bg-red-500/10 text-danger" },
 };
 const MEAL_LABELS = { breakfast: "Breakfast", lunch: "Lunch", dinner: "Dinner", snack: "Snack" };
 const MEALS_ORDER = ["breakfast", "lunch", "dinner", "snack"];
@@ -1020,8 +1020,8 @@ const TrainerClientDetailPage = () => {
   const lastCheckIn = checkins[0] || null;
   const STATUS_META = {
     ARCHIVED: { label: "Archived", color: "bg-surface-elevated text-text-secondary" },
-    PENDING:  { label: "Pending",  color: "bg-amber-400/10 text-amber-800" },
-    ACTIVE:   { label: "Active",   color: "bg-emerald-400/10 text-emerald-800" },
+    PENDING:  { label: "Pending",  color: "bg-amber-400/10 text-warning" },
+    ACTIVE:   { label: "Active",   color: "bg-emerald-400/10 text-success" },
   };
   const statusMeta  = STATUS_META[client.status] || STATUS_META.ACTIVE;
   const statusLabel = statusMeta.label;
@@ -1053,7 +1053,7 @@ const TrainerClientDetailPage = () => {
       <Card>
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-sky-500/20 text-sky-800 flex items-center justify-center text-base font-bold">
+            <div className="w-14 h-14 rounded-2xl bg-sky-500/20 text-info flex items-center justify-center text-base font-bold">
               {initials(client.name)}
             </div>
             <div>
@@ -1066,7 +1066,7 @@ const TrainerClientDetailPage = () => {
                   <span className="w-1.5 h-1.5 rounded-full bg-primary" />
                   Linked Google: <span className="text-text-secondary">{client.googleEmail}</span>
                   {client.email && client.googleEmail !== client.email.toLowerCase() && (
-                    <span className="text-amber-800">· invited as {client.email}</span>
+                    <span className="text-warning">· invited as {client.email}</span>
                   )}
                 </p>
               )}
@@ -1098,11 +1098,11 @@ const TrainerClientDetailPage = () => {
       {client.inviteNeedsRegeneration && client.status === "PENDING" && !inviteBannerDismissed && (
         <Card className="border-amber-400/30 bg-amber-400/[0.05]">
           <div className="flex items-start gap-3">
-            <div className="w-9 h-9 rounded-xl bg-amber-400/15 text-amber-800 flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-amber-400/15 text-warning flex items-center justify-center shrink-0">
               <WarningIcon size={18} />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-amber-800">Invite information has changed</p>
+              <p className="text-sm font-semibold text-warning">Invite information has changed</p>
               <p className="text-[13px] text-text-secondary mt-1">
                 The current invite link may no longer be valid. Generate a new invite link to share the latest details.
               </p>

@@ -13,7 +13,7 @@ const FILTERS = [
 
 const StatusBadge = ({ active }) => {
   const meta = active
-    ? { text: "Active",   color: "text-emerald-800", bg: "bg-emerald-400/10", dot: "bg-emerald-400" }
+    ? { text: "Active",   color: "text-success", bg: "bg-emerald-400/10", dot: "bg-emerald-400" }
     : { text: "Inactive", color: "text-text-secondary",    bg: "bg-surface-elevated",       dot: "bg-zinc-600" };
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium ${meta.color} ${meta.bg}`}>
@@ -64,19 +64,19 @@ const CreateAdminModal = ({ onClose, onCreated }) => {
             <div>
               <label className="block text-[11px] font-semibold tracking-[0.08em] text-text-muted uppercase mb-1.5">Name</label>
               <input value={name} onChange={(e) => setName(e.target.value)} className={inputCls(fieldErrs.name)} placeholder="Sam Operator" />
-              {fieldErrs.name && <p className="mt-1 text-[11.5px] text-red-700">{fieldErrs.name}</p>}
+              {fieldErrs.name && <p className="mt-1 text-[11.5px] text-danger">{fieldErrs.name}</p>}
             </div>
             <div>
               <label className="block text-[11px] font-semibold tracking-[0.08em] text-text-muted uppercase mb-1.5">Email</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls(fieldErrs.email)} placeholder="sam@fitos.app" />
-              {fieldErrs.email && <p className="mt-1 text-[11.5px] text-red-700">{fieldErrs.email}</p>}
+              {fieldErrs.email && <p className="mt-1 text-[11.5px] text-danger">{fieldErrs.email}</p>}
             </div>
             <div>
               <label className="block text-[11px] font-semibold tracking-[0.08em] text-text-muted uppercase mb-1.5">Password</label>
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls(fieldErrs.password)} placeholder="At least 8 characters" autoComplete="new-password" />
-              {fieldErrs.password && <p className="mt-1 text-[11.5px] text-red-700">{fieldErrs.password}</p>}
+              {fieldErrs.password && <p className="mt-1 text-[11.5px] text-danger">{fieldErrs.password}</p>}
             </div>
-            {error && <div className="text-[12.5px] text-red-700 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</div>}
+            {error && <div className="text-[12.5px] text-danger bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</div>}
             <div className="flex items-center justify-end gap-2 pt-2">
               <Button variant="ghost" type="button" onClick={onClose} disabled={busy}>Cancel</Button>
               <Button type="submit" loading={busy}>Create Admin</Button>

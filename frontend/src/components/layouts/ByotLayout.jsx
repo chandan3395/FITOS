@@ -18,7 +18,7 @@ export default function ByotLayout({ user, onSignOut, children }) {
   return (
     <div className="byot-shell flex h-dvh min-h-0 flex-col overflow-hidden bg-bg text-text-primary md:pl-64">
       <a href="#byot-main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 bg-surface p-3">Skip to content</a>
-      <aside aria-label="BYOT portal sidebar" className="shrink-0 border-b border-border bg-surface md:fixed md:inset-y-0 md:left-0 md:z-20 md:flex md:w-64 md:flex-col md:border-b-0 md:border-r">
+      <aside aria-label="BYOT portal sidebar" className="shrink-0 border-b border-border bg-navigation md:fixed md:inset-y-0 md:left-0 md:z-20 md:flex md:w-64 md:flex-col md:border-b-0 md:border-r">
         <div className="flex h-16 shrink-0 items-center gap-2.5 border-b border-border px-5">
           <Link to="/byot/dashboard" className="flex items-center gap-2.5 font-extrabold text-[17px]">
             <FitosWordmark byot className="text-[17px] text-text-primary" />

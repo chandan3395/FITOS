@@ -117,7 +117,7 @@ const MealCard = ({ meal, index, onPatch, onRemove, onToggle }) => {
               {(meal.dishes || []).map((d, i) => (
                 <span key={i} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-surface border border-border text-[12px] text-text-primary">
                   {d}
-                  <button type="button" onClick={() => removeDish(i)} aria-label={`Remove ${d}`} className="text-text-muted hover:text-red-700">
+                  <button type="button" onClick={() => removeDish(i)} aria-label={`Remove ${d}`} className="text-text-muted hover:text-danger">
                     <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M12 4L4 12M4 4l8 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
                   </button>
                 </span>
@@ -162,7 +162,7 @@ const DayCard = ({ day, meals, mealsPerDay, onAddMeal, onRemoveDay, onPatchMeal,
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className={`text-[11px] font-medium px-2 py-1 rounded-full ${over ? "bg-amber-400/10 text-amber-800" : "bg-surface text-text-muted"}`}>
+          <span className={`text-[11px] font-medium px-2 py-1 rounded-full ${over ? "bg-amber-400/10 text-warning" : "bg-surface text-text-muted"}`}>
             {meals.length} / {Number(mealsPerDay) > 0 ? mealsPerDay : "—"} meals
           </span>
           <Button size="sm" variant="ghost" onClick={() => onRemoveDay(day)}>Remove day</Button>

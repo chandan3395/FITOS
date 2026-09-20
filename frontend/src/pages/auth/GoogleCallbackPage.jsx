@@ -58,7 +58,7 @@ const GoogleCallbackPage = () => {
       <div className="text-center py-6">
         {error ? (
           <>
-            <p className="text-sm text-red-700 mb-2">{error}</p>
+            <p className="text-sm text-danger mb-2">{error}</p>
             <p className="text-[12px] text-text-muted">Redirecting you back to sign-in…</p>
           </>
         ) : (

@@ -53,7 +53,7 @@ export default function MealEditor({ meals, onChange }) {
             </button>
             <button
               type="button"
-              className={`${button} text-danger hover:bg-red-50`}
+              className={`${button} text-danger hover:bg-danger/10`}
               onClick={() => {
                 if (window.confirm("Remove this meal and its foods? Save to apply the removal."))
                   onChange(meals.filter((_, i) => i !== index));
@@ -128,7 +128,7 @@ export default function MealEditor({ meals, onChange }) {
               </div>
               <button
                 type="button"
-                className={`${button} text-danger hover:bg-red-50`}
+                className={`${button} text-danger hover:bg-danger/10`}
                 onClick={() => {
                   if (window.confirm("Remove this food? Save to apply the removal."))
                     update(index, { ...meal, foods: meal.foods.filter((_, i) => i !== foodIndex) });

@@ -55,7 +55,7 @@ const DoubleCheck = ({ className = "" }) => (
 );
 
 const StatusTicks = ({ status }) => {
-  if (status === "read") return <DoubleCheck className="text-sky-800" />;
+  if (status === "read") return <DoubleCheck className="text-info" />;
   if (status === "delivered") return <DoubleCheck className="text-text-muted" />;
   return <SingleCheck className="text-text-muted" />; // "sent" (or anything pre-delivery)
 };
@@ -162,7 +162,7 @@ const MessageThread = ({ clientId, fallbackName }) => {
       {/* Conversation header */}
       <div className="flex items-center gap-3 px-5 py-4 border-b border-border">
         <div className="relative">
-          <div className="w-10 h-10 rounded-full bg-sky-500/20 text-sky-800 flex items-center justify-center text-[13px] font-bold">
+          <div className="w-10 h-10 rounded-full bg-sky-500/20 text-info flex items-center justify-center text-[13px] font-bold">
             {otherInitials}
           </div>
           <span
@@ -236,7 +236,7 @@ const MessageThread = ({ clientId, fallbackName }) => {
                 </div>
               ) : (
                 <div key={msg._id} className="flex justify-start items-end gap-2.5">
-                  <div className="w-8 h-8 shrink-0 rounded-full bg-sky-500/20 text-sky-800 flex items-center justify-center text-[11px] font-bold">
+                  <div className="w-8 h-8 shrink-0 rounded-full bg-sky-500/20 text-info flex items-center justify-center text-[11px] font-bold">
                     {otherInitials}
                   </div>
                   <div className="max-w-[80%] sm:max-w-[72%] flex flex-col items-start gap-1">
@@ -251,7 +251,7 @@ const MessageThread = ({ clientId, fallbackName }) => {
 
             {otherTyping && (
               <div className="flex justify-start items-end gap-2.5">
-                <div className="w-8 h-8 shrink-0 rounded-full bg-sky-500/20 text-sky-800 flex items-center justify-center text-[11px] font-bold">
+                <div className="w-8 h-8 shrink-0 rounded-full bg-sky-500/20 text-info flex items-center justify-center text-[11px] font-bold">
                   {otherInitials}
                 </div>
                 <div className="rounded-2xl rounded-bl-md bg-surface-elevated border border-border px-4 py-3 flex items-center gap-1">

@@ -35,10 +35,10 @@ const Frame = ({ children, label = "app.fitos.com", className = "" }) => (
 
 const Avatar = ({ name, tone = "sky" }) => {
   const tones = {
-    sky: "bg-sky-500/20 text-sky-800",
-    violet: "bg-violet-500/20 text-violet-700",
-    amber: "bg-amber-500/20 text-amber-800",
-    emerald: "bg-emerald-500/20 text-emerald-800",
+    sky: "bg-sky-500/20 text-info",
+    violet: "bg-violet-500/20 text-info",
+    amber: "bg-amber-500/20 text-warning",
+    emerald: "bg-emerald-500/20 text-success",
     primary: "bg-primary/20 text-primary",
   };
   const initials = name.split(" ").slice(0, 2).map((w) => w[0]).join("");
@@ -51,10 +51,10 @@ const Avatar = ({ name, tone = "sky" }) => {
 
 const Pill = ({ children, tone = "emerald" }) => {
   const tones = {
-    emerald: "bg-emerald-400/10 text-emerald-800",
-    amber: "bg-amber-400/10 text-amber-800",
+    emerald: "bg-emerald-400/10 text-success",
+    amber: "bg-amber-400/10 text-warning",
     primary: "bg-primary/10 text-primary",
-    sky: "bg-sky-400/10 text-sky-800",
+    sky: "bg-sky-400/10 text-info",
   };
   return <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${tones[tone]}`}>{children}</span>;
 };
@@ -183,8 +183,8 @@ const Ring = ({ pct = 75, inView }) => {
 
 const MACROS = [
   { label: "Protein", val: 180, unit: "g", pct: 90, color: "bg-primary" },
-  { label: "Carbs", val: 220, unit: "g", pct: 70, color: "bg-sky-700" },
-  { label: "Fats", val: 60, unit: "g", pct: 55, color: "bg-bronze-text" },
+  { label: "Carbs", val: 220, unit: "g", pct: 70, color: "bg-text-secondary" },
+  { label: "Fats", val: 60, unit: "g", pct: 55, color: "bg-text-primary" },
 ];
 
 export const MacroRings = () => {
@@ -239,7 +239,7 @@ export const ProgressCompare = () => {
     <div className="relative flex-1 rounded-xl border border-border overflow-hidden bg-surface-elevated aspect-[3/4]">
       <div className="absolute inset-0" style={{ background: `radial-gradient(80% 60% at 50% 30%, ${hue}, transparent 70%)` }} />
       <svg viewBox="0 0 80 110" className="absolute inset-0 w-full h-full opacity-70">
-        <path d="M40 14c5 0 8 4 8 9s-3 8-3 12l4 18-3 22 2 24h-4l-2-22-2 22h-4l2-24-3-22 4-18c0-4-3-7-3-12s3-9 7-9z" fill="rgba(24,36,56,0.10)" />
+        <path d="M40 14c5 0 8 4 8 9s-3 8-3 12l4 18-3 22 2 24h-4l-2-22-2 22h-4l2-24-3-22 4-18c0-4-3-7-3-12s3-9 7-9z" fill="rgb(var(--color-secondary) / 0.2)" />
       </svg>
       <span className="absolute top-2 left-2"><Pill tone="primary">{week}</Pill></span>
       <span className="absolute bottom-2 left-0 right-0 text-center text-[11px] text-text-secondary font-medium">{label}</span>
@@ -257,8 +257,8 @@ export const ProgressCompare = () => {
         </div>
         <div className="flex gap-3"
           style={{ opacity: inView ? 1 : 0, transform: inView ? "none" : "scale(.96)", transition: "all .7s cubic-bezier(.22,1,.36,1)" }}>
-          <Figure label="Front" week="Week 1" hue="rgba(110,110,110,0.35)" />
-          <Figure label="Front" week="Week 8" hue="rgba(24,36,56,0.30)" />
+          <Figure label="Front" week="Week 1" hue="rgb(var(--color-secondary) / 0.15)" />
+          <Figure label="Front" week="Week 8" hue="rgb(var(--color-accent) / 0.15)" />
         </div>
         <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-text-muted">
           <span className="w-1.5 h-1.5 rounded-full bg-primary" /> Side-by-side compare · weekly timeline
@@ -271,9 +271,9 @@ export const ProgressCompare = () => {
 /* ── Check-ins (metrics fill) ────────────────────────────────── */
 const METRICS = [
   { label: "Adherence", val: "92%", pct: 92, tone: "bg-primary" },
-  { label: "Sleep", val: "7.4h", pct: 82, tone: "bg-sky-700" },
+  { label: "Sleep", val: "7.4h", pct: 82, tone: "bg-text-secondary" },
   { label: "Energy", val: "4 / 5", pct: 80, tone: "bg-emerald-400" },
-  { label: "Stress", val: "Low", pct: 30, tone: "bg-bronze-text" },
+  { label: "Stress", val: "Low", pct: 30, tone: "bg-text-primary" },
 ];
 
 export const CheckinMetrics = () => {
@@ -348,7 +348,7 @@ const ACTIVITY = [
   { dot: "bg-primary", text: "Workout plan published for Marcus", t: "2m" },
   { dot: "bg-emerald-400", text: "Priya submitted a check-in", t: "18m" },
   { dot: "bg-violet-400", text: "Aisha uploaded progress photos", t: "1h" },
-  { dot: "bg-sky-700", text: "Meal photo logged by David", t: "3h" },
+  { dot: "bg-text-secondary", text: "Meal photo logged by David", t: "3h" },
 ];
 
 export const DashboardMockup = ({ className = "" }) => {

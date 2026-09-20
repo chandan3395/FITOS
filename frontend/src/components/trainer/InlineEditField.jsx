@@ -154,7 +154,7 @@ const InlineEditField = ({
           />
         )}
 
-        {err && <p className="text-[12px] text-red-700">{err}</p>}
+        {err && <p className="text-[12px] text-danger">{err}</p>}
 
         <div className="flex items-center gap-2">
           <button

@@ -42,9 +42,11 @@ export default function WeightGraph({ records }) {
         animation: false,
         plugins: {
           tooltip: {
-            backgroundColor: color("--accent"),
-            titleColor: "#FFFFFF",
-            bodyColor: "#FFFFFF",
+            backgroundColor: color("--surface-3"),
+            titleColor: color("--text-1"),
+            bodyColor: color("--text-2"),
+            borderColor: color("--line"),
+            borderWidth: 1,
             callbacks: {
               title: (items) => new Date(items[0].parsed.x).toISOString().slice(0, 10),
               label: (item) => `${item.parsed.y} kg`,
@@ -54,6 +56,7 @@ export default function WeightGraph({ records }) {
         scales: {
           x: {
             type: "linear",
+            grid: { color: color("--line") },
             min: firstDate - (rows.length === 1 ? 86400000 : 0),
             max: lastDate + (rows.length === 1 ? 86400000 : 0),
             title: { display: true, text: "Measurement date", color: color("--text-2") },

@@ -184,7 +184,7 @@ const ClientWorkoutPage = () => {
                       <div key={exercise._id} className="rounded-lg border border-border bg-surface-elevated p-4 flex items-start justify-between gap-4">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
-                            {completed && <CheckCircleIcon size={16} className="text-emerald-800" />}
+                            {completed && <CheckCircleIcon size={16} className="text-success" />}
                             <p className="text-sm font-semibold text-text-primary">{exercise.name}</p>
                           </div>
                           {hasSetDetails(exercise) ? (

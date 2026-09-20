@@ -110,7 +110,7 @@ const UploadCard = ({
               key={`${file.name}-${idx}`}
               className="flex items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3"
             >
-              <CheckCircleIcon size={14} className="text-emerald-800 shrink-0" />
+              <CheckCircleIcon size={14} className="text-success shrink-0" />
               <span className="flex-1 text-[13px] text-text-secondary truncate">{file.name}</span>
               <span className="text-[11px] text-text-secondary shrink-0">
                 {(file.size / 1024 / 1024).toFixed(1)} MB

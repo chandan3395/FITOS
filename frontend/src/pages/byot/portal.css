@@ -4,5 +4,5 @@
 .byot-content input, .byot-content select, .byot-content textarea { min-width: 0; }
 .byot-content .byot-segments { display: inline-flex; flex-wrap: wrap; gap: .25rem; padding: .25rem; border: 1px solid rgb(var(--color-border)); border-radius: .75rem; }
 .byot-content .byot-segments button { min-height: 44px; border: 0; border-radius: .5rem; padding: .5rem 1rem; }
-.byot-content .byot-segments button[aria-pressed="true"] { background: rgb(var(--color-navy)); color: white; font-weight: 600; }
+.byot-content .byot-segments button[aria-pressed="true"] { background: rgb(var(--color-accent)); color: var(--on-accent); font-weight: 600; }
 .byot-content .byot-segments button[aria-pressed="false"] { background: transparent; }

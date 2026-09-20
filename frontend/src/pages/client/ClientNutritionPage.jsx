@@ -48,9 +48,9 @@ const fmtDay = (d) => {
 };
 
 const MEAL_STATUS = {
-  PENDING:  { label: "Pending review",  cls: "bg-amber-400/10 text-amber-800" },
-  REVIEWED: { label: "Approved ✓",      cls: "bg-emerald-400/10 text-emerald-800" },
-  FLAGGED:  { label: "Needs attention", cls: "bg-red-500/10 text-red-700" },
+  PENDING:  { label: "Pending review",  cls: "bg-amber-400/10 text-warning" },
+  REVIEWED: { label: "Approved ✓",      cls: "bg-emerald-400/10 text-success" },
+  FLAGGED:  { label: "Needs attention", cls: "bg-red-500/10 text-danger" },
 };
 
 const MealCheckinSection = () => {

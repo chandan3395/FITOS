@@ -54,7 +54,7 @@ const MarketingNav = () => {
       className="fixed top-0 inset-x-0 z-50 isolate"
       style={{ transform: mounted ? "translateY(0)" : "translateY(-100%)", transition: "transform .6s cubic-bezier(.22,1,.36,1)" }}
     >
-      <div className={`transition-colors duration-300 ${scrolled ? "bg-surface/85 backdrop-blur-xl border-b border-border" : "bg-bg/95"}`}>
+      <div className={`transition-colors duration-300 ${scrolled ? "bg-navigation/95 backdrop-blur-xl border-b border-border" : "bg-navigation/95"}`}>
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           <Wordmark />
 
@@ -97,7 +97,7 @@ const MarketingNav = () => {
       </div>
 
       {open && (
-        <div className="lg:hidden bg-surface/95 backdrop-blur-xl border-b border-border animate-fade-in">
+        <div className="lg:hidden bg-navigation/95 backdrop-blur-xl border-b border-border animate-fade-in">
           <div className="px-4 py-4 space-y-1">
             {NAV_LINKS.map((l) => (
               <NavItem key={l.label} link={l} onClick={() => setOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface-elevated" />

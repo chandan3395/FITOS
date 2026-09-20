@@ -110,7 +110,7 @@ function Onboarding({ onSave }) {
           </span>
         </label>
         {error && (
-          <p role="alert" className="text-red-700">
+          <p role="alert" className="text-danger">
             {error}
           </p>
         )}

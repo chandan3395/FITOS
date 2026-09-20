@@ -18,9 +18,9 @@ import ComparePhotos from "../../components/progress/ComparePhotos";
 const fmtDate = (iso) => iso ? new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "—";
 
 const BADGE = {
-  PENDING:  { label: "Pending review", cls: "bg-amber-400/10 text-amber-800" },
-  REVIEWED: { label: "Reviewed",       cls: "bg-emerald-400/10 text-emerald-800" },
-  FLAGGED:  { label: "Flagged",        cls: "bg-red-500/10 text-red-700" },
+  PENDING:  { label: "Pending review", cls: "bg-amber-400/10 text-warning" },
+  REVIEWED: { label: "Reviewed",       cls: "bg-emerald-400/10 text-success" },
+  FLAGGED:  { label: "Flagged",        cls: "bg-red-500/10 text-danger" },
 };
 const StatusBadge = ({ status }) => {
   const meta = BADGE[status] || BADGE.PENDING;

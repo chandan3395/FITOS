@@ -49,7 +49,7 @@ const Ring = ({ pct, center, sub }) => {
   return (
     <div className="relative w-[76px] h-[76px] shrink-0">
       <svg width="76" height="76" viewBox="0 0 76 76" className="-rotate-90">
-        <circle cx="38" cy="38" r={r} fill="none" stroke="rgba(24,36,56,0.08)" strokeWidth="7" />
+        <circle cx="38" cy="38" r={r} fill="none" stroke="var(--line)" strokeWidth="7" />
         <circle cx="38" cy="38" r={r} fill="none" stroke="var(--accent)" strokeWidth="7" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - pct / 100)} />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -70,7 +70,7 @@ const Screen = ({ index }) => {
           <div className="space-y-2">
             {[["Missed workout", "Nudge sent", true], ["Meal log missing", "Reminder queued", false], ["Check-in due", "Sent", true]].map(([t, s, done]) => (
               <Card key={t} className="flex items-center gap-3">
-                <span className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${done ? "bg-primary/12 text-primary" : "bg-amber-400/10 text-amber-800"}`}>
+                <span className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${done ? "bg-primary/12 text-primary" : "bg-amber-400/10 text-warning"}`}>
                   {done ? <CheckCircleIcon size={15} /> : <BellIcon size={15} />}
                 </span>
                 <div className="min-w-0 flex-1"><p className="text-[12px] font-semibold text-text-primary truncate">{t}</p><p className="text-[10.5px] text-text-muted truncate">{s}</p></div>
@@ -84,7 +84,7 @@ const Screen = ({ index }) => {
         <>
           <SHead kicker="Profile" title="Priya Sharma" />
           <Card className="flex items-center gap-3 mb-2.5">
-            <span className="w-11 h-11 rounded-full bg-sky-500/20 text-sky-800 flex items-center justify-center text-[12px] font-bold">PS</span>
+            <span className="w-11 h-11 rounded-full bg-sky-500/20 text-info flex items-center justify-center text-[12px] font-bold">PS</span>
             <div><p className="text-[12.5px] font-semibold text-text-primary">Fat loss · 12 wk</p><p className="text-[10.5px] text-text-muted">Member since Jan 2026</p></div>
           </Card>
           <div className="grid grid-cols-3 gap-2 mb-2.5">
@@ -119,8 +119,8 @@ const Screen = ({ index }) => {
             <Ring pct={84} center="2,240" sub="kcal" />
             <div className="flex-1 space-y-2.5">
               <Bar label="Protein" pct={92} val="180g" />
-              <Bar label="Carbs" pct={74} val="220g" tone="bg-sky-700" />
-              <Bar label="Fats" pct={58} val="60g" tone="bg-bronze-text" />
+              <Bar label="Carbs" pct={74} val="220g" tone="bg-text-secondary" />
+              <Bar label="Fats" pct={58} val="60g" tone="bg-text-primary" />
             </div>
           </Card>
           <div className="flex gap-2">
@@ -134,10 +134,10 @@ const Screen = ({ index }) => {
         <>
           <SHead kicker="Transformation" title="Progress" />
           <div className="grid grid-cols-2 gap-2 mb-2.5">
-            {[["Week 1", "rgba(110,110,110,0.35)"], ["Week 8", "rgba(24,36,56,0.30)"]].map(([w, hue]) => (
+            {[["Week 1", "rgb(var(--color-secondary) / 0.15)"], ["Week 8", "rgb(var(--color-accent) / 0.15)"]].map(([w, hue]) => (
               <div key={w} className="relative rounded-xl border border-border overflow-hidden bg-surface-elevated aspect-[3/4]">
                 <div className="absolute inset-0" style={{ background: `radial-gradient(80% 60% at 50% 30%, ${hue}, transparent 70%)` }} />
-                <svg viewBox="0 0 80 110" className="absolute inset-0 w-full h-full opacity-70"><path d="M40 14c5 0 8 4 8 9s-3 8-3 12l4 18-3 22 2 24h-4l-2-22-2 22h-4l2-24-3-22 4-18c0-4-3-7-3-12s3-9 7-9z" fill="rgba(24,36,56,0.10)" /></svg>
+                <svg viewBox="0 0 80 110" className="absolute inset-0 w-full h-full opacity-70"><path d="M40 14c5 0 8 4 8 9s-3 8-3 12l4 18-3 22 2 24h-4l-2-22-2 22h-4l2-24-3-22 4-18c0-4-3-7-3-12s3-9 7-9z" fill="rgb(var(--color-secondary) / 0.2)" /></svg>
                 <span className="absolute top-1.5 left-1.5 text-[8.5px] font-bold text-primary">{w}</span>
               </div>
             ))}
@@ -150,12 +150,12 @@ const Screen = ({ index }) => {
         <>
           <SHead kicker="This week" title="Check-in" />
           <Card className="space-y-3">
-            <Bar label="Sleep" pct={82} val="7.4h" tone="bg-sky-700" />
+            <Bar label="Sleep" pct={82} val="7.4h" tone="bg-text-secondary" />
             <Bar label="Energy" pct={80} val="4 / 5" tone="bg-emerald-400" />
-            <Bar label="Stress" pct={30} val="Low" tone="bg-bronze-text" />
+            <Bar label="Stress" pct={30} val="Low" tone="bg-text-primary" />
             <Bar label="Adherence" pct={92} val="92%" />
           </Card>
-          <div className="mt-2.5 flex items-center justify-center gap-1.5 text-[10px] text-emerald-800"><CheckCircleIcon size={12} /> Reviewed by coach</div>
+          <div className="mt-2.5 flex items-center justify-center gap-1.5 text-[10px] text-success"><CheckCircleIcon size={12} /> Reviewed by coach</div>
         </>
       );
     case 6: // Alert Mechanism
@@ -216,7 +216,7 @@ const Screen = ({ index }) => {
             <Ring pct={92} center="92%" sub="retained" />
             <div className="flex-1">
               <p className="text-[11px] text-text-secondary leading-relaxed">Clients staying past 6 months</p>
-              <p className="text-[11px] font-bold text-emerald-800 mt-1 flex items-center gap-1"><FlameIcon size={12} className="text-amber-800" /> +37% vs last year</p>
+              <p className="text-[11px] font-bold text-success mt-1 flex items-center gap-1"><FlameIcon size={12} className="text-warning" /> +37% vs last year</p>
             </div>
           </Card>
           <Card><Spark d="0,32 16,30 32,24 48,22 64,15 80,11 100,6" /></Card>
@@ -231,7 +231,7 @@ const Screen = ({ index }) => {
 const PhoneShell = ({ active }) => (
   <div className="relative mx-auto w-[268px] sm:w-[288px]">
     <div className="pointer-events-none absolute -inset-10 rounded-full blur-[80px] bg-bronze/5" />
-    <div className="relative rounded-[2.75rem] bg-surface border border-white/12 p-2.5 shadow-card-lg">
+    <div className="relative rounded-[2.75rem] bg-surface border border-border p-2.5 shadow-card-lg">
       <span className="absolute -left-[3px] top-24 h-9 w-[3px] rounded-l bg-primary/15" />
       <span className="absolute -left-[3px] top-36 h-14 w-[3px] rounded-l bg-primary/15" />
       <span className="absolute -right-[3px] top-32 h-16 w-[3px] rounded-r bg-primary/15" />

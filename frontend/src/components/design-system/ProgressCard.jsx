@@ -28,16 +28,16 @@ const ProgressCard = ({
 
   const barColors = {
     default: "bg-primary",
-    success: "bg-emerald-700",
-    warning: "bg-amber-700",
-    danger:  "bg-red-700",
+    success: "bg-success",
+    warning: "bg-warning",
+    danger:  "bg-danger",
   };
 
   const pctColors = {
     default: "text-text-primary",
-    success: "text-emerald-800",
-    warning: "text-amber-800",
-    danger:  "text-red-700",
+    success: "text-success",
+    warning: "text-warning",
+    danger:  "text-danger",
   };
 
   return (
@@ -84,7 +84,7 @@ const ProgressCard = ({
             {unit && <span className="ml-0.5">{unit}</span>}
           </span>
           {streak !== undefined && (
-            <span className="inline-flex items-center gap-1 text-[12px] text-amber-800">
+            <span className="inline-flex items-center gap-1 text-[12px] text-warning">
               <FlameIcon size={12} />
               {streak} day streak
             </span>

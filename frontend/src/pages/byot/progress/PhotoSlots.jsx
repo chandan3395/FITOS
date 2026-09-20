@@ -207,7 +207,7 @@ export default function PhotoSlots({ record, dirty, onRecord, busy: parentBusy, 
               )}
               {record.checkin.photos[slot] && (
                 <button
-                  className={`${button} text-danger hover:bg-red-50`}
+                  className={`${button} text-danger hover:bg-danger/10`}
                   disabled={Boolean(active) || parentBusy || dirty}
                   onClick={() => remove(slot)}
                 >

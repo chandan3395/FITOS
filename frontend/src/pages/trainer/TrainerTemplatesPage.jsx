@@ -16,7 +16,7 @@ const textareaClass = "w-full min-h-[84px] px-3 py-2 rounded-lg bg-surface-eleva
 const DAYS = [1, 2, 3, 4, 5, 6, 7];
 
 const BADGE = {
-  ACTIVE:   { label: "Active",   cls: "bg-emerald-400/10 text-emerald-800" },
+  ACTIVE:   { label: "Active",   cls: "bg-emerald-400/10 text-success" },
   ARCHIVED: { label: "Archived", cls: "bg-surface-elevated text-text-secondary" },
 };
 const StatusBadge = ({ status }) => {

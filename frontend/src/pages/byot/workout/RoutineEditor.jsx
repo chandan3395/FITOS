@@ -251,7 +251,7 @@ export default function RoutineEditor({ onDirty }) {
                 ))}
                 <button
                   type="button"
-                  className={`${secondary} text-danger hover:bg-red-50`}
+                  className={`${secondary} text-danger hover:bg-danger/10`}
                   onClick={() => {
                     if (
                       window.confirm("Remove this planned exercise? Saved workouts stay unchanged.")
