@@ -1,10 +1,10 @@
 const variants = {
   primary:
-    "bg-primary hover:bg-primary-hover text-black font-semibold shadow-glow-sm hover:shadow-glow hover:-translate-y-px active:translate-y-0 active:scale-[0.98]",
+    "bg-primary hover:bg-primary-hover text-on-primary font-semibold shadow-glow-sm hover:shadow-glow hover:-translate-y-px active:translate-y-0 active:scale-[0.98]",
   secondary:
-    "bg-surface-elevated hover:bg-line-hover text-text-primary border border-border hover:border-line-hover",
+    "bg-surface-elevated hover:bg-primary/5 text-text-primary border border-border hover:border-primary",
   ghost: "bg-transparent hover:bg-surface-elevated text-text-secondary hover:text-text-primary",
-  danger: "bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/25 hover:border-red-500/45",
+  danger: "bg-red-500/10 hover:bg-red-500/20 text-red-700 border border-red-500/25 hover:border-red-500/45",
   outline:
     "bg-transparent border border-primary/60 text-primary hover:bg-primary-muted hover:border-primary",
 };
@@ -32,7 +32,7 @@ const Button = ({
       onClick={onClick}
       disabled={disabled || loading}
       className={[
-        "inline-flex items-center justify-center gap-2 font-medium",
+        "inline-flex shrink-0 items-center justify-center gap-2 font-medium whitespace-nowrap min-h-11 sm:min-h-0",
         "transition-all duration-150 cursor-pointer select-none",
         "disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100",
         variants[variant],

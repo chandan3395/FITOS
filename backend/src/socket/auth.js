@@ -3,6 +3,7 @@
 const jwt = require("jsonwebtoken");
 const { env } = require("../config/env");
 const { User } = require("../schemas/User.schema");
+const { matches } = require("../utils/session");
 
 /**
  * Socket.IO handshake authentication — the SAME JWT access-token mechanism as
@@ -30,7 +31,7 @@ async function authenticateSocket(socket, next) {
 
     const decoded = jwt.verify(token, env.JWT_SECRET);
     const user = await User.findById(decoded.userId);
-    if (!user || !user.isActive) return next(new Error("Unauthorized"));
+    if (!user || !user.isActive || user.role === "BYOT" || !matches(user, decoded)) return next(new Error("Unauthorized"));
 
     // Attach the user for the connection's lifetime.
     socket.user = user;

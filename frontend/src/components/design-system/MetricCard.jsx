@@ -24,7 +24,7 @@ const MetricCard = ({
 }) => {
   const trendMeta = {
     up:      { color: "text-primary",  Icon: TrendUpIcon },
-    down:    { color: "text-red-400",  Icon: TrendDownIcon },
+    down:    { color: "text-red-700",  Icon: TrendDownIcon },
     neutral: { color: "text-text-muted", Icon: null },
   };
 
@@ -33,8 +33,16 @@ const MetricCard = ({
   return (
     <div
       onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (event) => {
+        if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) {
+          event.preventDefault();
+          onClick(event);
+        }
+      } : undefined}
       className={[
-        // Dark card with a soft green accent edge on the left.
+        // Light card with a restrained navy edge.
         "relative overflow-hidden card p-6 flex flex-col gap-5",
         "before:content-[''] before:absolute before:inset-y-0 before:left-0 before:w-[3px] before:bg-primary/70",
         onClick ? "card-hover cursor-pointer" : "",
@@ -57,7 +65,7 @@ const MetricCard = ({
 
       {/* Value */}
       <div>
-        <p className="text-[2.6rem] font-extrabold text-white tracking-tight leading-none">
+        <p className="text-[2.6rem] font-extrabold text-text-primary tracking-tight leading-none">
           {value}
         </p>
       </div>

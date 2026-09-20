@@ -11,9 +11,9 @@ import mealLogService from "../../services/mealLogService";
  */
 
 const STATUS = {
-  pending:         { label: "Pending review", cls: "bg-amber-400/10 text-amber-300" },
-  reviewed:        { label: "Reviewed",        cls: "bg-emerald-400/10 text-emerald-300" },
-  action_required: { label: "Action required", cls: "bg-red-500/10 text-red-300" },
+  pending:         { label: "Pending review", cls: "bg-amber-400/10 text-amber-800" },
+  reviewed:        { label: "Reviewed",        cls: "bg-emerald-400/10 text-emerald-800" },
+  action_required: { label: "Action required", cls: "bg-red-500/10 text-red-700" },
 };
 
 const round = (n) => Math.round(Number(n) || 0);
@@ -70,7 +70,7 @@ const MealLogList = ({ meals = [], localDate, onLogged, pushToast }) => {
                 <p className="text-[12px] text-text-muted mt-1.5">{macroLine(meal.plannedMacros || {})}</p>
 
                 {meal.logStatus === "action_required" && meal.note && (
-                  <p className="mt-2 text-[12.5px] text-red-300">
+                  <p className="mt-2 text-[12.5px] text-red-700">
                     <span className="text-text-muted">Coach:</span> {meal.note}
                   </p>
                 )}
@@ -82,7 +82,7 @@ const MealLogList = ({ meals = [], localDate, onLogged, pushToast }) => {
                     <img src={meal.photo.thumbnailUrl} alt={meal.mealType} className="w-full h-full object-cover" />
                   </a>
                 )}
-                <label className={`inline-flex items-center h-9 px-3 rounded-lg text-[12.5px] font-semibold cursor-pointer transition-colors ${busy ? "bg-surface text-text-muted cursor-wait" : "bg-primary text-black hover:bg-primary-hover"}`}>
+                <label className={`inline-flex items-center h-9 px-3 rounded-lg text-[12.5px] font-semibold cursor-pointer transition-colors ${busy ? "bg-surface text-text-muted cursor-wait" : "bg-primary text-on-primary hover:bg-primary-hover"}`}>
                   {busy ? "Uploading…" : meal.photo ? "Replace photo" : "Upload photo"}
                   <input
                     type="file"

@@ -154,14 +154,14 @@ const InlineEditField = ({
           />
         )}
 
-        {err && <p className="text-[12px] text-red-400">{err}</p>}
+        {err && <p className="text-[12px] text-red-700">{err}</p>}
 
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={commit}
             disabled={saving}
-            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-primary text-black text-[13px] font-semibold hover:opacity-90 disabled:opacity-60 transition-opacity"
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-primary text-on-primary text-[13px] font-semibold hover:opacity-90 disabled:opacity-60 transition-opacity"
           >
             {saving ? <SpinnerIcon size={13} /> : <CheckIcon size={13} />} Save
           </button>

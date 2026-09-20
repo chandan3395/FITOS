@@ -14,8 +14,8 @@ import {
   num,
 } from "../../lib/nutritionTotals";
 
-const inputClass = "w-full h-9 px-3 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-[#333]";
-const textareaClass = "w-full min-h-[84px] px-3 py-2 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-[#333]";
+const inputClass = "w-full h-9 px-3 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-border";
+const textareaClass = "w-full min-h-[84px] px-3 py-2 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-border";
 
 const DIET_OPTIONS = ["Omnivore", "Vegetarian", "Vegan", "Eggetarian", "Keto", "Intermittent Fasting"];
 
@@ -110,9 +110,9 @@ const publishBlockReason = (draft) => {
 };
 
 const BADGE_STYLE = {
-  DRAFT:    { label: "Draft",     cls: "bg-zinc-800 text-zinc-300" },
-  ACTIVE:   { label: "Published", cls: "bg-emerald-400/10 text-emerald-300" },
-  ARCHIVED: { label: "Archived",  cls: "bg-zinc-900 text-zinc-500" },
+  DRAFT:    { label: "Draft",     cls: "bg-surface-elevated text-text-secondary" },
+  ACTIVE:   { label: "Published", cls: "bg-emerald-400/10 text-emerald-800" },
+  ARCHIVED: { label: "Archived",  cls: "bg-surface-elevated text-text-secondary" },
 };
 
 const PlanBadge = ({ status }) => {
@@ -150,7 +150,7 @@ const TemplatePicker = ({ onCancel, onConfirm, busy }) => {
         value={target}
         onChange={(e) => setTarget(e.target.value)}
         disabled={loading || options.length === 0 || busy}
-        className="h-9 px-2 rounded-lg bg-surface border border-border text-sm text-text-primary focus:outline-none focus:border-[#333]"
+        className="h-9 px-2 rounded-lg bg-surface border border-border text-sm text-text-primary focus:outline-none focus:border-border"
       >
         <option value="">{loading ? "Loading…" : options.length === 0 ? "No active templates" : "Pick a template"}</option>
         {options.map((t) => (
@@ -192,7 +192,7 @@ const ReassignPicker = ({ currentClientId, onCancel, onConfirm, busy }) => {
         value={target}
         onChange={(e) => setTarget(e.target.value)}
         disabled={loading || options.length === 0 || busy}
-        className="h-9 px-2 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary focus:outline-none focus:border-[#333]"
+        className="h-9 px-2 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary focus:outline-none focus:border-border"
       >
         <option value="">{loading ? "Loading…" : options.length === 0 ? "No other clients" : "Pick a client"}</option>
         {options.map((c) => (

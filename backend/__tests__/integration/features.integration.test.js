@@ -12,6 +12,9 @@
  * these tests never touch the auth rate-limiter (see authRateLimit spec).
  */
 
+// Legacy media serializers construct URLs locally; they still require a cloud
+// name. Never depend on a developer's .env or real provider credentials here.
+process.env.CLOUDINARY_CLOUD_NAME = "synthetic-test-cloud";
 const request = require("supertest");
 const mongoose = require("mongoose");
 

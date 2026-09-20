@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { Fragment, createContext, useCallback, useContext, useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import authService from "../services/authService";
 import api, {
@@ -26,6 +26,7 @@ export const AuthProvider = ({ children }) => {
   // On load: if there's no access token in memory, attempt a silent
   // refresh (the refresh cookie may still be valid), then hydrate /me.
   useEffect(() => {
+    if (window.location.pathname === "/auth/google/callback") { setStatus(STATUS.GUEST); return; }
     let cancelled = false;
     setStatus(STATUS.LOADING);
 
@@ -67,9 +68,26 @@ export const AuthProvider = ({ children }) => {
     return () => { cancelled = true; };
   }, []);
 
+  // No messaging connection for BYOT. Check revocation on resume and once per minute.
+  useEffect(() => {
+    if (user?.role !== "BYOT") return;
+    let pending = false;
+    const check = async () => {
+      if (pending || document.hidden) return;
+      pending = true;
+      try { await authService.getCurrentUser(); } catch { /* interceptor handles revoked sessions */ }
+      finally { pending = false; }
+    };
+    const timer = setInterval(check, 60000);
+    window.addEventListener("focus", check);
+    document.addEventListener("visibilitychange", check);
+    return () => { clearInterval(timer); window.removeEventListener("focus", check); document.removeEventListener("visibilitychange", check); };
+  }, [user?._id, user?.role]);
+
   // When the API interceptor gives up on refresh, drop session locally.
   useEffect(() => {
     setUnauthorizedHandler(() => {
+      setError("Your session ended or account access changed. Please sign in again.");
       setUser(null);
       setStatus(STATUS.GUEST);
     });
@@ -111,10 +129,13 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const logout = useCallback(async () => {
-    await authService.logout();
     setUser(null);
     setStatus(STATUS.GUEST);
+    setError(null);
+    await authService.logout();
   }, []);
+
+  const completeGoogleLogin = useCallback((me) => { setError(null); setUser(me); setStatus(STATUS.AUTHED); }, []);
 
   const value = {
     user,
@@ -122,12 +143,13 @@ export const AuthProvider = ({ children }) => {
     error,
     isReady:         status !== STATUS.IDLE && status !== STATUS.LOADING,
     isAuthenticated: status === STATUS.AUTHED,
+    completeGoogleLogin,
     adminLogin,
     login,
     logout,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={value}><Fragment key={user?._id || "guest"}>{children}</Fragment></AuthContext.Provider>;
 };
 
 export const useAuthContext = () => {
@@ -158,6 +180,7 @@ export const RequireAuth = ({ roles, children }) => {
   if (roles && !roles.includes(user?.role)) {
     // Send the user to their own portal instead of the requested one.
     const fallback =
+      user?.role === "BYOT" ? "/byot" :
       user?.role === "ADMIN"   ? ROUTES.ADMIN_DASHBOARD   :
       user?.role === "TRAINER" ? ROUTES.TRAINER_DASHBOARD :
       user?.role === "CLIENT"  ? ROUTES.CLIENT_DASHBOARD  : ROUTES.HOME;

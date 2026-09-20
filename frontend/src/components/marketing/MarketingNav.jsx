@@ -8,6 +8,7 @@ const NAV_LINKS = [
   { label: "Features", href: "/#features" },
   { label: "Testimonials", href: "/#testimonials" },
   { label: "FAQ", to: ROUTES.FAQ },
+  { label: "BYOT", to: "/byot" },
 ];
 
 export const GETSTARTED_HREF = ROUTES.LOGIN;
@@ -15,9 +16,9 @@ export const GETSTARTED_HREF = ROUTES.LOGIN;
 const Wordmark = () => (
   <Link to={ROUTES.HOME} className="flex items-center gap-2.5 shrink-0" aria-label="FITOS home">
     <span className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-glow-sm">
-      <span className="text-black font-extrabold text-base leading-none">F</span>
+      <span className="text-on-primary font-extrabold text-base leading-none">F</span>
     </span>
-    <span className="text-lg font-extrabold tracking-tight text-white">FITOS</span>
+    <span className="text-lg font-extrabold tracking-tight text-text-primary">FITOS</span>
   </Link>
 );
 
@@ -40,6 +41,7 @@ const MarketingNav = () => {
   }, []);
 
   const dashHref =
+    user?.role === "BYOT" ? "/byot" :
     user?.role === "ADMIN" ? ROUTES.ADMIN_DASHBOARD :
     user?.role === "TRAINER" ? ROUTES.TRAINER_DASHBOARD :
     user?.role === "CLIENT" ? ROUTES.CLIENT_DASHBOARD : ROUTES.LOGIN;
@@ -54,7 +56,7 @@ const MarketingNav = () => {
       className="fixed top-0 inset-x-0 z-50 isolate"
       style={{ transform: mounted ? "translateY(0)" : "translateY(-100%)", transition: "transform .6s cubic-bezier(.22,1,.36,1)" }}
     >
-      <div className={`transition-colors duration-300 ${scrolled ? "bg-[#0b0b0b]/85 backdrop-blur-xl border-b border-border" : "bg-transparent"}`}>
+      <div className={`transition-colors duration-300 ${scrolled ? "bg-surface/85 backdrop-blur-xl border-b border-border" : "bg-bg/95"}`}>
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           <Wordmark />
 
@@ -66,7 +68,7 @@ const MarketingNav = () => {
 
           <div className="hidden lg:flex items-center gap-2">
             {isAuthenticated ? (
-              <Link to={dashHref} className="h-10 px-5 inline-flex items-center rounded-xl bg-primary hover:bg-primary-hover text-black text-[13.5px] font-semibold shadow-glow-sm transition-colors">
+              <Link to={dashHref} className="h-10 px-5 inline-flex items-center rounded-xl bg-primary hover:bg-primary-hover text-on-primary text-[13.5px] font-semibold shadow-glow-sm transition-colors">
                 Go to dashboard
               </Link>
             ) : (
@@ -74,7 +76,7 @@ const MarketingNav = () => {
                 <Link to={ROUTES.LOGIN} className="h-10 px-4 inline-flex items-center rounded-xl text-[13.5px] font-medium text-text-secondary hover:text-text-primary hover:bg-surface-elevated transition-colors">
                   Sign in
                 </Link>
-                <Link to={GETSTARTED_HREF} className="h-10 px-5 inline-flex items-center rounded-xl bg-primary hover:bg-primary-hover text-black text-[13.5px] font-semibold shadow-glow-sm hover:shadow-glow hover:-translate-y-px transition-all">
+                <Link to={GETSTARTED_HREF} className="h-10 px-5 inline-flex items-center rounded-xl bg-primary hover:bg-primary-hover text-on-primary text-[13.5px] font-semibold shadow-glow-sm hover:shadow-glow hover:-translate-y-px transition-all">
                   Get started
                 </Link>
               </>
@@ -97,7 +99,7 @@ const MarketingNav = () => {
       </div>
 
       {open && (
-        <div className="lg:hidden bg-[#0b0b0b]/95 backdrop-blur-xl border-b border-border animate-fade-in">
+        <div className="lg:hidden bg-surface/95 backdrop-blur-xl border-b border-border animate-fade-in">
           <div className="px-4 py-4 space-y-1">
             {NAV_LINKS.map((l) => (
               <NavItem key={l.label} link={l} onClick={() => setOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface-elevated" />
@@ -106,7 +108,7 @@ const MarketingNav = () => {
               <Link to={ROUTES.LOGIN} onClick={() => setOpen(false)} className="h-10 inline-flex items-center justify-center rounded-xl border border-border text-sm font-medium text-text-primary">
                 Sign in
               </Link>
-              <Link to={GETSTARTED_HREF} onClick={() => setOpen(false)} className="h-10 inline-flex items-center justify-center rounded-xl bg-primary text-black text-sm font-semibold">
+              <Link to={GETSTARTED_HREF} onClick={() => setOpen(false)} className="h-10 inline-flex items-center justify-center rounded-xl bg-primary text-on-primary text-sm font-semibold">
                 Get started
               </Link>
             </div>

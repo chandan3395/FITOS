@@ -49,7 +49,7 @@ describe("refresh-token rotation", () => {
     // >1s so the new refresh JWT's iat differs and the token bytes change.
     await sleep(1100);
 
-    const first = await request(app).post("/api/auth/refresh").set("Cookie", r1);
+    const first = await request(app).post("/api/auth/refresh").set("X-FITOS-CSRF", "1").set("Cookie", r1);
     expect(first.status).toBe(200);
     expect(first.body.data.accessToken).toEqual(expect.any(String));
     const r2 = refreshCookie(first);
@@ -57,11 +57,11 @@ describe("refresh-token rotation", () => {
     expect(r2).not.toBe(r1); // rotated
 
     // Replaying the ORIGINAL token now fails — it was replaced in the DB.
-    const replay = await request(app).post("/api/auth/refresh").set("Cookie", r1);
+    const replay = await request(app).post("/api/auth/refresh").set("X-FITOS-CSRF", "1").set("Cookie", r1);
     expect(replay.status).toBe(401);
 
     // The rotated token still works.
-    const withNew = await request(app).post("/api/auth/refresh").set("Cookie", r2);
+    const withNew = await request(app).post("/api/auth/refresh").set("X-FITOS-CSRF", "1").set("Cookie", r2);
     expect(withNew.status).toBe(200);
   });
 });

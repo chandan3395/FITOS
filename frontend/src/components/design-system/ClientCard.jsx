@@ -4,31 +4,31 @@ const statusMeta = {
   active: {
     dot:   "bg-emerald-400",
     label: "Active",
-    text:  "text-emerald-400",
+    text:  "text-emerald-800",
     bg:    "bg-emerald-400/10",
   },
   inactive: {
     dot:   "bg-zinc-600",
     label: "Inactive",
-    text:  "text-zinc-500",
-    bg:    "bg-zinc-800",
+    text:  "text-text-secondary",
+    bg:    "bg-surface-elevated",
   },
   paused: {
     dot:   "bg-amber-400",
     label: "Paused",
-    text:  "text-amber-400",
+    text:  "text-amber-800",
     bg:    "bg-amber-400/10",
   },
 };
 
 /** Deterministic colour from initials */
 const avatarColors = [
-  "bg-indigo-500/20 text-indigo-300",
-  "bg-violet-500/20 text-violet-300",
-  "bg-sky-500/20    text-sky-300",
-  "bg-rose-500/20   text-rose-300",
-  "bg-teal-500/20   text-teal-300",
-  "bg-amber-500/20  text-amber-300",
+  "bg-indigo-500/20 text-indigo-700",
+  "bg-violet-500/20 text-violet-700",
+  "bg-sky-500/20    text-sky-800",
+  "bg-rose-500/20   text-rose-700",
+  "bg-teal-500/20   text-teal-700",
+  "bg-amber-500/20  text-amber-800",
 ];
 
 const colorFor = (name = "") => {
@@ -72,6 +72,14 @@ const ClientCard = ({
   return (
     <div
       onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (event) => {
+        if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) {
+          event.preventDefault();
+          onClick(event);
+        }
+      } : undefined}
       className={[
         "card p-5 flex flex-col gap-4",
         onClick ? "card-hover cursor-pointer" : "",
@@ -91,11 +99,11 @@ const ClientCard = ({
 
         {/* Name + goal */}
         <div className="flex-1 min-w-0">
-          <p className="text-[14px] font-semibold text-white leading-tight truncate">
+          <p className="text-[14px] font-semibold text-text-primary leading-tight truncate">
             {name}
           </p>
           {goal && (
-            <p className="text-[12px] text-zinc-500 mt-0.5">{goal}</p>
+            <p className="text-[12px] text-text-secondary mt-0.5">{goal}</p>
           )}
         </div>
 
@@ -109,36 +117,36 @@ const ClientCard = ({
       </div>
 
       {/* Divider */}
-      <div className="border-t border-[#1f1f1f]" />
+      <div className="border-t border-border" />
 
       {/* Meta rows */}
       <div className="flex flex-col gap-2">
         {lastSession && (
-          <div className="flex items-center gap-2 text-[12px] text-zinc-500">
-            <BoltIcon size={12} className="text-zinc-600 shrink-0" />
+          <div className="flex items-center gap-2 text-[12px] text-text-secondary">
+            <BoltIcon size={12} className="text-text-secondary shrink-0" />
             <span>Last session</span>
-            <span className="ml-auto text-zinc-400">{lastSession}</span>
+            <span className="ml-auto text-text-secondary">{lastSession}</span>
           </div>
         )}
         {nextSession && (
-          <div className="flex items-center gap-2 text-[12px] text-zinc-500">
-            <CalendarIcon size={12} className="text-zinc-600 shrink-0" />
+          <div className="flex items-center gap-2 text-[12px] text-text-secondary">
+            <CalendarIcon size={12} className="text-text-secondary shrink-0" />
             <span>Next session</span>
-            <span className="ml-auto text-zinc-400">{nextSession}</span>
+            <span className="ml-auto text-text-secondary">{nextSession}</span>
           </div>
         )}
         {sessions !== undefined && (
           <div className="flex items-center justify-between text-[12px]">
-            <span className="text-zinc-500">Total sessions</span>
-            <span className="text-zinc-300 font-medium">{sessions}</span>
+            <span className="text-text-secondary">Total sessions</span>
+            <span className="text-text-secondary font-medium">{sessions}</span>
           </div>
         )}
       </div>
 
       {/* Trainer tag */}
       {trainer && (
-        <div className="text-[11px] text-zinc-600 pt-0.5">
-          Trainer: <span className="text-zinc-400">{trainer}</span>
+        <div className="text-[11px] text-text-secondary pt-0.5">
+          Trainer: <span className="text-text-secondary">{trainer}</span>
         </div>
       )}
     </div>

@@ -3,11 +3,11 @@ import { SpinnerIcon } from "./Icons";
 const sizes = {
   sm: "h-9 px-4 text-[13px] rounded-xl gap-1.5",
   md: "h-11 px-6 text-sm   rounded-xl gap-2",
-  lg: "h-13 px-8 text-base rounded-2xl gap-2",
+  lg: "h-12 px-8 text-base rounded-2xl gap-2",
 };
 
 /**
- * PrimaryButton — white fill, black text. Apple-style.
+ * PrimaryButton — navy fill and white text.
  *
  * Props
  *   size        "sm" | "md" | "lg"           default "md"
@@ -36,8 +36,8 @@ const PrimaryButton = ({
       onClick={onClick}
       disabled={disabled || loading}
       className={[
-        "inline-flex items-center justify-center font-semibold select-none",
-        "bg-primary text-black shadow-glow-sm",
+        "inline-flex items-center justify-center font-semibold select-none min-h-11 sm:min-h-0",
+        "bg-primary text-on-primary shadow-glow-sm",
         "hover:bg-primary-hover hover:shadow-glow active:scale-[0.97]",
         "transition-all duration-150 ease-out",
         "disabled:opacity-30 disabled:cursor-not-allowed disabled:active:scale-100",
@@ -50,7 +50,7 @@ const PrimaryButton = ({
       {...props}
     >
       {loading ? (
-        <SpinnerIcon size={15} className="border-black/25 border-t-black" />
+        <SpinnerIcon size={15} className="border-white/30 border-t-white" />
       ) : (
         icon && <span className="shrink-0">{icon}</span>
       )}

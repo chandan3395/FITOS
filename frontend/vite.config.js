@@ -3,6 +3,8 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
+  // Preserve the prior browser target when moving to the patched Vite 7 toolchain.
+  build: { target: ["es2020", "chrome87", "edge88", "firefox78", "safari14"] },
   server: {
     port: 5173,
     proxy: {

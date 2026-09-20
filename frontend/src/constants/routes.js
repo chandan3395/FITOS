@@ -12,6 +12,7 @@ export const ROUTES = {
   ADMIN_DASHBOARD: "/admin/dashboard",
   ADMIN_TRAINERS:  "/admin/trainers",
   ADMIN_ADMINS:    "/admin/admins",
+  ADMIN_BYOT_USERS: "/admin/byot-users",
 
   // Trainer
   TRAINER:           "/trainer",

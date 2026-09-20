@@ -31,7 +31,7 @@ export const SocketProvider = ({ children }) => {
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !["TRAINER", "CLIENT"].includes(user?.role)) {
       setSocket(null);
       setConnected(false);
       return undefined;
@@ -61,7 +61,7 @@ export const SocketProvider = ({ children }) => {
       setConnected(false);
     };
     // Recreate the socket when the signed-in user changes (login/logout/switch).
-  }, [isAuthenticated, user?._id]);
+  }, [isAuthenticated, user?._id, user?.role]);
 
   return (
     <SocketContext.Provider value={{ socket, connected }}>

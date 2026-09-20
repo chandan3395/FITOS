@@ -5,41 +5,20 @@ export default {
   theme: {
     extend: {
       colors: {
-        // ── FITOS brand surfaces (from the marketing palette) ──
-        black:   "#000000",
-        bg:      "#0A0A0A",   // DARK BLACK — app background
-        surface: {
-          DEFAULT: "#151515", // SURFACE — sidebar / topbar / sunken panels
-          1:       "#151515",
-          2:       "#1C1C1C", // CARD
-          3:       "#1C1C1C",
-          4:       "#232323",
-        },
-        card:    "#1C1C1C",   // CARD — primary content surface
-        // ── Borders ─────────────────────────────
-        line: {
-          DEFAULT: "#2A2A2A", // BORDER
-          hover:   "#383838",
-          focus:   "#454545",
-        },
-        // ── Legacy aliases (kept so existing classes resolve) ──
-        "surface-elevated": "#232323",
-        border:             "#2A2A2A",
-        // ── Accent — FITOS lime green ───────────
-        primary: {
-          DEFAULT: "#A6CE39", // PRIMARY GREEN
-          hover:   "#B7DC4E",
-          muted:   "rgba(166,206,57,0.12)",
-        },
-        // ── Text ────────────────────────────────
-        "text-primary":   "#FFFFFF", // WHITE
-        "text-secondary": "#B0B0B0", // SECONDARY TEXT
-        "text-muted":     "#6E6E6E",
-        // ── Semantic ────────────────────────────
-        success: "#A6CE39",
-        warning: "#f59e0b",
-        danger:  "#ef4444",
-        info:    "#3b82f6",
+        bg: "rgb(var(--color-page) / <alpha-value>)",
+        surface: { DEFAULT: "rgb(var(--color-surface) / <alpha-value>)", 1: "rgb(var(--color-surface) / <alpha-value>)", 2: "rgb(var(--color-surface) / <alpha-value>)", 3: "rgb(var(--color-neutral) / <alpha-value>)", 4: "rgb(var(--color-neutral) / <alpha-value>)" },
+        card: "rgb(var(--color-surface) / <alpha-value>)",
+        "surface-elevated": "rgb(var(--color-neutral) / <alpha-value>)",
+        line: { DEFAULT: "rgb(var(--color-border) / <alpha-value>)", hover: "rgb(var(--color-control) / <alpha-value>)", focus: "rgb(var(--color-navy) / <alpha-value>)" },
+        border: "rgb(var(--color-border) / <alpha-value>)",
+        control: "rgb(var(--color-control) / <alpha-value>)",
+        primary: { DEFAULT: "rgb(var(--color-navy) / <alpha-value>)", hover: "rgb(var(--color-navy-hover) / <alpha-value>)", muted: "rgb(var(--color-navy) / 0.08)" },
+        "on-primary": "rgb(var(--color-surface) / <alpha-value>)",
+        "text-primary": "rgb(var(--color-navy) / <alpha-value>)",
+        "text-secondary": "rgb(var(--color-secondary) / <alpha-value>)",
+        "text-muted": "rgb(var(--color-secondary) / <alpha-value>)",
+        bronze: { DEFAULT: "rgb(var(--color-bronze) / <alpha-value>)", text: "rgb(var(--color-bronze-text) / <alpha-value>)" },
+        success: "#166534", warning: "#92400E", danger: "#B91C1C", info: "#1D4ED8",
       },
 
       fontFamily: {
@@ -61,12 +40,12 @@ export default {
       },
 
       boxShadow: {
-        "card-sm": "0 1px 2px rgba(0,0,0,0.6)",
-        card:      "0 2px 10px rgba(0,0,0,0.45)",
-        "card-lg": "0 16px 48px rgba(0,0,0,0.55)",
-        // Green-tinted premium glow for primary actions, modals, focus.
-        "glow-sm": "0 0 0 1px rgba(166,206,57,0.12), 0 4px 16px rgba(166,206,57,0.14)",
-        glow:      "0 0 0 1px rgba(166,206,57,0.18), 0 10px 34px rgba(166,206,57,0.22)",
+        "card-sm": "0 1px 2px rgba(24,36,56,0.08)",
+        card:      "0 2px 10px rgba(24,36,56,0.08)",
+        "card-lg": "0 16px 48px rgba(24,36,56,0.08)",
+        // Legacy shadow aliases now resolve to restrained neutral shadows.
+        "glow-sm": "0 0 0 1px rgba(24,36,56,0.08), 0 4px 16px rgba(24,36,56,0.08)",
+        glow:      "0 0 0 1px rgba(24,36,56,0.08), 0 10px 34px rgba(24,36,56,0.08)",
       },
 
       animation: {
@@ -89,11 +68,11 @@ export default {
       keyframes: {
         "fade-in": {
           from: { opacity: "0", transform: "translateY(6px)" },
-          to:   { opacity: "1", transform: "translateY(0)" },
+          to:   { opacity: "1", transform: "none" },
         },
         "slide-up": {
           from: { opacity: "0", transform: "translateY(12px)" },
-          to:   { opacity: "1", transform: "translateY(0)" },
+          to:   { opacity: "1", transform: "none" },
         },
         "toast-in": {
           from: { opacity: "0", transform: "translateX(24px) translateY(4px)" },

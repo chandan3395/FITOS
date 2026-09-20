@@ -24,7 +24,7 @@ const MobileBottomNavigation = ({
 }) => {
   return (
     <nav
-      className="flex items-center bg-black border-t border-[#1a1a1a]"
+      className="flex items-center bg-surface border-t border-border"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       aria-label="Main navigation"
     >
@@ -38,19 +38,19 @@ const MobileBottomNavigation = ({
             className={[
               "flex-1 flex flex-col items-center justify-center gap-1",
               "py-3 transition-all duration-150 active:scale-95",
-              active ? "text-white" : "text-zinc-600 hover:text-zinc-400",
+              active ? "text-text-primary" : "text-text-secondary hover:text-text-secondary",
             ].join(" ")}
           >
             {/* Icon wrapper — active gets a subtle pill indicator */}
             <span className="relative">
               <Icon size={22} />
               {active && (
-                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-white" />
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
               )}
             </span>
             <span
               className={`text-[10px] font-medium leading-none transition-colors ${
-                active ? "text-white" : "text-zinc-600"
+                active ? "text-text-primary" : "text-text-secondary"
               }`}
             >
               {label}

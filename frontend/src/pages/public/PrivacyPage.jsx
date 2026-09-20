@@ -12,7 +12,7 @@ const SECTIONS = [
         "Email address",
         "Phone number",
         "Profile information",
-        "Account role (Admin, Trainer, Client)",
+        "Account role (Admin, Trainer, Client, BYOT)",
       ] },
       { type: "sub", text: "Coaching Information" },
       { type: "p", text: "Depending on how the platform is used, we may collect:" },
@@ -63,6 +63,10 @@ const SECTIONS = [
       { type: "p", text: "FITOS may store progress photos, meal photos, and related media uploaded by users." },
       { type: "p", text: "These files are used solely for coaching, progress tracking, and platform functionality." },
       { type: "p", text: "Users retain ownership of their uploaded content." },
+      { type: "sub", text: "BYOT personal tracking" },
+      { type: "p", text: "BYOT is free, manual tracking without trainers, coaching, AI, messaging or subscriptions. Nutrition, workouts, measurements and check-ins belong to the signed-in owner. Admins can see name, email, signup date, last activity and account status, and enable or disable access; they cannot retrieve BYOT fitness records or photos through the application." },
+      { type: "p", text: "BYOT body photos are stored as authenticated Cloudinary assets. Originals and thumbnails are delivered through an owner-authorized server request, not public photo links. Images are resized without cropping and metadata including location is removed before storage. This is access-controlled storage, not end-to-end encryption: authorized infrastructure operators with database or Cloudinary credentials can access stored data." },
+      { type: "p", text: "Removing a photo revokes application access immediately and queues provider deletion with retries. Removing a required photo makes its check-in incomplete. Deleting a check-in keeps measurements unless you explicitly delete them. Disabling an account preserves records and photos. Previously downloaded copies cannot be remotely erased." },
     ],
   },
   {
@@ -184,7 +188,7 @@ const PrivacyPage = () => (
     seoDescription="Read the FITOS Privacy Policy explaining how we collect, use, store, and protect your information."
     eyebrow="Legal"
     title="Privacy Policy"
-    meta="Last updated June 2026"
+    meta="Last updated September 2026"
     subtitle="How FITOS collects, uses, stores, and protects your information."
     breadcrumb="Privacy"
   >

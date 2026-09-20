@@ -12,18 +12,18 @@ import { Link } from "react-router-dom";
  * Both share the same data + math + fill animation so they never drift.
  */
 
-const LIME = "#A6CE39";
-const BLUE = "#3b82f6";
-const AMBER = "#f59e0b";
-const TRACK = "#2A2A2A"; // theme border — unfilled ring/bar track
+const NAVY = "var(--accent)";
+const BLUE = "#356B83";
+const AMBER = "var(--bronze-text)";
+const TRACK = "var(--line)"; // theme border — unfilled ring/bar track
 
 const pct = (val, target) => (target > 0 ? Math.min(val / target, 1) : 0);
 const round = (n) => Math.round(Number(n) || 0);
 
 const LeafIcon = ({ size = 16 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden>
-    <path d="M5 21c0-7 4-13 14-15 0 10-5 15-14 15Z" stroke={LIME} strokeWidth="1.7" strokeLinejoin="round" />
-    <path d="M5 21C8 15 12 12 16 10" stroke={LIME} strokeWidth="1.7" strokeLinecap="round" />
+    <path d="M5 21c0-7 4-13 14-15 0 10-5 15-14 15Z" stroke={NAVY} strokeWidth="1.7" strokeLinejoin="round" />
+    <path d="M5 21C8 15 12 12 16 10" stroke={NAVY} strokeWidth="1.7" strokeLinecap="round" />
   </svg>
 );
 const DropIcon = () => (
@@ -33,7 +33,7 @@ const DropIcon = () => (
 );
 
 const ActivePill = () => (
-  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-400/10 text-emerald-300 text-[11px] font-semibold">
+  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-400/10 text-emerald-800 text-[11px] font-semibold">
     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Active
   </span>
 );
@@ -47,7 +47,7 @@ const Ring = ({ px, r, stroke, valueCal, targetCal, children }) => {
       <svg viewBox={`0 0 ${px} ${px}`} className="w-full h-full -rotate-90">
         <circle cx={px / 2} cy={px / 2} r={r} fill="none" stroke={TRACK} strokeWidth={stroke} />
         <circle
-          cx={px / 2} cy={px / 2} r={r} fill="none" stroke={LIME} strokeWidth={stroke} strokeLinecap="round"
+          cx={px / 2} cy={px / 2} r={r} fill="none" stroke={NAVY} strokeWidth={stroke} strokeLinecap="round"
           strokeDasharray={circ}
           strokeDashoffset={offset}
           style={{ transition: "stroke-dashoffset 0.8s cubic-bezier(.22,1,.36,1)" }}
@@ -114,7 +114,7 @@ const NutritionCard = ({ summary, compact = false, to }) => {
               <span className="text-[9.5px] text-text-muted mt-0.5">/ {round(target.calories)}</span>
             </Ring>
             <div className="flex-1 min-w-0 space-y-2">
-              <MacroRow slim label="Protein" color={LIME}  consumed={consumed.protein} animated={shown.protein} target={target.protein} />
+              <MacroRow slim label="Protein" color={NAVY}  consumed={consumed.protein} animated={shown.protein} target={target.protein} />
               <MacroRow slim label="Carbs"   color={BLUE}  consumed={consumed.carbs}   animated={shown.carbs}   target={target.carbs} />
               <MacroRow slim label="Fats"    color={AMBER} consumed={consumed.fats}    animated={shown.fats}    target={target.fats} />
             </div>
@@ -154,7 +154,7 @@ const NutritionCard = ({ summary, compact = false, to }) => {
             </Ring>
           </div>
           <div className="space-y-4">
-            <MacroRow label="Protein" color={LIME}  consumed={consumed.protein} animated={shown.protein} target={target.protein} />
+            <MacroRow label="Protein" color={NAVY}  consumed={consumed.protein} animated={shown.protein} target={target.protein} />
             <MacroRow label="Carbs"   color={BLUE}  consumed={consumed.carbs}   animated={shown.carbs}   target={target.carbs} />
             <MacroRow label="Fats"    color={AMBER} consumed={consumed.fats}    animated={shown.fats}    target={target.fats} />
           </div>
@@ -163,12 +163,12 @@ const NutritionCard = ({ summary, compact = false, to }) => {
 
       <div className="flex items-center gap-2 mt-6 flex-wrap">
         {summary?.waterTarget != null && (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-sky-500/10 text-sky-300 text-[12px] font-medium">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-sky-500/10 text-sky-800 text-[12px] font-medium">
             <DropIcon /> {summary.waterTarget} L water
           </span>
         )}
         {summary?.mealsPerDay != null && (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-400/10 text-amber-300 text-[12px] font-medium">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-400/10 text-amber-800 text-[12px] font-medium">
             {summary.mealsPerDay} meals / day
           </span>
         )}

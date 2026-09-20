@@ -177,7 +177,7 @@ const ClientDashboard = () => {
       <Card>
         <div className="flex items-center justify-between gap-6 flex-wrap">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-sky-500/15 text-sky-300 flex items-center justify-center text-base font-bold">
+            <div className="w-12 h-12 rounded-2xl bg-sky-500/15 text-sky-800 flex items-center justify-center text-base font-bold">
               {initials}
             </div>
             <div>
@@ -185,7 +185,7 @@ const ClientDashboard = () => {
               <p className="text-sm text-text-secondary mt-0.5">{DAY_NAMES[currentDay]} · Let&apos;s make it count.</p>
             </div>
           </div>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-400/10 text-emerald-300 text-[12px] font-medium">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-400/10 text-emerald-800 text-[12px] font-medium">
             <CheckCircleIcon size={12} /> Active
           </span>
         </div>
@@ -234,7 +234,7 @@ const ClientDashboard = () => {
                         <span
                           className={[
                             "w-5 h-5 rounded-[6px] border flex items-center justify-center shrink-0 transition-colors",
-                            completed ? "bg-primary border-primary text-black" : "border-text-muted/60 text-transparent",
+                            completed ? "bg-primary border-primary text-on-primary" : "border-text-muted/60 text-transparent",
                           ].join(" ")}
                         >
                           <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
@@ -361,7 +361,7 @@ const ClientDashboard = () => {
               <div className="flex items-center justify-between">
                 <span className="text-text-muted text-[12px]">Active workouts</span>
                 <span className="text-text-primary font-medium flex items-center gap-1.5">
-                  <FlameIcon size={13} className="text-amber-300" /> {workouts.length}
+                  <FlameIcon size={13} className="text-amber-800" /> {workouts.length}
                 </span>
               </div>
             </div>

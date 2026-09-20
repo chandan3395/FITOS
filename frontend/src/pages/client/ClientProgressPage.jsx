@@ -18,9 +18,9 @@ import ComparePhotos from "../../components/progress/ComparePhotos";
 const fmtDate = (iso) => iso ? new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "—";
 
 const BADGE = {
-  PENDING:  { label: "Pending review", cls: "bg-amber-400/10 text-amber-300" },
-  REVIEWED: { label: "Reviewed",       cls: "bg-emerald-400/10 text-emerald-300" },
-  FLAGGED:  { label: "Flagged",        cls: "bg-red-500/10 text-red-300" },
+  PENDING:  { label: "Pending review", cls: "bg-amber-400/10 text-amber-800" },
+  REVIEWED: { label: "Reviewed",       cls: "bg-emerald-400/10 text-emerald-800" },
+  FLAGGED:  { label: "Flagged",        cls: "bg-red-500/10 text-red-700" },
 };
 const StatusBadge = ({ status }) => {
   const meta = BADGE[status] || BADGE.PENDING;
@@ -150,7 +150,7 @@ const ClientProgressPage = () => {
                     type="file"
                     accept="image/*"
                     onChange={(e) => setFiles((f) => ({ ...f, [slot]: e.target.files?.[0] || null }))}
-                    className="block w-full mt-1 text-[12px] text-text-secondary file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-primary file:text-white file:text-[12px] file:cursor-pointer"
+                    className="block w-full mt-1 text-[12px] text-text-secondary file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-primary file:text-on-primary file:text-[12px] file:cursor-pointer"
                   />
                 </label>
               ))}

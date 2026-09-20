@@ -2,7 +2,7 @@
 
 const mongoose = require("mongoose");
 
-const ROLES = ["ADMIN", "TRAINER", "CLIENT"];
+const ROLES = ["ADMIN", "TRAINER", "CLIENT", "BYOT"];
 
 const userSchema = new mongoose.Schema(
   {
@@ -50,12 +50,15 @@ const userSchema = new mongoose.Schema(
       default: null,
       select: false,
     },
+    // Incremented only on explicit revocation; old records/tokens remain version zero.
+    sessionVersion: { type: Number, default: 0, min: 0 },
 
     // Messaging presence. "Online" is ephemeral and lives in the in-memory
     // presence registry (socket layer); this timestamp is persisted on full
     // disconnect so the conversation list can show "last seen <time>" for a
     // participant who is currently offline. Unset until the user's first
     // socket disconnect — readers fall back to "offline" with no last-seen.
+    lastActiveAt: { type: Date },
     lastSeenAt: {
       type: Date,
     },
@@ -79,6 +82,8 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+userSchema.index({ role: 1, createdAt: -1, _id: -1 });
+userSchema.index({ role: 1, isActive: 1, createdAt: -1, _id: -1 });
 const User = mongoose.model("User", userSchema);
 
 module.exports = { User, ROLES };

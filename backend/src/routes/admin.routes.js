@@ -18,6 +18,7 @@ const {
 const router = Router();
 
 router.use(authenticate, allowRoles("ADMIN"));
+router.use("/byot-users", require("./adminByot.routes"));
 
 // Trainer management. Trainers self-register via Google sign-in, so there
 // is no create route — admins can only list, enable, and disable them.

@@ -127,7 +127,7 @@ const Label = ({ htmlFor, children, required }) => (
     htmlFor={htmlFor}
     className="block text-[11px] font-semibold tracking-[0.08em] text-text-muted uppercase mb-2"
   >
-    {children} {required && <span className="text-red-400">*</span>}
+    {children} {required && <span className="text-red-700">*</span>}
   </label>
 );
 
@@ -135,13 +135,13 @@ const Field = ({ id, label, required, error, children, span = 1 }) => (
   <div className={span === 2 ? "sm:col-span-2" : ""}>
     <Label htmlFor={id} required={required}>{label}</Label>
     {children}
-    {error && <p id={`${id}-error`} className="mt-1.5 text-[11.5px] text-red-300">{error}</p>}
+    {error && <p id={`${id}-error`} className="mt-1.5 text-[11.5px] text-red-700">{error}</p>}
   </div>
 );
 
 const inputBase =
   "w-full h-10 px-3 rounded-lg bg-surface-elevated border text-sm text-text-primary placeholder:text-text-muted focus:outline-none transition-colors";
-const inputOK   = "border-border focus:border-[#333]";
+const inputOK   = "border-border focus:border-border";
 const inputBad  = "border-red-500/50 focus:border-red-400";
 
 const cls = (error) => `${inputBase} ${error ? inputBad : inputOK}`;
@@ -181,7 +181,7 @@ const Chip = ({ active, onClick, children }) => (
       "h-8 px-3 rounded-full text-[12px] font-medium transition-all duration-150",
       active
         ? "bg-primary/15 text-primary border border-primary/40"
-        : "bg-surface-elevated border border-border text-text-secondary hover:text-text-primary hover:border-[#333]",
+        : "bg-surface-elevated border border-border text-text-secondary hover:text-text-primary hover:border-border",
     ].join(" ")}
   >
     {children}
@@ -211,8 +211,8 @@ const Stepper = ({ current }) => (
             <span
               className={[
                 "w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold transition-colors",
-                done   ? "bg-emerald-500/20 text-emerald-300" :
-                active ? "bg-primary text-white" :
+                done   ? "bg-emerald-500/20 text-emerald-800" :
+                active ? "bg-primary text-on-primary" :
                          "bg-surface-elevated text-text-muted border border-border",
               ].join(" ")}
             >
@@ -220,7 +220,7 @@ const Stepper = ({ current }) => (
             </span>
             <span className={[
               "text-[12.5px] font-medium",
-              done   ? "text-emerald-300" :
+              done   ? "text-emerald-800" :
               active ? "text-text-primary" :
                        "text-text-muted",
             ].join(" ")}>
@@ -289,7 +289,7 @@ const Step2 = ({ form, update, errors }) => (
       Icon={TargetIcon}
       title="Body Measurements"
       description="Baseline measurements at program start"
-      accent="bg-emerald-500/10 text-emerald-300"
+      accent="bg-emerald-500/10 text-emerald-800"
     />
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
       <Field id="height" label="Height (cm)" required error={errors.height}>
@@ -314,7 +314,7 @@ const Step2 = ({ form, update, errors }) => (
       Icon={WarningIcon}
       title="Health History & Medical"
       description="Injuries, conditions, medications — critical for safe programming"
-      accent="bg-red-500/10 text-red-300"
+      accent="bg-red-500/10 text-red-700"
       className="mt-8"
     />
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -348,7 +348,7 @@ const Step3 = ({ form, update, errors }) => (
       Icon={TargetIcon}
       title="Fitness Goals"
       description="Primary objective and target metrics"
-      accent="bg-amber-500/10 text-amber-300"
+      accent="bg-amber-500/10 text-amber-800"
     />
     <Field id="goal" label="Primary goal" required error={errors.goal}>
       <div id="goal" className="flex flex-wrap gap-2">
@@ -494,7 +494,7 @@ const Step5 = ({ form, update }) => (
       Icon={CheckCircleIcon}
       title="Trainer Notes"
       description="Private notes — only visible to you (optional)"
-      accent="bg-violet-500/10 text-violet-300"
+      accent="bg-violet-500/10 text-violet-700"
     />
     <Field id="notes" label="Private notes">
       <Textarea
@@ -558,7 +558,7 @@ const LivePreview = ({ form, step }) => {
       <p className="text-[10px] font-semibold tracking-[0.18em] text-text-muted uppercase mb-3">Live Preview</p>
 
       <div className="flex flex-col items-center text-center py-3">
-        <div className="w-14 h-14 rounded-full bg-sky-500/20 text-sky-300 flex items-center justify-center text-base font-bold mb-3">
+        <div className="w-14 h-14 rounded-full bg-sky-500/20 text-sky-800 flex items-center justify-center text-base font-bold mb-3">
           {form.firstName?.[0]?.toUpperCase() || "?"}
         </div>
         <p className="text-base font-semibold text-text-primary">{fullName}</p>
@@ -850,9 +850,9 @@ const TrainerAddClientPage = () => {
               {/* Stale-invite notice — appears when the form was edited after creation. */}
               {dirtySinceCreate && (
                 <div className="flex items-start gap-3 rounded-lg border border-amber-400/30 bg-amber-400/[0.06] px-3 py-3">
-                  <WarningIcon size={16} className="text-amber-300 mt-0.5 shrink-0" />
+                  <WarningIcon size={16} className="text-amber-800 mt-0.5 shrink-0" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-[13px] font-semibold text-amber-200">Invite information has changed</p>
+                    <p className="text-[13px] font-semibold text-amber-800">Invite information has changed</p>
                     <p className="text-[12px] text-text-secondary mt-0.5">
                       You edited the client after creating it. Regenerate the link so it reflects the latest details — the old link will stop working.
                     </p>
@@ -930,14 +930,14 @@ const TrainerAddClientPage = () => {
 
             {/* Show submit-level errors only on the active step where they were caused. */}
             {submitError && step === 5 && (
-              <div className="mt-5 text-[12.5px] text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+              <div className="mt-5 text-[12.5px] text-red-700 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
                 {submitError}
               </div>
             )}
 
             {/* Step-scoped summary if there are field errors on THIS step. */}
             {Object.keys(currentErrors).length > 0 && (
-              <p className="mt-4 text-[11.5px] text-red-300">
+              <p className="mt-4 text-[11.5px] text-red-700">
                 Please fix {Object.keys(currentErrors).length} field
                 {Object.keys(currentErrors).length === 1 ? "" : "s"} above before continuing.
               </p>
@@ -951,7 +951,7 @@ const TrainerAddClientPage = () => {
                 ? <Button onClick={next} disabled={submitting}>Continue →</Button>
                 : activation
                   ? <div className="flex items-center gap-2">
-                      <span className="text-[12px] text-emerald-300 font-medium">Created ✓</span>
+                      <span className="text-[12px] text-emerald-800 font-medium">Created ✓</span>
                       <Button variant="secondary" onClick={regenerateInvite} loading={regenBusy}>
                         Regenerate Invite Link
                       </Button>

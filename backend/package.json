@@ -12,7 +12,9 @@
     "create-admin": "node scripts/create-first-admin.js",
     "seed:demo": "node scripts/seedDemoEnvironment.js",
     "migrate:nutrition-v2": "node scripts/migrateNutritionScheduleV2.js",
-    "migrate:workout-v2": "node scripts/migrateWorkoutSetDetailsV2.js"
+    "migrate:workout-v2": "node scripts/migrateWorkoutSetDetailsV2.js",
+    "cleanup:byot-media": "node scripts/cleanup-byot-media.js",
+    "check:byot-runtime": "node scripts/check-byot-runtime.js"
   },
   "jest": {
     "testEnvironment": "node",
@@ -36,12 +38,13 @@
     "express-rate-limit": "^8.5.2",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.6.3",
+    "mongoose": "9.7.2",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "pino": "^10.3.1",
     "pino-http": "^11.0.0",
     "pino-pretty": "^13.1.3",
+    "sharp": "^0.35.4",
     "socket.io": "^4.8.3"
   },
   "devDependencies": {

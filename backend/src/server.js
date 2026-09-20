@@ -15,6 +15,17 @@ let server;
 
 async function start() {
   await connectDB();
+  await require("./schemas/User.schema").User.createIndexes();
+  // Identity constraints must exist before accepting BYOT traffic.
+  await require("./schemas/ByotProfile.schema").ByotProfile.createIndexes();
+  if (env.ENABLE_GOOGLE_AUTH) await require("./utils/oauthState").OAuthState.createIndexes();
+
+  const { ByotNutritionPlan, ByotFoodLog } = require("./schemas/ByotNutrition.schema");
+  await Promise.all([ByotNutritionPlan.createIndexes(), ByotFoodLog.createIndexes()]);
+  const { ByotWorkoutRoutine, ByotDailyWorkout } = require("./schemas/ByotWorkout.schema");
+  await Promise.all([ByotWorkoutRoutine.createIndexes(), ByotDailyWorkout.createIndexes()]);
+  const { ByotProgress, ByotPhotoAttempt, ByotPhotoBudget } = require("./schemas/ByotProgress.schema");
+  await Promise.all([ByotProgress.createIndexes(), ByotPhotoAttempt.createIndexes(), ByotPhotoBudget.createIndexes()]);
 
   // Socket.IO attaches to the same HTTP server as Express so REST and the
   // realtime messaging layer share one port and the same JWT auth.

@@ -7,6 +7,7 @@ import { ROUTES } from "../../constants/routes";
 import { API_BASE_URL } from "../../lib/api";
 
 const dashboardFor = (role) => {
+  if (role === "BYOT") return "/byot";
   if (role === "ADMIN")   return ROUTES.ADMIN_DASHBOARD;
   if (role === "TRAINER") return ROUTES.TRAINER_DASHBOARD;
   if (role === "CLIENT")  return ROUTES.CLIENT_DASHBOARD;
@@ -126,7 +127,7 @@ const LoginPage = () => {
         <>
           <a
             href={googleSignInUrl("TRAINER")}
-            className="w-full h-11 flex items-center justify-center gap-3 rounded-xl bg-white text-black text-sm font-semibold hover:bg-zinc-100 active:scale-[0.98] transition-all"
+            className="w-full h-11 flex items-center justify-center gap-3 rounded-xl bg-white text-text-primary border border-control text-sm font-semibold hover:bg-zinc-100 active:scale-[0.98] transition-all"
           >
             <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden>
               <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
@@ -150,7 +151,7 @@ const LoginPage = () => {
       )}
 
       {!GOOGLE_AUTH_ENABLED && (
-        <div className="mb-6 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[12px] text-amber-300">
+        <div className="mb-6 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[12px] text-amber-800">
           Google sign-in is temporarily disabled. Trainers and clients can sign in once it is re-enabled.
         </div>
       )}
@@ -173,7 +174,7 @@ const LoginPage = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="admin@fitos.app"
-              className="w-full h-10 px-3 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-[#333] transition-colors"
+              className="w-full h-10 px-3 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-border transition-colors"
             />
           </div>
           <div>
@@ -184,11 +185,11 @@ const LoginPage = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full h-10 px-3 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-[#333] transition-colors"
+              className="w-full h-10 px-3 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-border transition-colors"
             />
           </div>
           {error && (
-            <div className="text-[12.5px] text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+            <div className="text-[12.5px] text-red-700 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
               {error}
             </div>
           )}
@@ -208,7 +209,7 @@ const LoginPage = () => {
       )}
 
       {!showAdmin && error && (
-        <div className="mt-4 text-[12.5px] text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+        <div className="mt-4 text-[12.5px] text-red-700 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
           {error}
         </div>
       )}

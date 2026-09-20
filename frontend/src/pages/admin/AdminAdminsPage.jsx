@@ -13,8 +13,8 @@ const FILTERS = [
 
 const StatusBadge = ({ active }) => {
   const meta = active
-    ? { text: "Active",   color: "text-emerald-400", bg: "bg-emerald-400/10", dot: "bg-emerald-400" }
-    : { text: "Inactive", color: "text-zinc-500",    bg: "bg-zinc-800",       dot: "bg-zinc-600" };
+    ? { text: "Active",   color: "text-emerald-800", bg: "bg-emerald-400/10", dot: "bg-emerald-400" }
+    : { text: "Inactive", color: "text-text-secondary",    bg: "bg-surface-elevated",       dot: "bg-zinc-600" };
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium ${meta.color} ${meta.bg}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
@@ -50,7 +50,7 @@ const CreateAdminModal = ({ onClose, onCreated }) => {
   };
 
   const inputCls = (bad) =>
-    `w-full h-10 px-3 rounded-lg bg-surface-elevated border ${bad ? "border-red-500/50 focus:border-red-400" : "border-border focus:border-[#333]"} text-sm text-text-primary placeholder:text-text-muted focus:outline-none transition-colors`;
+    `w-full h-10 px-3 rounded-lg bg-surface-elevated border ${bad ? "border-red-500/50 focus:border-red-400" : "border-border focus:border-border"} text-sm text-text-primary placeholder:text-text-muted focus:outline-none transition-colors`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
@@ -64,19 +64,19 @@ const CreateAdminModal = ({ onClose, onCreated }) => {
             <div>
               <label className="block text-[11px] font-semibold tracking-[0.08em] text-text-muted uppercase mb-1.5">Name</label>
               <input value={name} onChange={(e) => setName(e.target.value)} className={inputCls(fieldErrs.name)} placeholder="Sam Operator" />
-              {fieldErrs.name && <p className="mt-1 text-[11.5px] text-red-300">{fieldErrs.name}</p>}
+              {fieldErrs.name && <p className="mt-1 text-[11.5px] text-red-700">{fieldErrs.name}</p>}
             </div>
             <div>
               <label className="block text-[11px] font-semibold tracking-[0.08em] text-text-muted uppercase mb-1.5">Email</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls(fieldErrs.email)} placeholder="sam@fitos.app" />
-              {fieldErrs.email && <p className="mt-1 text-[11.5px] text-red-300">{fieldErrs.email}</p>}
+              {fieldErrs.email && <p className="mt-1 text-[11.5px] text-red-700">{fieldErrs.email}</p>}
             </div>
             <div>
               <label className="block text-[11px] font-semibold tracking-[0.08em] text-text-muted uppercase mb-1.5">Password</label>
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputCls(fieldErrs.password)} placeholder="At least 8 characters" autoComplete="new-password" />
-              {fieldErrs.password && <p className="mt-1 text-[11.5px] text-red-300">{fieldErrs.password}</p>}
+              {fieldErrs.password && <p className="mt-1 text-[11.5px] text-red-700">{fieldErrs.password}</p>}
             </div>
-            {error && <div className="text-[12.5px] text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</div>}
+            {error && <div className="text-[12.5px] text-red-700 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</div>}
             <div className="flex items-center justify-end gap-2 pt-2">
               <Button variant="ghost" type="button" onClick={onClose} disabled={busy}>Cancel</Button>
               <Button type="submit" loading={busy}>Create Admin</Button>
@@ -181,7 +181,7 @@ const AdminAdminsPage = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search admins..."
-            className="h-9 w-64 px-3 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-[#333]"
+            className="h-9 w-64 px-3 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-border"
           />
           <Button onClick={() => setShowCreate(true)}>+ Create Admin</Button>
         </div>
@@ -196,7 +196,7 @@ const AdminAdminsPage = () => {
               "h-8 px-3.5 rounded-full text-[12.5px] font-medium transition-colors inline-flex items-center gap-2",
               filter === f.id
                 ? "bg-primary/15 text-primary border border-primary/40"
-                : "bg-surface-elevated border border-border text-text-secondary hover:text-text-primary hover:border-[#333]",
+                : "bg-surface-elevated border border-border text-text-secondary hover:text-text-primary hover:border-border",
             ].join(" ")}
           >
             {f.label}

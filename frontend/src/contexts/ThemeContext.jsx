@@ -2,9 +2,9 @@ import { createContext, useContext } from "react";
 
 export const ThemeContext = createContext(null);
 
-// Scaffold only — logic added in a later phase
+// The approved light palette is the only supported theme; no partial dark toggle.
 export const ThemeProvider = ({ children }) => {
-  return <ThemeContext.Provider value={{}}>{children}</ThemeContext.Provider>;
+  return <ThemeContext.Provider value={{ theme: "light" }}>{children}</ThemeContext.Provider>;
 };
 
 export const useThemeContext = () => useContext(ThemeContext);

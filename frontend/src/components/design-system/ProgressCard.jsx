@@ -27,17 +27,17 @@ const ProgressCard = ({
   const pct = Math.min(Math.max(Math.round((current / target) * 100), 0), 100);
 
   const barColors = {
-    default: "bg-white",
-    success: "bg-emerald-400",
-    warning: "bg-amber-400",
-    danger:  "bg-red-400",
+    default: "bg-primary",
+    success: "bg-emerald-700",
+    warning: "bg-amber-700",
+    danger:  "bg-red-700",
   };
 
   const pctColors = {
-    default: "text-white",
-    success: "text-emerald-400",
-    warning: "text-amber-400",
-    danger:  "text-red-400",
+    default: "text-text-primary",
+    success: "text-emerald-800",
+    warning: "text-amber-800",
+    danger:  "text-red-700",
   };
 
   return (
@@ -45,15 +45,15 @@ const ProgressCard = ({
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2.5">
-          <span className="text-zinc-500">
+          <span className="text-text-secondary">
             {icon ?? <TargetIcon size={15} />}
           </span>
           <div>
-            <p className="text-[14px] font-semibold text-white leading-tight">
+            <p className="text-[14px] font-semibold text-text-primary leading-tight">
               {label}
             </p>
             {description && (
-              <p className="text-[12px] text-zinc-500 mt-0.5">{description}</p>
+              <p className="text-[12px] text-text-secondary mt-0.5">{description}</p>
             )}
           </div>
         </div>
@@ -76,15 +76,15 @@ const ProgressCard = ({
 
         {/* Value label */}
         <div className="flex justify-between mt-2.5">
-          <span className="text-[12px] text-zinc-500">
+          <span className="text-[12px] text-text-secondary">
             {current}
             {unit && <span className="ml-0.5">{unit}</span>}
-            <span className="mx-1 text-zinc-700">/</span>
+            <span className="mx-1 text-text-secondary">/</span>
             {target}
             {unit && <span className="ml-0.5">{unit}</span>}
           </span>
           {streak !== undefined && (
-            <span className="inline-flex items-center gap-1 text-[12px] text-amber-400">
+            <span className="inline-flex items-center gap-1 text-[12px] text-amber-800">
               <FlameIcon size={12} />
               {streak} day streak
             </span>

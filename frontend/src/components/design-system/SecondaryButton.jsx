@@ -3,11 +3,11 @@ import { SpinnerIcon } from "./Icons";
 const sizes = {
   sm: "h-9 px-4 text-[13px] rounded-xl gap-1.5",
   md: "h-11 px-6 text-sm   rounded-xl gap-2",
-  lg: "h-13 px-8 text-base rounded-2xl gap-2",
+  lg: "h-12 px-8 text-base rounded-2xl gap-2",
 };
 
 /**
- * SecondaryButton — transparent fill, zinc border, white text.
+ * SecondaryButton — transparent fill, control border, navy text.
  *
  * Props
  *   size        "sm" | "md" | "lg"           default "md"
@@ -33,8 +33,8 @@ const SecondaryButton = ({
   ...props
 }) => {
   const colorClasses = destructive
-    ? "border-red-500/30 text-red-400 hover:bg-red-500/8 hover:border-red-500/50 active:bg-red-500/12"
-    : "border-[#2a2a2a] text-white hover:bg-white/[0.04] hover:border-[#3a3a3a] active:bg-white/[0.06]";
+    ? "border-red-500/30 text-red-700 hover:bg-red-500/8 hover:border-red-500/50 active:bg-red-500/12"
+    : "border-border text-text-primary hover:bg-primary/5 hover:border-border active:bg-primary/10";
 
   return (
     <button
@@ -42,7 +42,7 @@ const SecondaryButton = ({
       onClick={onClick}
       disabled={disabled || loading}
       className={[
-        "inline-flex items-center justify-center font-medium select-none",
+        "inline-flex items-center justify-center font-medium select-none min-h-11 sm:min-h-0",
         "bg-transparent border",
         "active:scale-[0.97] transition-all duration-150 ease-out",
         "disabled:opacity-30 disabled:cursor-not-allowed disabled:active:scale-100",

@@ -12,6 +12,7 @@ if (env.SENTRY_DSN) {
   Sentry.init({
     dsn: env.SENTRY_DSN,
     environment: env.NODE_ENV,
+    ...require("./utils/monitoringPrivacy"),
   });
 }
 
@@ -36,6 +37,12 @@ app.set("trust proxy", 1);
 
 app.use(helmet());
 app.use(cors(corsOptions));
+// Apply before parsers/auth/rate limits so failures and token responses are private too.
+app.use((req, res, next) => {
+  if (/^\/api\/(?:byot|auth|admin\/byot-users)(?:\/|$)/.test(req.path))
+    res.set({ "Cache-Control": "private, no-store", "Referrer-Policy": "no-referrer" });
+  next();
+});
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // Strip Mongo operator characters ($, .) from body/query/params so user

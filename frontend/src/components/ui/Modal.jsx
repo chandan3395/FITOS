@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { useEffect, useId, useRef } from "react";
+import { createPortal } from "react-dom";
 
 const Modal = ({
   isOpen,
@@ -12,6 +13,25 @@ const Modal = ({
   // the standard backdrop so existing modals are unchanged.
   backdropClassName = "bg-black/70 backdrop-blur-sm",
 }) => {
+  const dialog = useRef(null);
+  const titleId = useId();
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const previous = document.activeElement;
+    const controls = () => [...dialog.current.querySelectorAll('button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex="0"]')].filter(el => el.getClientRects().length);
+    (controls()[0] || dialog.current).focus();
+    const trap = (event) => {
+      if (event.key !== "Tab") return;
+      const items = controls();
+      const first = items[0], last = items[items.length - 1];
+      if (!first) { event.preventDefault(); dialog.current.focus(); }
+      else if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    };
+    const node = dialog.current;
+    node.addEventListener("keydown", trap);
+    return () => { node.removeEventListener("keydown", trap); previous?.focus(); };
+  }, [isOpen]);
   // Close on Escape
   useEffect(() => {
     if (!isOpen) return;
@@ -35,11 +55,14 @@ const Modal = ({
     xl: "max-w-2xl",
   };
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
+      aria-labelledby={title ? titleId : undefined}
+      ref={dialog}
+      tabIndex={-1}
     >
       {/* Backdrop */}
       <div
@@ -64,7 +87,7 @@ const Modal = ({
         {(title || onClose) && (
           <div className="shrink-0 flex items-center justify-between px-6 pt-5 pb-4 border-b border-border">
             {title && (
-              <h2 className="text-base font-semibold text-text-primary">{title}</h2>
+              <h2 id={titleId} className="text-base font-semibold text-text-primary">{title}</h2>
             )}
             {onClose && (
               <button
@@ -95,7 +118,8 @@ const Modal = ({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

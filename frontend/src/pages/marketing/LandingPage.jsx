@@ -38,7 +38,7 @@ const Chip = ({ children }) => (
 const PrimaryCta = ({ children = "Get started", className = "" }) => (
   <Link
     to={GETSTARTED_HREF}
-    className={`group inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl bg-primary hover:bg-primary-hover text-black font-semibold shadow-glow-sm hover:shadow-glow hover:-translate-y-px transition-all ${className}`}
+    className={`group inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl bg-primary hover:bg-primary-hover text-on-primary font-semibold shadow-glow-sm hover:shadow-glow hover:-translate-y-px transition-all ${className}`}
   >
     {children} <ArrowRightIcon size={17} className="group-hover:translate-x-0.5 transition-transform" />
   </Link>
@@ -58,7 +58,7 @@ const Hero = () => {
   return (
     <section className="relative overflow-hidden pt-32 sm:pt-40 pb-20 sm:pb-28">
       <BrandOrb className="w-[640px] h-[640px] -top-48 left-1/2 -translate-x-1/2 opacity-70" />
-      <div aria-hidden className="pointer-events-none absolute -right-24 top-64 w-[360px] h-[360px] rounded-full blur-[120px] bg-sky-500/10" style={{ transform: `translateY(${y * -0.06}px)` }} />
+      <div aria-hidden className="pointer-events-none absolute -right-24 top-64 w-[360px] h-[360px] rounded-full blur-[120px] bg-bronze/5" style={{ transform: `translateY(${y * -0.06}px)` }} />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 grid lg:grid-cols-[1.05fr_1fr] gap-12 lg:gap-12 items-center">
         <div className="text-center lg:text-left">
@@ -149,7 +149,7 @@ const Hound = () => (
 );
 
 /* ── Storytelling section (alternating, large visual, horizontal reveal) ── */
-const StorySection = ({ id, eyebrow, title, copy, points, visual, reverse, glow = "bg-primary/10" }) => (
+const StorySection = ({ id, eyebrow, title, copy, points, visual, reverse, glow = "bg-bronze/5" }) => (
   <section id={id} className="relative py-20 sm:py-24 scroll-mt-24">
     <div className="max-w-6xl mx-auto px-4 sm:px-6">
       <div className={`grid lg:grid-cols-2 gap-12 lg:gap-20 items-center ${reverse ? "lg:[&>*:first-child]:order-2" : ""}`}>
@@ -262,7 +262,7 @@ const LandingPage = () => (
         copy="Design personalized programs, save reusable templates, and track every completed set."
         points={["Templates", "One-click assign", "Tracking"]}
         visual={<WorkoutBuilder />}
-        glow="bg-sky-500/10"
+        glow="bg-bronze/5"
       />
       <StorySection
         id="nutrition"
@@ -280,7 +280,7 @@ const LandingPage = () => (
         copy="Weekly photo comparisons and trends turn progress into something clients can see and feel."
         points={["Photo compare", "Trends", "Timelines"]}
         visual={<ProgressCompare />}
-        glow="bg-sky-500/10"
+        glow="bg-bronze/5"
       />
       <StorySection
         id="checkins"
@@ -294,6 +294,12 @@ const LandingPage = () => (
       <FeatureShowcase />
       <Testimonials />
       <FinalCta />
+      <section className="max-w-6xl mx-auto px-5 py-20">
+        <p className="text-primary text-sm font-semibold mb-3">BYOT · BE YOUR OWN TRAINER</p>
+        <h2 className="text-3xl sm:text-4xl font-bold mb-4">Your fitness, on your terms.</h2>
+        <p className="text-text-secondary max-w-2xl mb-6">Free, self-managed fitness tracking. Set your own goals, create weekly nutrition plans and log your daily food. Workouts and progress tools are coming in later phases.</p>
+        <Link to="/byot" className="inline-flex bg-primary text-on-primary rounded-xl px-6 py-3 font-semibold">Get started with BYOT</Link>
+      </section>
     </main>
     <MarketingFooter />
   </div>

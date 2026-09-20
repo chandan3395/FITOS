@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuthContext } from "../../contexts/AuthContext";
 import AuthLayout from "../../components/layouts/AuthLayout";
 import { setAccessToken } from "../../lib/api";
 import authService from "../../services/authService";
 import { ROUTES } from "../../constants/routes";
 
 const dashboardFor = (role) => {
+  if (role === "BYOT") return "/byot";
   if (role === "ADMIN")   return ROUTES.ADMIN_DASHBOARD;
   if (role === "TRAINER") return ROUTES.TRAINER_DASHBOARD;
   if (role === "CLIENT")  return ROUTES.CLIENT_DASHBOARD;
@@ -19,15 +21,19 @@ const dashboardFor = (role) => {
  */
 const GoogleCallbackPage = () => {
   const navigate = useNavigate();
+  const { completeGoogleLogin } = useAuthContext();
+  const started = useRef(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (started.current) return;
+    started.current = true;
     (async () => {
       try {
         const hash = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : "";
         const params = new URLSearchParams(hash);
         const token = params.get("token");
-        const role  = params.get("role");
+
         if (!token) throw new Error("Missing access token in callback URL");
 
         setAccessToken(token);
@@ -38,20 +44,21 @@ const GoogleCallbackPage = () => {
         const me = await authService.getCurrentUser();
         if (!me) throw new Error("Could not load profile");
 
-        navigate(dashboardFor(role || me.role), { replace: true });
+        completeGoogleLogin(me);
+        navigate(dashboardFor(me.role), { replace: true });
       } catch (err) {
         setError(err?.message || "Sign-in failed");
         setTimeout(() => navigate(ROUTES.LOGIN, { replace: true }), 1500);
       }
     })();
-  }, [navigate]);
+  }, [navigate, completeGoogleLogin]);
 
   return (
     <AuthLayout>
       <div className="text-center py-6">
         {error ? (
           <>
-            <p className="text-sm text-red-300 mb-2">{error}</p>
+            <p className="text-sm text-red-700 mb-2">{error}</p>
             <p className="text-[12px] text-text-muted">Redirecting you back to sign-in…</p>
           </>
         ) : (

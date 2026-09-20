@@ -19,14 +19,14 @@ import {
 
 /* ── Section wrapper ─────────────────────────────────────── */
 const Section = ({ id, eyebrow, title, description, children }) => (
-  <section id={id} className="scroll-mt-20 pt-16 pb-20 border-t border-[#111]">
+  <section id={id} className="scroll-mt-20 pt-16 pb-20 border-t border-border">
     <div className="mb-10">
-      <span className="text-[11px] font-semibold text-zinc-600 uppercase tracking-[0.15em]">
+      <span className="text-[11px] font-semibold text-text-secondary uppercase tracking-[0.15em]">
         {eyebrow}
       </span>
-      <h2 className="text-[22px] font-bold text-white mt-2 leading-tight">{title}</h2>
+      <h2 className="text-[22px] font-bold text-text-primary mt-2 leading-tight">{title}</h2>
       {description && (
-        <p className="text-[14px] text-zinc-500 mt-1.5 max-w-lg leading-relaxed">
+        <p className="text-[14px] text-text-secondary mt-1.5 max-w-lg leading-relaxed">
           {description}
         </p>
       )}
@@ -36,7 +36,7 @@ const Section = ({ id, eyebrow, title, description, children }) => (
 );
 
 /* ── Showcase tile ───────────────────────────────────────── */
-const Tile = ({ label, children, dark = false, wide = false }) => (
+const Tile = ({ label, children, wide = false }) => (
   <div
     className={[
       "flex flex-col gap-3",
@@ -45,13 +45,13 @@ const Tile = ({ label, children, dark = false, wide = false }) => (
       .filter(Boolean)
       .join(" ")}
   >
-    <span className="text-[11px] font-medium text-zinc-600 uppercase tracking-[0.12em]">
+    <span className="text-[11px] font-medium text-text-secondary uppercase tracking-[0.12em]">
       {label}
     </span>
     <div
       className={[
-        "rounded-2xl border border-[#1a1a1a] flex items-center justify-center p-6",
-        dark ? "bg-[#050505]" : "bg-[#0a0a0a]",
+        "rounded-2xl border border-border flex items-center justify-center p-6",
+        "bg-surface",
       ].join(" ")}
     >
       {children}
@@ -82,18 +82,18 @@ const DesignSystemPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-bg">
 
       {/* ── Sticky header ─────────────────────────────────── */}
-      <header className="sticky top-0 z-30 border-b border-[#111] bg-black/90 backdrop-blur-md">
+      <header className="sticky top-0 z-30 border-b border-border bg-bg/90 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex items-center justify-between h-14">
             {/* Logo */}
             <div className="flex items-center gap-3">
-              <span className="text-[15px] font-bold text-white tracking-tight">FITOS</span>
-              <span className="h-4 w-px bg-[#222]" />
-              <span className="text-[13px] text-zinc-500">Design System</span>
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#111] border border-[#222] text-zinc-500">
+              <span className="text-[15px] font-bold text-text-primary tracking-tight">FITOS</span>
+              <span className="h-4 w-px bg-surface" />
+              <span className="text-[13px] text-text-secondary">Design System</span>
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-surface border border-border text-text-secondary">
                 v1.0
               </span>
             </div>
@@ -104,7 +104,7 @@ const DesignSystemPage = () => {
                 <a
                   key={id}
                   href={`#${id}`}
-                  className="text-[12px] font-medium text-zinc-500 hover:text-white px-3 py-1.5 rounded-lg hover:bg-white/[0.04] transition-colors"
+                  className="text-[12px] font-medium text-text-secondary hover:text-text-primary px-3 py-1.5 rounded-lg hover:bg-primary/5 transition-colors"
                 >
                   {label}
                 </a>
@@ -116,15 +116,15 @@ const DesignSystemPage = () => {
 
       {/* ── Hero ──────────────────────────────────────────── */}
       <div className="max-w-6xl mx-auto px-6 pt-16 pb-4">
-        <p className="text-[11px] font-semibold text-zinc-600 uppercase tracking-[0.15em] mb-3">
+        <p className="text-[11px] font-semibold text-text-secondary uppercase tracking-[0.15em] mb-3">
           FITOS / Design System
         </p>
-        <h1 className="text-[42px] font-black text-white leading-[1.1] tracking-tight max-w-xl">
+        <h1 className="text-[42px] font-black text-text-primary leading-[1.1] tracking-tight max-w-xl">
           Component<br />Library
         </h1>
-        <p className="text-[15px] text-zinc-500 mt-4 max-w-lg leading-relaxed">
+        <p className="text-[15px] text-text-secondary mt-4 max-w-lg leading-relaxed">
           Production-ready UI components for the FITOS fitness coaching platform.
-          Pure black, Apple-level spacing, zero gradients.
+          Warm ivory, navy actions, white surfaces, and restrained bronze accents.
         </p>
       </div>
 
@@ -271,7 +271,7 @@ const DesignSystemPage = () => {
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Left column */}
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 min-w-0 max-w-full">
               <AlertCard
                 variant="info"
                 title="Sync in progress"
@@ -461,7 +461,7 @@ const DesignSystemPage = () => {
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
             <div>
-              <p className="text-[12px] text-zinc-600 mb-3">Progress photos</p>
+              <p className="text-[12px] text-text-secondary mb-3">Progress photos</p>
               <UploadCard
                 label="Upload Progress Photos"
                 hint="JPG, PNG or HEIC — max 10 MB each"
@@ -470,7 +470,7 @@ const DesignSystemPage = () => {
               />
             </div>
             <div>
-              <p className="text-[12px] text-zinc-600 mb-3">Single document</p>
+              <p className="text-[12px] text-text-secondary mb-3">Single document</p>
               <UploadCard
                 label="Attach Medical Clearance"
                 hint="PDF only — max 5 MB"
@@ -482,7 +482,7 @@ const DesignSystemPage = () => {
 
           {/* Disabled state */}
           <div className="mt-8 max-w-sm">
-            <p className="text-[12px] text-zinc-600 mb-3">Disabled state</p>
+            <p className="text-[12px] text-text-secondary mb-3">Disabled state</p>
             <UploadCard
               label="Upload unavailable"
               hint="Subscription required to upload files"
@@ -502,17 +502,17 @@ const DesignSystemPage = () => {
         >
           {/* Phone-shaped preview */}
           <div className="flex items-start gap-8 flex-wrap">
-            <div className="flex flex-col gap-3">
-              <span className="text-[11px] font-medium text-zinc-600 uppercase tracking-[0.12em]">
-                390 × 84 px frame
+            <div className="flex flex-col gap-3 min-w-0 max-w-full">
+              <span className="text-[11px] font-medium text-text-secondary uppercase tracking-[0.12em]">
+                Responsive 390 × 84 px frame
               </span>
               <div
-                className="border border-[#2a2a2a] rounded-[28px] overflow-hidden"
-                style={{ width: 390 }}
+                className="border border-border rounded-[28px] overflow-hidden"
+                style={{ width: 390, maxWidth: "100%" }}
               >
                 {/* Phone screen stub */}
-                <div className="bg-[#0a0a0a] h-24 flex items-center justify-center">
-                  <span className="text-[12px] text-zinc-700">App content area</span>
+                <div className="bg-surface h-24 flex items-center justify-center">
+                  <span className="text-[12px] text-text-secondary">App content area</span>
                 </div>
                 {/* Nav bar */}
                 <MobileBottomNavigation
@@ -520,14 +520,14 @@ const DesignSystemPage = () => {
                   onTabChange={setActiveNav}
                 />
               </div>
-              <p className="text-[12px] text-zinc-600">
-                Active tab: <span className="text-zinc-400">{activeNav}</span>
+              <p className="text-[12px] text-text-secondary">
+                Active tab: <span className="text-text-secondary">{activeNav}</span>
               </p>
             </div>
 
             {/* States reference */}
             <div className="flex flex-col gap-4 pt-8">
-              <p className="text-[12px] text-zinc-600 uppercase tracking-widest text-[11px]">
+              <p className="text-[12px] text-text-secondary uppercase tracking-widest text-[11px]">
                 Tab states
               </p>
               {["home", "workouts", "progress", "clients", "profile"].map((tab) => (
@@ -536,14 +536,14 @@ const DesignSystemPage = () => {
                     className="rounded-xl border overflow-hidden"
                     style={{ width: 240 }}
                   >
-                    <div className={tab === activeNav ? "bg-[#0a0a0a]" : "bg-[#060606]"}>
+                    <div className={tab === activeNav ? "bg-surface" : "bg-surface"}>
                       <MobileBottomNavigation
                         activeTab={tab}
                         onTabChange={() => {}}
                       />
                     </div>
                   </div>
-                  <span className="text-[11px] text-zinc-600">{tab}</span>
+                  <span className="text-[11px] text-text-secondary">{tab}</span>
                 </div>
               ))}
             </div>
@@ -553,13 +553,13 @@ const DesignSystemPage = () => {
       </main>
 
       {/* ── Footer ────────────────────────────────────────── */}
-      <footer className="border-t border-[#111] mt-8">
+      <footer className="border-t border-border mt-8">
         <div className="max-w-6xl mx-auto px-6 py-8 flex items-center justify-between gap-4 flex-wrap">
-          <p className="text-[12px] text-zinc-700">
-            FITOS Design System · Phase 1 · {new Date().getFullYear()}
+          <p className="text-[12px] text-text-secondary">
+            FITOS Design System · {new Date().getFullYear()}
           </p>
-          <p className="text-[12px] text-zinc-700">
-            8 components · Pure black · Mobile-first
+          <p className="text-[12px] text-text-secondary">
+            8 components · Ivory and navy · Mobile-first
           </p>
         </div>
       </footer>

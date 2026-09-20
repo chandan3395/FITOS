@@ -41,37 +41,29 @@ if (env.ENABLE_GOOGLE_AUTH) {
   const passport = require("../config/passport");
   const { googleCallback } = require("../controllers/auth.controller");
 
-  router.get("/google", (req, res, next) => {
-    // An invite token means this is a client activating from their invite
-    // link — force the CLIENT role and carry the token through OAuth `state`
-    // so the callback can link the Google account to the invited profile.
-    const inviteToken = req.query.invite ? String(req.query.invite) : null;
-    const role = inviteToken
-      ? "CLIENT"
-      : (req.query.role === "TRAINER" ? "TRAINER" : "CLIENT");
-    // The Flutter app starts the flow with ?platform=mobile. Google only
-    // round-trips `state`, so carry it there to read back in the callback and
-    // redirect to the fitos:// deep link. Absent/anything else → web (default).
-    const platform = req.query.platform === "mobile" ? "mobile" : null;
-    const statePayload = { role };
-    if (inviteToken) statePayload.invite = inviteToken;
-    if (platform) statePayload.platform = platform;
-    const state = Buffer.from(JSON.stringify(statePayload)).toString("base64");
-    passport.authenticate("google", {
-      scope: ["profile", "email"],
-      session: false,
-      state,
-    })(req, res, next);
+  const oauthState = require("../utils/oauthState");
+  router.get("/google", authLimiter, async (req, res, next) => {
+    try {
+      const state = await oauthState.begin(req, res);
+      passport.authenticate("google", { scope: ["profile", "email"], session: false, state, prompt: "select_account" })(req, res, next);
+    } catch (err) { next(err); }
   });
-
-  router.get(
-    "/google/callback",
-    passport.authenticate("google", {
-      session: false,
-      failureRedirect: `${env.CLIENT_ORIGIN}/login?error=google_failed`,
-    }),
-    googleCallback
-  );
+  router.get("/google/callback", async (req, res, next) => {
+    try {
+      req.oauthState = await oauthState.consume(req);
+      res.clearCookie(oauthState.COOKIE, { ...oauthState.options, maxAge: undefined });
+      if (!req.oauthState) return res.redirect(`${env.CLIENT_ORIGIN}/byot?error=invalid_state`);
+      passport.authenticate("google", { session: false }, (err, user, info) => {
+        if (err || !user) {
+          const path = req.oauthState.intent === "BYOT" ? "/byot" : "/login";
+          const code = info?.code === "account_conflict" ? "account_conflict" : "google_failed";
+          return res.redirect(`${env.CLIENT_ORIGIN}${path}?error=${code}`);
+        }
+        req.user = user;
+        return googleCallback(req, res, next);
+      })(req, res, next);
+    } catch (err) { next(err); }
+  });
 
   router.get("/google/failure", (_req, res) => {
     res.status(401).json({ success: false, message: "Google authentication failed" });
@@ -81,13 +73,13 @@ if (env.ENABLE_GOOGLE_AUTH) {
     success: false,
     message: "Google sign-in is currently disabled.",
   });
-  router.get("/google",           disabled);
+  router.get("/google", (req, res) => req.query.intent === "byot" ? res.redirect(`${env.CLIENT_ORIGIN}/byot?error=google_disabled`) : disabled(req, res));
   router.get("/google/callback",  disabled);
   router.get("/google/failure",   disabled);
 }
 
-router.post("/refresh", authLimiter, refresh);
-router.post("/logout",  logout);
+router.post("/refresh", require("../middleware/cookieOrigin"), authLimiter, refresh);
+router.post("/logout", require("../middleware/cookieOrigin"), logout);
 
 router.get("/me", authenticate, getCurrentUser);
 

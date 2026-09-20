@@ -20,6 +20,7 @@ const conversationRouter  = require("./conversation.routes");
 
 const router = Router();
 
+router.use("/byot", require("./byot.routes"));
 router.use("/health",           healthRouter);
 router.use("/auth",             authRouter);
 router.use("/clients",          clientRouter);

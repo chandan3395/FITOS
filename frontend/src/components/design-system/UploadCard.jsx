@@ -48,6 +48,16 @@ const UploadCard = ({
     <div className={`flex flex-col gap-3 ${className}`}>
       {/* Drop zone */}
       <div
+        role="button"
+        aria-label={label}
+        aria-disabled={disabled}
+        tabIndex={disabled ? -1 : 0}
+        onKeyDown={(event) => {
+          if (!disabled && (event.key === "Enter" || event.key === " ")) {
+            event.preventDefault();
+            inputRef.current?.click();
+          }
+        }}
         onClick={() => !disabled && inputRef.current?.click()}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
@@ -57,8 +67,8 @@ const UploadCard = ({
           "rounded-2xl border-2 border-dashed py-12 px-6 text-center",
           "transition-all duration-200 cursor-pointer select-none",
           dragging
-            ? "border-white/30 bg-white/[0.04] scale-[0.995]"
-            : "border-[#2a2a2a] hover:border-[#3a3a3a] hover:bg-white/[0.02]",
+            ? "border-primary bg-primary/5 scale-[0.995]"
+            : "border-control hover:border-primary hover:bg-primary/5",
           disabled ? "opacity-40 cursor-not-allowed" : "",
         ]
           .filter(Boolean)
@@ -76,19 +86,19 @@ const UploadCard = ({
 
         {/* Cloud icon */}
         <div
-          className={`text-zinc-600 transition-colors duration-150 ${dragging ? "text-zinc-400" : ""}`}
+          className={`text-text-secondary transition-colors duration-150 ${dragging ? "text-text-secondary" : ""}`}
         >
           <UploadCloudIcon size={36} />
         </div>
 
         {/* Labels */}
         <div className="flex flex-col gap-1">
-          <p className="text-[14px] font-medium text-white">{label}</p>
-          <p className="text-[13px] text-zinc-500">
+          <p className="text-[14px] font-medium text-text-primary">{label}</p>
+          <p className="text-[13px] text-text-secondary">
             Drag and drop, or{" "}
-            <span className="text-white underline underline-offset-2">browse</span>
+            <span className="text-text-primary underline underline-offset-2">browse</span>
           </p>
-          <p className="text-[12px] text-zinc-600 mt-1">{hint}</p>
+          <p className="text-[12px] text-text-secondary mt-1">{hint}</p>
         </div>
       </div>
 
@@ -98,16 +108,16 @@ const UploadCard = ({
           {staged.map((file, idx) => (
             <li
               key={`${file.name}-${idx}`}
-              className="flex items-center gap-3 rounded-xl border border-[#1f1f1f] bg-[#0a0a0a] px-4 py-3"
+              className="flex items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3"
             >
-              <CheckCircleIcon size={14} className="text-emerald-400 shrink-0" />
-              <span className="flex-1 text-[13px] text-zinc-300 truncate">{file.name}</span>
-              <span className="text-[11px] text-zinc-600 shrink-0">
+              <CheckCircleIcon size={14} className="text-emerald-800 shrink-0" />
+              <span className="flex-1 text-[13px] text-text-secondary truncate">{file.name}</span>
+              <span className="text-[11px] text-text-secondary shrink-0">
                 {(file.size / 1024 / 1024).toFixed(1)} MB
               </span>
               <button
                 onClick={() => removeFile(idx)}
-                className="shrink-0 text-zinc-600 hover:text-zinc-400 transition-colors"
+                className="shrink-0 text-text-secondary hover:text-text-secondary transition-colors"
                 aria-label={`Remove ${file.name}`}
               >
                 <XIcon size={12} />

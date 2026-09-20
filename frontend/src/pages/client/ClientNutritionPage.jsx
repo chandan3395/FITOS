@@ -48,9 +48,9 @@ const fmtDay = (d) => {
 };
 
 const MEAL_STATUS = {
-  PENDING:  { label: "Pending review",  cls: "bg-amber-400/10 text-amber-300" },
-  REVIEWED: { label: "Approved ✓",      cls: "bg-emerald-400/10 text-emerald-300" },
-  FLAGGED:  { label: "Needs attention", cls: "bg-red-500/10 text-red-300" },
+  PENDING:  { label: "Pending review",  cls: "bg-amber-400/10 text-amber-800" },
+  REVIEWED: { label: "Approved ✓",      cls: "bg-emerald-400/10 text-emerald-800" },
+  FLAGGED:  { label: "Needs attention", cls: "bg-red-500/10 text-red-700" },
 };
 
 const MealCheckinSection = () => {
@@ -117,7 +117,7 @@ const MealCheckinSection = () => {
                     type="file"
                     accept="image/*"
                     onChange={(e) => setFiles((f) => ({ ...f, [key]: e.target.files?.[0] || null }))}
-                    className="block w-full mt-1 text-[12px] text-text-secondary file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-primary file:text-black file:font-semibold file:text-[12px] file:cursor-pointer"
+                    className="block w-full mt-1 text-[12px] text-text-secondary file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-primary file:text-on-primary file:font-semibold file:text-[12px] file:cursor-pointer"
                   />
                 </label>
               ))}

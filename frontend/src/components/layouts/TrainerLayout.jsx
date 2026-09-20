@@ -38,13 +38,13 @@ const TrainerLayout = () => {
   return (
     <div className="flex min-h-screen bg-bg">
       {/* Sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-20 w-64 flex flex-col bg-surface border-r border-border">
+      <aside className="fixed inset-y-0 left-0 z-20 w-64 hidden md:flex flex-col bg-surface border-r border-border">
         {/* Logo */}
         <div className="flex items-center gap-2.5 h-16 px-5 border-b border-border">
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-glow-sm">
-            <span className="text-black font-extrabold text-base leading-none">F</span>
+            <span className="text-on-primary font-extrabold text-base leading-none">F</span>
           </div>
-          <span className="text-[17px] font-extrabold tracking-tight text-white">FITOS</span>
+          <span className="text-[17px] font-extrabold tracking-tight text-text-primary">FITOS</span>
           <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
             Trainer
           </span>
@@ -88,9 +88,9 @@ const TrainerLayout = () => {
       </aside>
 
       {/* Main */}
-      <div className="flex-1 flex flex-col ml-64">
-        <header className="sticky top-0 z-10 h-16 flex items-center gap-4 px-8 bg-surface/80 backdrop-blur-md border-b border-border">
-          <h1 className="text-[15px] font-semibold text-white">Trainer Portal</h1>
+      <div className="flex-1 min-w-0 flex flex-col md:ml-64">
+        <header className="sticky top-0 z-10 h-16 flex items-center gap-4 px-4 md:px-8 bg-surface/80 backdrop-blur-md border-b border-border">
+          <h1 className="text-[15px] font-semibold text-text-primary">Trainer Portal</h1>
 
           <div className="ml-auto flex items-center gap-3">
             <div className="hidden md:flex items-center gap-2 h-9 w-64 px-3 rounded-xl bg-surface-elevated border border-border text-text-muted">
@@ -101,7 +101,7 @@ const TrainerLayout = () => {
               <span className="text-[13px]">Search…</span>
             </div>
             <button
-              className="relative w-9 h-9 rounded-xl bg-surface-elevated border border-border text-text-secondary hover:text-white hover:border-line-hover flex items-center justify-center transition-colors"
+              className="relative w-9 h-9 rounded-xl bg-surface-elevated border border-border text-text-secondary hover:text-text-primary hover:border-line-hover flex items-center justify-center transition-colors"
               aria-label="Notifications"
             >
               <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
@@ -114,14 +114,22 @@ const TrainerLayout = () => {
                 {initials(user?.name)}
               </div>
               <div className="hidden sm:block leading-tight">
-                <p className="text-[12.5px] font-semibold text-white truncate max-w-[140px]">{user?.name || "Trainer"}</p>
+                <p className="text-[12.5px] font-semibold text-text-primary truncate max-w-[140px]">{user?.name || "Trainer"}</p>
                 <p className="text-[11px] text-text-muted">Trainer</p>
               </div>
             </div>
           </div>
         </header>
 
-        <main className="flex-1 px-8 py-7 animate-fade-in">
+        <nav aria-label="Mobile portal navigation" className="md:hidden grid grid-cols-2 gap-2 p-3 border-b border-border bg-surface">
+          {navItems.map(({ label, to, Icon }) => (
+            <NavLink key={to} to={to} end className={navClass}>
+              <Icon size={17} className="shrink-0" /><span>{label}</span>
+            </NavLink>
+          ))}
+          <button onClick={onLogout} className="rounded-xl border border-control px-3 py-3 text-sm">Sign out</button>
+        </nav>
+        <main className="flex-1 min-w-0 px-4 md:px-8 py-7 animate-fade-in">
           <Outlet />
         </main>
       </div>

@@ -7,36 +7,34 @@
 /* ─── Design tokens ──────────────────────────────────────── */
 @layer base {
   :root {
-    --bg:           #0A0A0A;
-    --surface-1:    #151515;
-    --surface-2:    #1C1C1C;
-    --surface-3:    #232323;
-    --line:         #2A2A2A;
-    --line-hover:   #383838;
-    --line-focus:   #454545;
-
-    --text-1:       #FFFFFF;
-    --text-2:       #B0B0B0;
-    --text-3:       #6E6E6E;
-
-    --accent:       #A6CE39;
-    --accent-hover: #B7DC4E;
-
-    --success-bg:   rgba(34, 197, 94, 0.08);
-    --success-line: rgba(34, 197, 94, 0.18);
-    --success-text: #86efac;
-
-    --warning-bg:   rgba(245, 158, 11, 0.08);
-    --warning-line: rgba(245, 158, 11, 0.18);
-    --warning-text: #fcd34d;
-
-    --danger-bg:    rgba(239, 68, 68, 0.08);
-    --danger-line:  rgba(239, 68, 68, 0.18);
-    --danger-text:  #fca5a5;
-
-    --info-bg:      rgba(59, 130, 246, 0.08);
-    --info-line:    rgba(59, 130, 246, 0.18);
-    --info-text:    #93c5fd;
+    color-scheme: light;
+    --color-page: 247 245 240;
+    --color-surface: 255 255 255;
+    --color-navy: 24 36 56;
+    --color-navy-hover: 36 54 80;
+    --color-secondary: 98 108 126;
+    --color-bronze: 168 137 92;
+    --color-bronze-text: 128 100 62;
+    --color-neutral: 239 238 233;
+    --color-border: 220 221 220;
+    --color-control: 128 133 140;
+    --bg: rgb(var(--color-page));
+    --surface-1: rgb(var(--color-surface));
+    --surface-2: rgb(var(--color-surface));
+    --surface-3: rgb(var(--color-neutral));
+    --line: rgb(var(--color-border));
+    --line-hover: rgb(var(--color-control));
+    --line-focus: rgb(var(--color-navy));
+    --text-1: rgb(var(--color-navy));
+    --text-2: rgb(var(--color-secondary));
+    --text-3: rgb(var(--color-secondary));
+    --accent: rgb(var(--color-navy));
+    --bronze-text: rgb(var(--color-bronze-text));
+    --accent-hover: rgb(var(--color-navy-hover));
+    --success-bg: #F0FDF4; --success-line: #86B99A; --success-text: #166534;
+    --warning-bg: #FFFBEB; --warning-line: #B59352; --warning-text: #92400E;
+    --danger-bg: #FEF2F2; --danger-line: #C78181; --danger-text: #B91C1C;
+    --info-bg: #EFF6FF; --info-line: #7898C7; --info-text: #1D4ED8;
   }
 
   *,
@@ -67,11 +65,11 @@
   ::-webkit-scrollbar       { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
-    background: #2A2A2A;
+    background: var(--line-hover);
     border-radius: 9999px;
     transition: background 0.15s;
   }
-  ::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-2); }
 
   /* ── Focus ring ─── */
   :focus-visible {
@@ -80,8 +78,8 @@
   }
 
   ::selection {
-    background: rgba(166, 206, 57, 0.28);
-    color: #fff;
+    background: rgb(var(--color-navy) / 0.15);
+    color: var(--text-1);
   }
 }
 
@@ -92,7 +90,7 @@
     background: var(--surface-2);
     border: 1px solid var(--line);
     border-radius: 16px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 2px 10px rgba(24, 36, 56, 0.06);
   }
 
   .card-hover {
@@ -101,17 +99,17 @@
 
   .card-hover:hover {
     border-color: var(--line-hover);
-    background: #202020;
+    background: var(--surface-3);
     transform: translateY(-2px);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 12px 32px rgba(24, 36, 56, 0.09);
   }
 
   /* Frosted glass surface (used by Card glass variant / overlays) */
   .glass {
-    background: rgba(28, 28, 28, 0.72);
+    background: rgba(255, 255, 255, 0.94);
     backdrop-filter: blur(14px) saturate(140%);
     -webkit-backdrop-filter: blur(14px) saturate(140%);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--line);
   }
 
   /* Progress bar fill */
@@ -125,19 +123,19 @@
   .progress-fill {
     height: 100%;
     border-radius: 9999px;
-    background: linear-gradient(90deg, #A6CE39, #C7E85A);
+    background: var(--accent);
     transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   /* Animate in */
   @keyframes fade-in {
     from { opacity: 0; transform: translateY(6px); }
-    to   { opacity: 1; transform: translateY(0); }
+    to   { opacity: 1; transform: none; }
   }
 
   @keyframes slide-up {
     from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: translateY(0); }
+    to   { opacity: 1; transform: none; }
   }
 
   @keyframes spin-slow {
@@ -155,9 +153,9 @@
   .animate-spin-slow  { animation: spin-slow 1.4s  linear infinite; }
   .animate-pulse-slow { animation: pulse-slow 2s   ease-in-out infinite; }
 
-  /* Gradient text — FITOS lime (used for the wordmark) */
+  /* Gradient text — bronze accent (used for the wordmark) */
   .gradient-text {
-    background: linear-gradient(135deg, #C7E85A, #A6CE39);
+    background: var(--bronze-text);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -165,6 +163,25 @@
 
   /* Subtle brand-tinted radial wash for hero / empty surfaces */
   .brand-glow {
-    background-image: radial-gradient(60% 80% at 50% 0%, rgba(166, 206, 57, 0.10), transparent 70%);
+    background-image: radial-gradient(60% 80% at 50% 0%, rgba(168, 137, 92, 0.05), transparent 70%);
   }
+}
+
+/* Form boundaries are stronger than decorative card dividers. */
+@layer utilities {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), select[class], textarea[class] {
+    background-color: var(--surface-1);
+    color: var(--text-1);
+    border-color: var(--line-hover);
+    max-width: 100%;
+  }
+  input::placeholder, textarea::placeholder { color: var(--text-2); opacity: 1; }
+  input, select, textarea { accent-color: var(--accent); }
+  :is(button, a, summary).border-border { border-color: var(--line-hover); }
+  input:-webkit-autofill { -webkit-text-fill-color: var(--text-1); box-shadow: 0 0 0 1000px white inset; }
+  :is(input, select, textarea, button, a, [tabindex]):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  :is(button, a):focus-visible { box-shadow: 0 0 0 2px white; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }

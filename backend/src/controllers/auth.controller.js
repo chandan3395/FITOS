@@ -14,6 +14,7 @@ const { env } = require("../config/env");
 const { buildOAuthRedirectUrl } = require("../utils/oauthRedirect");
 const activityService = require("../services/activity.service");
 const accountLinking = require("../services/accountLinking.service");
+const session = require("../utils/session");
 
 const REFRESH_COOKIE = "refreshToken";
 
@@ -41,11 +42,15 @@ function buildSafeUser(user) {
 }
 
 async function issueTokens(user, res) {
-  const accessToken = generateAccessToken(user._id, user.role);
-  const refreshToken = generateRefreshToken(user._id);
-
-  user.refreshToken = refreshToken;
-  await user.save();
+  if (!user.isActive) throw new ApiError(403, "Account disabled");
+  const version = session.versionOf(user);
+  const accessToken = generateAccessToken(user._id, user.role, version);
+  const refreshToken = generateRefreshToken(user._id, version);
+  const saved = await User.updateOne(
+    { _id: user._id, isActive: true, ...session.versionFilter(version) },
+    { $set: { refreshToken } }
+  );
+  if (!saved.matchedCount) throw new ApiError(401, "Session revoked or account disabled");
 
   res.cookie(REFRESH_COOKIE, refreshToken, COOKIE_OPTIONS);
   return accessToken;
@@ -131,24 +136,15 @@ async function login(req, res, next) {
   }
 }
 
-// Decode the base64-JSON OAuth `state` we set on the /google route.
-function decodeState(raw) {
-  try {
-    return JSON.parse(Buffer.from(String(raw || ""), "base64").toString("utf8")) || {};
-  } catch {
-    return {};
-  }
-}
-
 // Redirect helper: hand the access token to the client that started the OAuth
 // flow (never logged server-side). Web gets it on the URL fragment so
 // GoogleCallbackPage can finish sign-in; mobile (platform=mobile, carried
 // through OAuth `state`) gets it on the fitos:// deep link. `req` is required so
-// the helper can read req.query.platform.
+// the helper can read the verified server-side intent.
 function redirectWithToken(req, res, accessToken, role) {
   return res.redirect(
     buildOAuthRedirectUrl({
-      platform: req.query.platform,
+      platform: req.oauthState?.platform,
       accessToken,
       role,
       clientOrigin: env.CLIENT_ORIGIN,
@@ -189,21 +185,18 @@ async function googleCallback(req, res, _next) {
       return res.redirect(`${env.CLIENT_ORIGIN}/account-disabled`);
     }
 
-    const { invite: inviteToken, platform } = decodeState(req.query.state);
-    // Google only round-trips the `state` parameter, not arbitrary query params,
-    // so re-expose the originating platform on req.query for redirectWithToken
-    // (and for the invite-link path below).
-    if (platform) req.query.platform = platform;
-
+    const { invite: inviteToken } = req.oauthState;
     if (inviteToken) {
       return handleInviteLink(req, res, inviteToken);
     }
 
+    if (req.user.role === "BYOT") await require("../services/byot.service").ensureProfile(req.user._id);
     const accessToken = await issueTokens(req.user, res);
     return redirectWithToken(req, res, accessToken, req.user.role);
   } catch (err) {
     // On failure, send the user back to the login page with an error flag.
-    return res.redirect(`${env.CLIENT_ORIGIN}/login?error=google_failed`);
+    const path = req.oauthState?.intent === "BYOT" ? "/byot" : "/login";
+    return res.redirect(`${env.CLIENT_ORIGIN}${path}?error=google_failed`);
   }
 }
 
@@ -304,18 +297,22 @@ async function refresh(req, res, next) {
     }
 
     const user = await User.findById(decoded.userId).select("+refreshToken");
-    if (!user || !user.isActive || user.refreshToken !== token) {
+    if (!user || !user.isActive || user.refreshToken !== token || !session.matches(user, decoded)) {
       throw new ApiError(401, "Unauthorized");
     }
 
-    const accessToken = generateAccessToken(user._id, user.role);
+    const version = session.versionOf(user);
+    const accessToken = generateAccessToken(user._id, user.role, version);
 
     // Rotate the refresh token on every use: a leaked token stops working
     // as soon as the legitimate client refreshes, instead of staying valid
     // for the full 7-day TTL.
-    const newRefreshToken = generateRefreshToken(user._id);
-    user.refreshToken = newRefreshToken;
-    await user.save();
+    const newRefreshToken = generateRefreshToken(user._id, version);
+    const rotated = await User.updateOne(
+      { _id: user._id, isActive: true, refreshToken: token, ...session.versionFilter(version) },
+      { $set: { refreshToken: newRefreshToken } }
+    );
+    if (!rotated.matchedCount) throw new ApiError(401, "Unauthorized");
     res.cookie(REFRESH_COOKIE, newRefreshToken, COOKIE_OPTIONS);
 
     return ApiResponse.ok(res, "Token refreshed", { accessToken });
@@ -430,6 +427,7 @@ async function activateInvite(req, res, next) {
     if (client.userId) {
       // Already activated — just sign them in.
       user = await User.findById(client.userId);
+      if (user && user.role !== "CLIENT") throw new ApiError(409, "Account belongs to another role");
       if (!user) throw new ApiError(500, "Client account record missing");
     } else {
       // First-time activation. An optional display name may be supplied;
@@ -453,6 +451,8 @@ async function activateInvite(req, res, next) {
       const email = invite.email.toLowerCase();
       const existing = await User.findOne({ email });
       if (existing) {
+        if (existing.role !== "CLIENT") throw new ApiError(409, "Account belongs to another role");
+        if (!existing.isActive) throw new ApiError(403, "Account disabled");
         user = existing;
       } else {
         user = await User.create({

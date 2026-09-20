@@ -217,17 +217,17 @@ const ComparePhotos = ({ photos = [] }) => {
             {/* ── Photo area — the hero, the only scroll region ── */}
             <div className="flex-1 min-h-0 overflow-y-auto scroll-smooth px-3 sm:px-6 py-4">
               {aMissing && (
-                <p className="text-[13px] text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 max-w-xl mx-auto text-center">
+                <p className="text-[13px] text-red-700 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 max-w-xl mx-auto text-center">
                   Week {weekA} photos do not exist.
                 </p>
               )}
               {bMissing && (
-                <p className="text-[13px] text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 max-w-xl mx-auto text-center">
+                <p className="text-[13px] text-red-700 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 max-w-xl mx-auto text-center">
                   Week {weekB} photos do not exist.
                 </p>
               )}
               {sameWeek && (
-                <p className="text-[13px] text-amber-300 bg-amber-400/10 border border-amber-400/20 rounded-lg px-3 py-2 max-w-xl mx-auto text-center">
+                <p className="text-[13px] text-amber-800 bg-amber-400/10 border border-amber-400/20 rounded-lg px-3 py-2 max-w-xl mx-auto text-center">
                   Please choose two different weeks.
                 </p>
               )}

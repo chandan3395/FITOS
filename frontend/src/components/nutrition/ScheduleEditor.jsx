@@ -28,7 +28,7 @@ import {
  */
 
 const inputClass =
-  "w-full h-9 px-3 rounded-lg bg-surface border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-[#333]";
+  "w-full h-9 px-3 rounded-lg bg-surface border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-border";
 
 const Chevron = ({ open }) => (
   <svg
@@ -99,7 +99,7 @@ const MealCard = ({ meal, index, onPatch, onRemove, onToggle }) => {
               <select
                 value={meal.mealType}
                 onChange={(e) => onPatch({ mealType: e.target.value })}
-                className="h-9 px-2 rounded-lg bg-surface border border-border text-sm text-text-primary focus:outline-none focus:border-[#333]"
+                className="h-9 px-2 rounded-lg bg-surface border border-border text-sm text-text-primary focus:outline-none focus:border-border"
               >
                 {MEAL_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
               </select>
@@ -117,7 +117,7 @@ const MealCard = ({ meal, index, onPatch, onRemove, onToggle }) => {
               {(meal.dishes || []).map((d, i) => (
                 <span key={i} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-surface border border-border text-[12px] text-text-primary">
                   {d}
-                  <button type="button" onClick={() => removeDish(i)} aria-label={`Remove ${d}`} className="text-text-muted hover:text-red-300">
+                  <button type="button" onClick={() => removeDish(i)} aria-label={`Remove ${d}`} className="text-text-muted hover:text-red-700">
                     <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M12 4L4 12M4 4l8 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
                   </button>
                 </span>
@@ -162,7 +162,7 @@ const DayCard = ({ day, meals, mealsPerDay, onAddMeal, onRemoveDay, onPatchMeal,
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className={`text-[11px] font-medium px-2 py-1 rounded-full ${over ? "bg-amber-400/10 text-amber-300" : "bg-surface text-text-muted"}`}>
+          <span className={`text-[11px] font-medium px-2 py-1 rounded-full ${over ? "bg-amber-400/10 text-amber-800" : "bg-surface text-text-muted"}`}>
             {meals.length} / {Number(mealsPerDay) > 0 ? mealsPerDay : "—"} meals
           </span>
           <Button size="sm" variant="ghost" onClick={() => onRemoveDay(day)}>Remove day</Button>
@@ -242,7 +242,7 @@ const ScheduleEditor = ({ schedule = [], onChange, mealsPerDay }) => {
             value=""
             onChange={(e) => addDay(e.target.value)}
             disabled={available.length === 0}
-            className="h-9 px-2 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary focus:outline-none focus:border-[#333] disabled:opacity-50"
+            className="h-9 px-2 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary focus:outline-none focus:border-border disabled:opacity-50"
           >
             <option value="">{available.length === 0 ? "All days added" : "+ Add a day"}</option>
             {available.map((d) => <option key={d} value={d}>{d}</option>)}

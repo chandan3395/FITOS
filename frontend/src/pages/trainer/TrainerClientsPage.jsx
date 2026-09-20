@@ -35,18 +35,18 @@ function toRow(c) {
 }
 
 const STATUS_META = {
-  active:   { label: "Active",   text: "text-emerald-400", bg: "bg-emerald-400/10", dot: "bg-emerald-400" },
-  pending:  { label: "Pending",  text: "text-amber-400",   bg: "bg-amber-400/10",   dot: "bg-amber-400" },
-  archived: { label: "Archived", text: "text-zinc-500",    bg: "bg-zinc-800",       dot: "bg-zinc-600" },
+  active:   { label: "Active",   text: "text-emerald-800", bg: "bg-emerald-400/10", dot: "bg-emerald-400" },
+  pending:  { label: "Pending",  text: "text-amber-800",   bg: "bg-amber-400/10",   dot: "bg-amber-400" },
+  archived: { label: "Archived", text: "text-text-secondary",    bg: "bg-surface-elevated",       dot: "bg-zinc-600" },
 };
 
 const AVATAR_COLORS = [
   "bg-indigo-500/20 text-indigo-300",
-  "bg-violet-500/20 text-violet-300",
-  "bg-sky-500/20 text-sky-300",
-  "bg-rose-500/20 text-rose-300",
-  "bg-teal-500/20 text-teal-300",
-  "bg-amber-500/20 text-amber-300",
+  "bg-violet-500/20 text-violet-700",
+  "bg-sky-500/20 text-sky-800",
+  "bg-rose-500/20 text-rose-700",
+  "bg-teal-500/20 text-teal-700",
+  "bg-amber-500/20 text-amber-800",
 ];
 const colorFor = (name = "") => AVATAR_COLORS[[...name].reduce((a, c) => a + c.charCodeAt(0), 0) % AVATAR_COLORS.length];
 const initials = (name = "") => name.split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
@@ -54,7 +54,7 @@ const initials = (name = "") => name.split(" ").slice(0, 2).map((w) => w[0]?.toU
 const ChangeBadge = ({ change }) => {
   if (!change) return <span className="text-text-muted">—</span>;
   const up = change > 0;
-  return <span className={up ? "text-red-400" : "text-emerald-400"}>{up ? "+" : ""}{change.toFixed(1)}kg</span>;
+  return <span className={up ? "text-red-700" : "text-emerald-800"}>{up ? "+" : ""}{change.toFixed(1)}kg</span>;
 };
 
 const ClientGridCard = ({ c, onOpen, unread = 0 }) => {
@@ -67,7 +67,7 @@ const ClientGridCard = ({ c, onOpen, unread = 0 }) => {
             {initials(c.name)}
           </div>
           {unread > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-black text-[10px] font-bold leading-none ring-2 ring-card">
+            <span className="absolute -top-1.5 -right-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-on-primary text-[10px] font-bold leading-none ring-2 ring-card">
               {unread > 99 ? "99+" : unread}
             </span>
           )}
@@ -160,7 +160,7 @@ const TrainerClientsPage = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search clients..."
-              className="h-9 w-64 pl-9 pr-3 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-[#333] transition-colors"
+              className="h-9 w-64 pl-9 pr-3 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-border transition-colors"
             />
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted">
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
@@ -185,7 +185,7 @@ const TrainerClientsPage = () => {
               "h-8 px-3.5 rounded-full text-[12.5px] font-medium transition-all duration-150 inline-flex items-center gap-2",
               filter === f.id
                 ? "bg-primary/15 text-primary border border-primary/40"
-                : "bg-surface-elevated border border-border text-text-secondary hover:text-text-primary hover:border-[#333]",
+                : "bg-surface-elevated border border-border text-text-secondary hover:text-text-primary hover:border-border",
             ].join(" ")}
           >
             {f.label}

@@ -39,8 +39,8 @@ async function getCurrentUser() {
  * Always resolves — logout should never block on a server error.
  */
 async function logout() {
-  try { await api.post("/auth/logout"); } catch { /* ignore */ }
   setAccessToken(null);
+  try { await api.post("/auth/logout"); } catch { /* ignore */ }
 }
 
 const authService = { adminLogin, login, getCurrentUser, logout };

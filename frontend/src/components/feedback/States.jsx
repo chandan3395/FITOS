@@ -3,6 +3,7 @@
 // do not introduce any new colors, spacing, or typography.
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Card from "../ui/Card";
 import Button from "../ui/Button";
 
@@ -78,7 +79,7 @@ export const ErrorState = ({ title = "Couldn't load this", message, onRetry }) =
   <Card>
     <div className="py-10 flex flex-col items-center text-center">
       <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-red-300">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-red-700">
           <path d="M12 8v5M12 16.5h.01" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
           <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
         </svg>
@@ -105,10 +106,10 @@ const TOAST_DURATIONS = {
 };
 
 const TOAST_META = {
-  success: "bg-primary/10 border-primary/30 text-primary",
-  info:    "bg-info/10 border-info/30 text-info",
-  warning: "bg-warning/10 border-warning/30 text-warning",
-  error:   "bg-red-500/10 border-red-500/30 text-red-300",
+  success: "bg-green-50 border-green-700/40 text-green-800",
+  info:    "bg-blue-50 border-blue-700/40 text-blue-800",
+  warning: "bg-amber-50 border-amber-700/40 text-amber-800",
+  error:   "bg-red-50 border-red-700/40 text-red-800",
 };
 
 const EXIT_MS = 320; // keep in sync with the toast-out keyframe duration
@@ -144,11 +145,11 @@ export const Toast = ({ kind = "success", message, onDismiss, duration }) => {
   if (!message) return null;
 
   const meta = TOAST_META[norm] || TOAST_META.success;
-  return (
+  return createPortal(
     <div
       role="status"
       aria-live="polite"
-      className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl border text-[13px] font-semibold shadow-card-lg ${meta} ${leaving ? "animate-toast-out" : "animate-toast-in"}`}
+      className={`fixed bottom-6 right-4 sm:right-6 max-w-[calc(100vw-2rem)] z-50 px-4 py-3 rounded-xl border text-[13px] font-semibold shadow-card-lg ${meta} ${leaving ? "animate-toast-out" : "animate-toast-in"}`}
     >
       <div className="flex items-center gap-3">
         <span>{message}</span>
@@ -160,6 +161,7 @@ export const Toast = ({ kind = "success", message, onDismiss, duration }) => {
           ×
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

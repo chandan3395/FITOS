@@ -12,11 +12,11 @@ import {
  * hero visual — no stock imagery.
  * ─────────────────────────────────────────────────────────────── */
 
-/** Ambient lime radial orb for depth behind sections. Decorative. */
+/** Restrained bronze wash for depth behind sections. Decorative. */
 export const BrandOrb = ({ className = "", animate = true }) => (
   <div
     aria-hidden="true"
-    className={`pointer-events-none absolute rounded-full blur-[120px] bg-primary/20 ${animate ? "animate-glow-pulse" : ""} ${className}`}
+    className={`pointer-events-none absolute rounded-full blur-[120px] bg-bronze/5 ${animate ? "animate-glow-pulse" : ""} ${className}`}
   />
 );
 
@@ -35,10 +35,10 @@ const Frame = ({ children, label = "app.fitos.com", className = "" }) => (
 
 const Avatar = ({ name, tone = "sky" }) => {
   const tones = {
-    sky: "bg-sky-500/20 text-sky-300",
-    violet: "bg-violet-500/20 text-violet-300",
-    amber: "bg-amber-500/20 text-amber-300",
-    emerald: "bg-emerald-500/20 text-emerald-300",
+    sky: "bg-sky-500/20 text-sky-800",
+    violet: "bg-violet-500/20 text-violet-700",
+    amber: "bg-amber-500/20 text-amber-800",
+    emerald: "bg-emerald-500/20 text-emerald-800",
     primary: "bg-primary/20 text-primary",
   };
   const initials = name.split(" ").slice(0, 2).map((w) => w[0]).join("");
@@ -51,10 +51,10 @@ const Avatar = ({ name, tone = "sky" }) => {
 
 const Pill = ({ children, tone = "emerald" }) => {
   const tones = {
-    emerald: "bg-emerald-400/10 text-emerald-300",
-    amber: "bg-amber-400/10 text-amber-300",
+    emerald: "bg-emerald-400/10 text-emerald-800",
+    amber: "bg-amber-400/10 text-amber-800",
     primary: "bg-primary/10 text-primary",
-    sky: "bg-sky-400/10 text-sky-300",
+    sky: "bg-sky-400/10 text-sky-800",
   };
   return <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${tones[tone]}`}>{children}</span>;
 };
@@ -141,7 +141,7 @@ export const WorkoutBuilder = () => {
                 transition: `all .5s cubic-bezier(.22,1,.36,1) ${i * 130}ms`,
               }}
             >
-              <span className={`w-4 h-4 rounded-[5px] flex items-center justify-center shrink-0 ${e.done ? "bg-primary text-black" : "border border-text-muted/50"}`}>
+              <span className={`w-4 h-4 rounded-[5px] flex items-center justify-center shrink-0 ${e.done ? "bg-primary text-on-primary" : "border border-text-muted/50"}`}>
                 {e.done && <CheckCircleIcon size={12} />}
               </span>
               <span className="text-[13px] font-medium text-text-primary flex-1">{e.n}</span>
@@ -172,7 +172,7 @@ const Ring = ({ pct = 75, inView }) => {
     <svg width="92" height="92" viewBox="0 0 92 92" className="-rotate-90">
       <circle cx="46" cy="46" r={r} fill="none" stroke="var(--line)" strokeWidth="8" />
       <circle
-        cx="46" cy="46" r={r} fill="none" stroke="#A6CE39" strokeWidth="8" strokeLinecap="round"
+        cx="46" cy="46" r={r} fill="none" stroke="var(--accent)" strokeWidth="8" strokeLinecap="round"
         strokeDasharray={c}
         strokeDashoffset={inView ? c * (1 - pct / 100) : c}
         style={{ transition: "stroke-dashoffset 1.3s cubic-bezier(.22,1,.36,1) .2s" }}
@@ -183,8 +183,8 @@ const Ring = ({ pct = 75, inView }) => {
 
 const MACROS = [
   { label: "Protein", val: 180, unit: "g", pct: 90, color: "bg-primary" },
-  { label: "Carbs", val: 220, unit: "g", pct: 70, color: "bg-sky-400" },
-  { label: "Fats", val: 60, unit: "g", pct: 55, color: "bg-amber-400" },
+  { label: "Carbs", val: 220, unit: "g", pct: 70, color: "bg-sky-700" },
+  { label: "Fats", val: 60, unit: "g", pct: 55, color: "bg-bronze-text" },
 ];
 
 export const MacroRings = () => {
@@ -239,7 +239,7 @@ export const ProgressCompare = () => {
     <div className="relative flex-1 rounded-xl border border-border overflow-hidden bg-surface-elevated aspect-[3/4]">
       <div className="absolute inset-0" style={{ background: `radial-gradient(80% 60% at 50% 30%, ${hue}, transparent 70%)` }} />
       <svg viewBox="0 0 80 110" className="absolute inset-0 w-full h-full opacity-70">
-        <path d="M40 14c5 0 8 4 8 9s-3 8-3 12l4 18-3 22 2 24h-4l-2-22-2 22h-4l2-24-3-22 4-18c0-4-3-7-3-12s3-9 7-9z" fill="rgba(255,255,255,0.10)" />
+        <path d="M40 14c5 0 8 4 8 9s-3 8-3 12l4 18-3 22 2 24h-4l-2-22-2 22h-4l2-24-3-22 4-18c0-4-3-7-3-12s3-9 7-9z" fill="rgba(24,36,56,0.10)" />
       </svg>
       <span className="absolute top-2 left-2"><Pill tone="primary">{week}</Pill></span>
       <span className="absolute bottom-2 left-0 right-0 text-center text-[11px] text-text-secondary font-medium">{label}</span>
@@ -258,7 +258,7 @@ export const ProgressCompare = () => {
         <div className="flex gap-3"
           style={{ opacity: inView ? 1 : 0, transform: inView ? "none" : "scale(.96)", transition: "all .7s cubic-bezier(.22,1,.36,1)" }}>
           <Figure label="Front" week="Week 1" hue="rgba(110,110,110,0.35)" />
-          <Figure label="Front" week="Week 8" hue="rgba(166,206,57,0.30)" />
+          <Figure label="Front" week="Week 8" hue="rgba(24,36,56,0.30)" />
         </div>
         <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-text-muted">
           <span className="w-1.5 h-1.5 rounded-full bg-primary" /> Side-by-side compare · weekly timeline
@@ -271,9 +271,9 @@ export const ProgressCompare = () => {
 /* ── Check-ins (metrics fill) ────────────────────────────────── */
 const METRICS = [
   { label: "Adherence", val: "92%", pct: 92, tone: "bg-primary" },
-  { label: "Sleep", val: "7.4h", pct: 82, tone: "bg-sky-400" },
+  { label: "Sleep", val: "7.4h", pct: 82, tone: "bg-sky-700" },
   { label: "Energy", val: "4 / 5", pct: 80, tone: "bg-emerald-400" },
-  { label: "Stress", val: "Low", pct: 30, tone: "bg-amber-400" },
+  { label: "Stress", val: "Low", pct: 30, tone: "bg-bronze-text" },
 ];
 
 export const CheckinMetrics = () => {
@@ -332,7 +332,7 @@ export const ChatThread = () => {
           return (
             <div key={i} className={`flex ${coach ? "justify-end" : "justify-start"}`}
               style={{ opacity: inView ? 1 : 0, transform: inView ? "none" : "translateY(10px)", transition: `all .5s ease ${i * 220}ms` }}>
-              <div className={`max-w-[78%] px-3.5 py-2 text-[12.5px] leading-relaxed rounded-2xl ${coach ? "bg-primary text-black rounded-br-md" : "bg-surface-elevated border border-border text-text-primary rounded-bl-md"}`}>
+              <div className={`max-w-[78%] px-3.5 py-2 text-[12.5px] leading-relaxed rounded-2xl ${coach ? "bg-primary text-on-primary rounded-br-md" : "bg-surface-elevated border border-border text-text-primary rounded-bl-md"}`}>
                 {m.text}
               </div>
             </div>
@@ -348,7 +348,7 @@ const ACTIVITY = [
   { dot: "bg-primary", text: "Workout plan published for Marcus", t: "2m" },
   { dot: "bg-emerald-400", text: "Priya submitted a check-in", t: "18m" },
   { dot: "bg-violet-400", text: "Aisha uploaded progress photos", t: "1h" },
-  { dot: "bg-sky-400", text: "Meal photo logged by David", t: "3h" },
+  { dot: "bg-sky-700", text: "Meal photo logged by David", t: "3h" },
 ];
 
 export const DashboardMockup = ({ className = "" }) => {

@@ -10,14 +10,14 @@ import SetDetailsEditor from "../../components/workout/SetDetailsEditor";
 import { serializeSetDetails, setDetailsToDraft } from "../../lib/workoutSets";
 
 // ── shared helpers ───────────────────────────────────────────
-const inputClass = "w-full h-9 px-3 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-[#333]";
-const textareaClass = "w-full min-h-[84px] px-3 py-2 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-[#333]";
+const inputClass = "w-full h-9 px-3 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-border";
+const textareaClass = "w-full min-h-[84px] px-3 py-2 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-border";
 
 const DAYS = [1, 2, 3, 4, 5, 6, 7];
 
 const BADGE = {
-  ACTIVE:   { label: "Active",   cls: "bg-emerald-400/10 text-emerald-300" },
-  ARCHIVED: { label: "Archived", cls: "bg-zinc-900 text-zinc-500" },
+  ACTIVE:   { label: "Active",   cls: "bg-emerald-400/10 text-emerald-800" },
+  ARCHIVED: { label: "Archived", cls: "bg-surface-elevated text-text-secondary" },
 };
 const StatusBadge = ({ status }) => {
   const meta = BADGE[status] || BADGE.ACTIVE;

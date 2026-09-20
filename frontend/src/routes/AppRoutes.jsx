@@ -23,6 +23,7 @@ import { RequireAuth } from "../contexts/AuthContext";
 
 // The authenticated app (admin/trainer/client) is code-split so a visitor
 // landing on the public homepage never downloads the dashboard bundles.
+const ByotPortal = lazy(() => import("../pages/byot/ByotPortal"));
 const DesignSystemPage       = lazy(() => import("../pages/DesignSystemPage"));
 const AdminLayout            = lazy(() => import("../components/layouts/AdminLayout"));
 const TrainerLayout          = lazy(() => import("../components/layouts/TrainerLayout"));
@@ -30,6 +31,7 @@ const ClientLayout           = lazy(() => import("../components/layouts/ClientLa
 const AdminDashboard         = lazy(() => import("../pages/admin/AdminDashboard"));
 const AdminTrainersPage      = lazy(() => import("../pages/admin/AdminTrainersPage"));
 const AdminAdminsPage        = lazy(() => import("../pages/admin/AdminAdminsPage"));
+const AdminByotUsersPage      = lazy(() => import("../pages/admin/AdminByotUsersPage"));
 const TrainerDashboard       = lazy(() => import("../pages/trainer/TrainerDashboard"));
 const TrainerClientsPage     = lazy(() => import("../pages/trainer/TrainerClientsPage"));
 const TrainerAddClientPage   = lazy(() => import("../pages/trainer/TrainerAddClientPage"));
@@ -67,12 +69,15 @@ const AppRoutes = () => (
       <Route path={ROUTES.ACCOUNT_DISABLED} element={<AccountDisabledPage />} />
       <Route path={ROUTES.DESIGN_SYSTEM}   element={<DesignSystemPage />} />
 
+      <Route path="/byot/*" element={<ByotPortal />} />
+
       {/* Admin */}
       <Route path="/admin" element={<RequireAuth roles={["ADMIN"]}><AdminLayout /></RequireAuth>}>
         <Route index             element={<Navigate to={ROUTES.ADMIN_DASHBOARD} replace />} />
         <Route path="dashboard"  element={<AdminDashboard />} />
         <Route path="trainers"   element={<AdminTrainersPage />} />
         <Route path="admins"     element={<AdminAdminsPage />} />
+        <Route path="byot-users" element={<AdminByotUsersPage />} />
       </Route>
 
       {/* Trainer */}

@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const { env } = require("../config/env");
 const { User } = require("../schemas/User.schema");
 const ApiError = require("../utils/ApiError");
+const session = require("../utils/session");
 
 /**
  * Authentication middleware — JWT access token only.
@@ -22,12 +23,12 @@ async function authenticate(req, _res, next) {
     const decoded = jwt.verify(token, env.JWT_SECRET);
 
     const user = await User.findById(decoded.userId);
-    if (!user || !user.isActive) {
-      throw new ApiError(401, "Unauthorized");
+    if (!user || !user.isActive || !session.matches(user, decoded)) {
+      throw new ApiError(401, "Session revoked or account disabled. Please sign in again.");
     }
 
     req.user = user;
-    next();
+    session.scope.run({ id: user._id, role: user.role, version: session.versionOf(user) }, next);
   } catch (err) {
     if (err instanceof ApiError) return next(err);
     next(new ApiError(401, "Invalid or expired token"));

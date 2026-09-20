@@ -12,8 +12,8 @@ const FILTERS = [
 
 const StatusBadge = ({ active }) => {
   const meta = active
-    ? { text: "Active",   color: "text-emerald-400", bg: "bg-emerald-400/10", dot: "bg-emerald-400" }
-    : { text: "Inactive", color: "text-zinc-500",    bg: "bg-zinc-800",       dot: "bg-zinc-600" };
+    ? { text: "Active",   color: "text-emerald-800", bg: "bg-emerald-400/10", dot: "bg-emerald-400" }
+    : { text: "Inactive", color: "text-text-secondary",    bg: "bg-surface-elevated",       dot: "bg-zinc-600" };
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium ${meta.color} ${meta.bg}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
@@ -91,7 +91,7 @@ const AdminTrainersPage = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search trainers..."
-            className="h-9 w-64 px-3 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-[#333]"
+            className="h-9 w-64 px-3 rounded-lg bg-surface-elevated border border-border text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-border"
           />
         </div>
       </div>
@@ -105,7 +105,7 @@ const AdminTrainersPage = () => {
               "h-8 px-3.5 rounded-full text-[12.5px] font-medium transition-colors inline-flex items-center gap-2",
               filter === f.id
                 ? "bg-primary/15 text-primary border border-primary/40"
-                : "bg-surface-elevated border border-border text-text-secondary hover:text-text-primary hover:border-[#333]",
+                : "bg-surface-elevated border border-border text-text-secondary hover:text-text-primary hover:border-border",
             ].join(" ")}
           >
             {f.label}

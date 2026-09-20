@@ -17,10 +17,10 @@ import checkinService from "../../services/checkinService";
 import activityService from "../../services/activityService";
 
 const QUICK_ACTIONS = [
-  { label: "Add Client",       Icon: UsersIcon,       accent: "bg-emerald-500/10 text-emerald-300", to: `${ROUTES.TRAINER_CLIENTS}/new` },
+  { label: "Add Client",       Icon: UsersIcon,       accent: "bg-emerald-500/10 text-emerald-800", to: `${ROUTES.TRAINER_CLIENTS}/new` },
   { label: "Review Check-ins", Icon: CheckCircleIcon, accent: "bg-primary/10 text-primary",         to: ROUTES.TRAINER_CHECKINS },
-  { label: "All Clients",      Icon: ChartBarIcon,    accent: "bg-violet-500/10 text-violet-300",   to: ROUTES.TRAINER_CLIENTS },
-  { label: "Schedule",         Icon: BoltIcon,        accent: "bg-amber-500/10 text-amber-300",     to: ROUTES.TRAINER_SCHEDULE },
+  { label: "All Clients",      Icon: ChartBarIcon,    accent: "bg-violet-500/10 text-violet-700",   to: ROUTES.TRAINER_CLIENTS },
+  { label: "Schedule",         Icon: BoltIcon,        accent: "bg-amber-500/10 text-amber-800",     to: ROUTES.TRAINER_SCHEDULE },
 ];
 
 function formatRelative(iso) {
@@ -185,7 +185,7 @@ const TrainerDashboard = () => {
               <button
                 key={q.label}
                 onClick={() => navigate(q.to)}
-                className="group flex flex-col items-center justify-center gap-3 py-6 rounded-xl bg-surface-elevated/40 border border-border hover:border-[#333] hover:bg-surface-elevated transition-all duration-150"
+                className="group flex flex-col items-center justify-center gap-3 py-6 rounded-xl bg-surface-elevated/40 border border-border hover:border-border hover:bg-surface-elevated transition-all duration-150"
               >
                 <span className={`w-10 h-10 rounded-xl flex items-center justify-center ${q.accent} group-hover:scale-105 transition-transform`}>
                   <q.Icon size={20} />
@@ -250,14 +250,14 @@ const TrainerDashboard = () => {
                   <button
                     key={cl._id}
                     onClick={() => navigate(`/trainer/client/${cl._id}`)}
-                    className="w-full text-left p-3 rounded-lg bg-surface-elevated/40 border border-border hover:border-[#333] hover:bg-surface-elevated transition-all"
+                    className="w-full text-left p-3 rounded-lg bg-surface-elevated/40 border border-border hover:border-border hover:bg-surface-elevated transition-all"
                   >
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-semibold text-text-primary">{cl.name}</p>
                         <p className="text-[12px] text-text-muted">{cl.goal || "No goal set"}</p>
                       </div>
-                      <span className="text-[11px] text-amber-300 font-medium">
+                      <span className="text-[11px] text-amber-800 font-medium">
                         {cl.daysSince === null ? "No check-ins" : `${cl.daysSince}d`}
                       </span>
                     </div>

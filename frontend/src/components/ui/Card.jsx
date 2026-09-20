@@ -16,6 +16,14 @@ const Card = ({
   return (
     <div
       onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (event) => {
+        if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) {
+          event.preventDefault();
+          onClick(event);
+        }
+      } : undefined}
       className={[
         "rounded-2xl border border-border",
         glass ? "glass" : "bg-card",

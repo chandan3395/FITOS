@@ -17,7 +17,7 @@ import { MAX_SETS, hasSetDetails, exerciseSummary, buildRows } from "../../lib/w
  */
 
 const cell =
-  "w-full h-8 px-2 rounded-md bg-surface border border-border text-[13px] text-text-primary focus:outline-none focus:border-[#333]";
+  "w-full h-8 px-2 rounded-md bg-surface border border-border text-[13px] text-text-primary focus:outline-none focus:border-border";
 const label = "text-[11px] uppercase tracking-wider text-text-muted";
 
 const clampSets = (n) => Math.max(1, Math.min(MAX_SETS, Math.round(Number(n) || 1)));
