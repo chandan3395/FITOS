@@ -31,13 +31,20 @@ export const setAccessToken = (token) => {
 };
 
 // ─────────────────────────────────────────────────────────────
-// Axios instance. Locally (VITE_API_URL unset) the relative "/api"
-// base works via the Vite dev proxy. In production (e.g. Vercel) the
-// frontend and backend are on different origins, so VITE_API_URL must
-// point at the full backend base URL. `withCredentials` is required to
-// send the refresh cookie cross-origin.
+// Axios instance. Web production uses the frontend's /api reverse proxy so
+// the HttpOnly refresh cookie remains first-party. Direct cross-origin API
+// traffic is an explicit escape hatch for local fixtures and deployments
+// that have deliberately provided an equivalent cookie-compatible setup.
 // ─────────────────────────────────────────────────────────────
-export const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
+const configuredApiBase = import.meta.env.VITE_API_URL || "/api";
+export const API_BASE_URL =
+  import.meta.env.PROD && import.meta.env.VITE_DIRECT_CROSS_ORIGIN_API !== "true"
+    ? "/api"
+    : configuredApiBase;
+
+const REFRESH_TIMEOUT_MS = 60000;
+
+export const isSessionRejection = (error) => error?.response?.status === 401;
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -68,15 +75,18 @@ export const setUnauthorizedHandler = (fn) => {
   onUnauthorized = fn;
 };
 
-async function refreshAccessToken() {
+export async function refreshAccessToken() {
   const epoch = sessionEpoch;
-  // raw axios — no interceptors, no Authorization header. Uses the same
-  // base URL as the shared instance so it hits the backend in production
-  // (not the Vercel origin) rather than a hardcoded "/api" prefix.
+  // Raw axios: no interceptors and no Authorization header. It uses the same
+  // base URL as the shared instance, including the production /api proxy.
   const res = await axios.post(
     `${API_BASE_URL}/auth/refresh`,
     {},
-    { withCredentials: true, timeout: 15000, headers: { "X-FITOS-CSRF": "1" } }
+    {
+      withCredentials: true,
+      timeout: REFRESH_TIMEOUT_MS,
+      headers: { "X-FITOS-CSRF": "1" },
+    }
   );
   const next = res?.data?.data?.accessToken;
   if (!next) throw new Error("Refresh returned no token");
@@ -122,8 +132,13 @@ api.interceptors.response.use(
       return api(original);
     } catch (refreshErr) {
       if (original._sessionEpoch !== sessionEpoch) return Promise.reject(refreshErr);
-      setAccessToken(null);
-      if (onUnauthorized) onUnauthorized();
+      // A missing/expired/revoked refresh credential is terminal. Network
+      // errors, cold starts, 429s and 5xx responses are recoverable and must
+      // not erase a still-valid browser session.
+      if (isSessionRejection(refreshErr)) {
+        setAccessToken(null);
+        if (onUnauthorized) onUnauthorized();
+      }
       return Promise.reject(refreshErr);
     }
   }

@@ -121,7 +121,15 @@ function Onboarding({ onSave }) {
   );
 }
 export default function ByotPortal() {
-  const { user, isReady, isAuthenticated, logout, error: sessionError } = useAuthContext();
+  const {
+    user,
+    isReady,
+    isAuthenticated,
+    logout,
+    error: sessionError,
+    retrySession,
+    sessionRecoverable,
+  } = useAuthContext();
   const location = useLocation();
   const [nutritionDirty, setNutritionDirty] = useState(false);
   const [workoutDirty, setWorkoutDirty] = useState(false);
@@ -159,6 +167,18 @@ export default function ByotPortal() {
       <div className="min-h-screen bg-bg text-text-primary p-10" role="status">
         Loading your session…
       </div>
+    );
+  if (sessionRecoverable)
+    return (
+      <main className="min-h-screen bg-bg text-text-primary px-5 py-16">
+        <div className="mx-auto max-w-sm rounded-2xl border border-border bg-surface p-6 text-center shadow-card">
+          <h1 className="text-xl font-semibold">Session temporarily unavailable</h1>
+          <p className="mt-2 text-sm text-text-secondary">{sessionError}</p>
+          <button type="button" className={`${button} mt-5`} onClick={retrySession}>
+            Try again
+          </button>
+        </div>
+      </main>
     );
   if (!isAuthenticated || user?.role !== "BYOT")
     return (

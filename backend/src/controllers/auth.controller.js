@@ -15,21 +15,15 @@ const { buildOAuthRedirectUrl } = require("../utils/oauthRedirect");
 const activityService = require("../services/activity.service");
 const accountLinking = require("../services/accountLinking.service");
 const session = require("../utils/session");
+const { REFRESH_COOKIE, refreshCookieOptions } = require("../utils/refreshCookie");
 
-const REFRESH_COOKIE = "refreshToken";
-
-// In production the frontend and backend are served from different domains,
-// so the refresh cookie must be SameSite=None + Secure to survive the Google
-// OAuth cross-site redirect. In development they share localhost, so Lax +
-// non-secure keeps the cookie working over plain HTTP.
-const IS_PROD = env.NODE_ENV === "production";
-const COOKIE_OPTIONS = {
-  httpOnly: true,
-  secure: IS_PROD,
-  sameSite: IS_PROD ? "none" : "lax",
-  // Persist across browser restarts, matching the 7-day refresh-token TTL.
-  maxAge: 7 * 24 * 60 * 60 * 1000,
-};
+// The production web client reaches auth through its same-origin /api proxy.
+// Lax therefore protects the credential from ordinary cross-site requests and
+// still permits Google's top-level OAuth callback. Secure is required on HTTPS.
+// Persist across browser restarts, matching the 7-day refresh-token TTL. The
+// narrow explicit path prevents proxy/browser defaults from scoping the
+// callback credential incorrectly or exposing it to unrelated API routes.
+const COOKIE_OPTIONS = refreshCookieOptions(env.NODE_ENV);
 
 function buildSafeUser(user) {
   return {

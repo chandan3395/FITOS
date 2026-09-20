@@ -3,6 +3,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import authService from "../services/authService";
 import api, {
   getAccessToken,
+  isSessionRejection,
   setAccessToken,
   setUnauthorizedHandler,
 } from "../lib/api";
@@ -15,12 +16,14 @@ const STATUS = {
   LOADING: "loading",   // bootstrapping session
   AUTHED:  "authed",
   GUEST:   "guest",
+  RECOVERABLE: "recoverable",
 };
 
 export const AuthProvider = ({ children }) => {
   const [user,   setUser]   = useState(null);
   const [status, setStatus] = useState(STATUS.IDLE);
   const [error,  setError]  = useState(null);
+  const [bootstrapAttempt, setBootstrapAttempt] = useState(0);
 
   // ── Bootstrap ───────────────────────────────────────────────
   // On load: if there's no access token in memory, attempt a silent
@@ -29,6 +32,7 @@ export const AuthProvider = ({ children }) => {
     if (window.location.pathname === "/auth/google/callback") { setStatus(STATUS.GUEST); return; }
     let cancelled = false;
     setStatus(STATUS.LOADING);
+    setError(null);
 
     (async () => {
       try {
@@ -40,10 +44,15 @@ export const AuthProvider = ({ children }) => {
             const r = await api.post("/auth/refresh", {});
             const next = r?.data?.data?.accessToken;
             if (next) setAccessToken(next);
-          } catch {
+          } catch (err) {
             if (!cancelled) {
               setUser(null);
-              setStatus(STATUS.GUEST);
+              if (isSessionRejection(err)) {
+                setStatus(STATUS.GUEST);
+              } else {
+                setError("FITOS could not restore your session. Check your connection and try again.");
+                setStatus(STATUS.RECOVERABLE);
+              }
             }
             return;
           }
@@ -58,15 +67,20 @@ export const AuthProvider = ({ children }) => {
           setUser(null);
           setStatus(STATUS.GUEST);
         }
-      } catch {
+      } catch (err) {
         if (cancelled) return;
-        setUser(null);
-        setStatus(STATUS.GUEST);
+        if (isSessionRejection(err)) {
+          setUser(null);
+          setStatus(STATUS.GUEST);
+        } else {
+          setError("FITOS could not restore your session. Check your connection and try again.");
+          setStatus(STATUS.RECOVERABLE);
+        }
       }
     })();
 
     return () => { cancelled = true; };
-  }, []);
+  }, [bootstrapAttempt]);
 
   // No messaging connection for BYOT. Check revocation on resume and once per minute.
   useEffect(() => {
@@ -136,6 +150,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const completeGoogleLogin = useCallback((me) => { setError(null); setUser(me); setStatus(STATUS.AUTHED); }, []);
+  const retrySession = useCallback(() => setBootstrapAttempt((value) => value + 1), []);
 
   const value = {
     user,
@@ -147,6 +162,8 @@ export const AuthProvider = ({ children }) => {
     adminLogin,
     login,
     logout,
+    retrySession,
+    sessionRecoverable: status === STATUS.RECOVERABLE,
   };
 
   return <AuthContext.Provider value={value}><Fragment key={user?._id || "guest"}>{children}</Fragment></AuthContext.Provider>;
@@ -162,13 +179,31 @@ export const useAuthContext = () => {
 // Route guards — keep them colocated so they share AuthContext.
 // ─────────────────────────────────────────────────────────────
 export const RequireAuth = ({ roles, children }) => {
-  const { isAuthenticated, isReady, user } = useAuthContext();
+  const { error, isAuthenticated, isReady, retrySession, sessionRecoverable, user } = useAuthContext();
   const location = useLocation();
 
   if (!isReady) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-bg">
         <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin-slow" />
+      </div>
+    );
+  }
+
+  if (sessionRecoverable) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-bg px-5">
+        <div className="w-full max-w-sm rounded-2xl border border-border bg-surface p-6 text-center shadow-card">
+          <h1 className="text-xl font-semibold text-text-primary">Session temporarily unavailable</h1>
+          <p className="mt-2 text-sm text-text-secondary">{error}</p>
+          <button
+            type="button"
+            onClick={retrySession}
+            className="mt-5 min-h-11 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            Try again
+          </button>
+        </div>
       </div>
     );
   }
