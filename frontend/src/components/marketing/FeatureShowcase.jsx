@@ -6,6 +6,7 @@ import {
   ClipboardCheckIcon, RadarIcon, ChatIcon, GridIcon, HeartPulseIcon,
 } from "./MarketingIcons";
 import { CheckCircleIcon, FlameIcon, BoltIcon } from "../design-system/Icons";
+import EditorialLabel from "./EditorialLabel";
 
 const INTERVAL = 3200;
 
@@ -265,9 +266,7 @@ const FeatureShowcase = () => {
       <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[640px] h-[640px] rounded-full blur-[130px] bg-bronze/5" />
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
         <Reveal className="text-center mb-16">
-          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary text-[11.5px] font-semibold tracking-[0.14em] uppercase">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary" /> The Product
-          </span>
+          <EditorialLabel>The Product</EditorialLabel>
           <h2 className="mt-5 text-3xl sm:text-5xl font-bold tracking-tight text-text-primary">Built to be felt, not read.</h2>
           <p className="mt-4 text-text-secondary max-w-xl mx-auto leading-relaxed">Hover any feature to see it come alive on the device.</p>
         </Reveal>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import MarketingNav from "../../components/marketing/MarketingNav";
 import MarketingFooter from "../../components/marketing/MarketingFooter";
 import Reveal from "../../components/marketing/Reveal";
+import EditorialLabel from "../../components/marketing/EditorialLabel";
 
 const FAQS = [
   { q: "Who is FITOS for?", a: "Fitness professionals — personal trainers, online coaches, gym owners, and coaching teams who manage clients and want one organized system." },
@@ -20,9 +21,7 @@ const FAQPage = () => {
       <MarketingNav />
       <main className="max-w-3xl mx-auto px-4 sm:px-6 pt-32 sm:pt-40 pb-28">
         <Reveal className="text-center mb-12">
-          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary text-[11.5px] font-semibold tracking-[0.12em] uppercase">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary" /> FAQ
-          </span>
+          <EditorialLabel>FAQ</EditorialLabel>
           <h1 className="mt-5 text-4xl sm:text-5xl font-extrabold tracking-tight">Questions, answered.</h1>
           <p className="mt-4 text-text-secondary max-w-xl mx-auto leading-relaxed">
             Everything you need to know about coaching with FITOS.

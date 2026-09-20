@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { ROUTES } from "../../constants/routes";
+import FitosWordmark from "../branding/FitosWordmark";
 
 const COLUMNS = [
   {
@@ -43,12 +44,7 @@ const MarketingFooter = () => (
       <div className="grid grid-cols-2 md:grid-cols-5 gap-10">
         {/* Brand */}
         <div className="col-span-2">
-          <div className="flex items-center gap-2.5 mb-3">
-            <span className="w-8 h-8 rounded-lg bg-white flex items-center justify-center">
-              <span className="text-primary font-extrabold text-base leading-none">F</span>
-            </span>
-            <span className="text-lg font-extrabold tracking-tight text-on-primary">FITOS</span>
-          </div>
+          <FitosWordmark className="mb-3 text-lg text-on-primary" />
           <p className="text-sm text-on-primary/80 max-w-xs leading-relaxed">
             The coaching CRM that runs your entire fitness business — clients, programming, accountability, and growth in one place.
           </p>

@@ -4,6 +4,7 @@ import MarketingFooter from "../marketing/MarketingFooter";
 import Reveal from "../marketing/Reveal";
 import Seo from "../Seo";
 import { ROUTES } from "../../constants/routes";
+import EditorialLabel from "../marketing/EditorialLabel";
 
 /**
  * PublicPageLayout — shared shell for the public, no-auth-required content
@@ -43,9 +44,7 @@ const PublicPageLayout = ({
         </p>
 
         {eyebrow && (
-          <span className="mt-5 inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary text-[11.5px] font-semibold tracking-[0.12em] uppercase">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary" /> {eyebrow}
-          </span>
+          <EditorialLabel className="mt-5">{eyebrow}</EditorialLabel>
         )}
 
         <h1 className="mt-4 text-3xl sm:text-4xl font-extrabold tracking-tight">{title}</h1>

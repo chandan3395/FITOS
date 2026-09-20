@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { ROUTES } from "../constants/routes";
+import RouteScrollManager from "../components/routing/RouteScrollManager";
 
 // Public/auth entry points stay eager — they're small and on the critical
 // path (the marketing site, legal pages, and sign-in must paint instantly).
@@ -52,8 +53,10 @@ const RouteFallback = () => (
 );
 
 const AppRoutes = () => (
-  <Suspense fallback={<RouteFallback />}>
-    <Routes>
+  <>
+    <RouteScrollManager />
+    <Suspense fallback={<RouteFallback />}>
+      <Routes>
       {/* Public marketing site is the root; login lives at /login. */}
       <Route path={ROUTES.HOME}            element={<LandingPage />} />
       <Route path={ROUTES.ABOUT}           element={<AboutPage />} />
@@ -105,8 +108,9 @@ const AppRoutes = () => (
       {/* 404 */}
       <Route path={ROUTES.NOT_FOUND} element={<NotFound />} />
       <Route path="*"                element={<Navigate to={ROUTES.NOT_FOUND} replace />} />
-    </Routes>
-  </Suspense>
+      </Routes>
+    </Suspense>
+  </>
 );
 
 export default AppRoutes;

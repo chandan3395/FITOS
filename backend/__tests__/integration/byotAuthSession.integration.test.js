@@ -31,10 +31,11 @@ let mongo;
 let requestCounter = 20;
 const nextIp = () => `127.0.0.${requestCounter++}`;
 
-const profile = (email, id = email) => ({
+const profile = (email, id = email, photo = "https://lh3.googleusercontent.com/test-avatar") => ({
   id,
   displayName: "BYOT Session Test",
   emails: [{ value: email }],
+  photos: photo ? [{ value: photo }] : [],
   _json: { email_verified: true },
 });
 
@@ -79,6 +80,7 @@ describe("BYOT Google session lifecycle", () => {
 
     const user = await User.findOne({ email }).select("+refreshToken");
     expect(user.role).toBe("BYOT");
+    expect(user.profileImage).toBe("https://lh3.googleusercontent.com/test-avatar");
     expect(user.refreshToken).toEqual(expect.any(String));
     expect(await ByotProfile.countDocuments({ ownerId: user._id })).toBe(1);
 
@@ -102,6 +104,28 @@ describe("BYOT Google session lifecycle", () => {
     expect(await User.countDocuments({ email })).toBe(1);
     expect(String((await User.findOne({ email }))._id)).toBe(String(original._id));
     expect(await ByotProfile.countDocuments({ ownerId: original._id })).toBe(1);
+  });
+
+  it("updates a returning user's photo from the verified Google profile", async () => {
+    const email = uniqEmail("byot-google-photo");
+    const id = `google-${email}`;
+    await googleLogin(request.agent(app), profile(email, id, "https://lh3.googleusercontent.com/old-photo"));
+
+    const callback = await googleLogin(
+      request.agent(app),
+      profile(email, id, "https://lh3.googleusercontent.com/new-photo")
+    );
+    const accessToken = new URLSearchParams(new URL(callback.headers.location).hash.slice(1)).get(
+      "token"
+    );
+    const current = await request(app)
+      .get("/api/auth/me")
+      .set("Authorization", `Bearer ${accessToken}`);
+
+    expect(current.status).toBe(200);
+    expect(current.body.user.profileImage).toBe(
+      "https://lh3.googleusercontent.com/new-photo"
+    );
   });
 
   it.each(["ADMIN", "TRAINER", "CLIENT"])(

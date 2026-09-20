@@ -7,7 +7,6 @@ import {
   CheckCircleIcon,
   ChartBarIcon,
   WarningIcon,
-  BoltIcon,
 } from "../../components/design-system/Icons";
 import { ROUTES } from "../../constants/routes";
 import { SkeletonGrid, ErrorState } from "../../components/feedback/States";
@@ -20,7 +19,6 @@ const QUICK_ACTIONS = [
   { label: "Add Client",       Icon: UsersIcon,       accent: "bg-emerald-500/10 text-emerald-800", to: `${ROUTES.TRAINER_CLIENTS}/new` },
   { label: "Review Check-ins", Icon: CheckCircleIcon, accent: "bg-primary/10 text-primary",         to: ROUTES.TRAINER_CHECKINS },
   { label: "All Clients",      Icon: ChartBarIcon,    accent: "bg-violet-500/10 text-violet-700",   to: ROUTES.TRAINER_CLIENTS },
-  { label: "Schedule",         Icon: BoltIcon,        accent: "bg-amber-500/10 text-amber-800",     to: ROUTES.TRAINER_SCHEDULE },
 ];
 
 function formatRelative(iso) {

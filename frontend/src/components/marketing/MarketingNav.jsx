@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ROUTES } from "../../constants/routes";
 import { useAuthContext } from "../../contexts/AuthContext";
+import FitosWordmark from "../branding/FitosWordmark";
 
 const NAV_LINKS = [
   { label: "About", href: "/#about" },
@@ -14,11 +15,8 @@ const NAV_LINKS = [
 export const GETSTARTED_HREF = ROUTES.LOGIN;
 
 const Wordmark = () => (
-  <Link to={ROUTES.HOME} className="flex items-center gap-2.5 shrink-0" aria-label="FITOS home">
-    <span className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-glow-sm">
-      <span className="text-on-primary font-extrabold text-base leading-none">F</span>
-    </span>
-    <span className="text-lg font-extrabold tracking-tight text-text-primary">FITOS</span>
+  <Link to={ROUTES.HOME} className="shrink-0" aria-label="FITOS home">
+    <FitosWordmark className="text-lg text-text-primary" />
   </Link>
 );
 

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import UserAvatar from "../../components/ui/UserAvatar";
 import Card from "../../components/ui/Card";
 import { CheckCircleIcon, FlameIcon, CalendarIcon } from "../../components/design-system/Icons";
 import { useAuthContext } from "../../contexts/AuthContext";
@@ -65,7 +66,6 @@ const ACTIVITY_META = {
 const ClientDashboard = () => {
   const { user } = useAuthContext();
   const firstName = (user?.name || "there").split(" ")[0];
-  const initials  = (user?.name || "?").split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase()).join("");
 
   const [workouts,    setWorkouts]    = useState([]);
   const [completions, setCompletions] = useState([]);
@@ -177,9 +177,7 @@ const ClientDashboard = () => {
       <Card>
         <div className="flex items-center justify-between gap-6 flex-wrap">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-sky-500/15 text-sky-800 flex items-center justify-center text-base font-bold">
-              {initials}
-            </div>
+            <UserAvatar user={user} className="h-12 w-12" fallback="C" />
             <div>
               <h2 className="text-xl font-semibold text-text-primary">Hey {firstName}! 👋</h2>
               <p className="text-sm text-text-secondary mt-0.5">{DAY_NAMES[currentDay]} · Let&apos;s make it count.</p>

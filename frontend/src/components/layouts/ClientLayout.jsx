@@ -9,8 +9,8 @@ import {
 } from "../design-system/Icons";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { useUnread } from "../../contexts/UnreadContext";
-
-const initials = (name = "") => name.split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("") || "C";
+import FitosWordmark from "../branding/FitosWordmark";
+import UserAvatar from "../ui/UserAvatar";
 
 const navItems = [
   { label: "Home",      to: ROUTES.CLIENT_DASHBOARD, Icon: HomeIcon },
@@ -41,10 +41,7 @@ const ClientLayout = () => {
     <div className="flex min-h-screen bg-bg">
       <aside className="fixed inset-y-0 left-0 z-20 w-64 hidden md:flex flex-col bg-surface border-r border-border">
         <div className="flex items-center gap-2.5 h-16 px-5 border-b border-border">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-glow-sm">
-            <span className="text-on-primary font-extrabold text-base leading-none">F</span>
-          </div>
-          <span className="text-[17px] font-extrabold tracking-tight text-text-primary">FITOS</span>
+          <FitosWordmark className="text-[17px] text-text-primary" />
           <span className="ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
             Client
           </span>
@@ -72,9 +69,7 @@ const ClientLayout = () => {
         </nav>
 
         <div className="border-t border-border px-4 py-3 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-primary/15 text-primary flex items-center justify-center text-[12px] font-bold ring-1 ring-primary/20">
-            {initials(user?.name)}
-          </div>
+          <UserAvatar user={user} fallback="C" />
           <div className="leading-tight min-w-0 flex-1">
             <p className="text-[13px] font-semibold text-text-primary truncate">{user?.name || "Client"}</p>
             <p className="text-[11px] text-text-muted truncate">{user?.email || "—"}</p>
@@ -97,19 +92,8 @@ const ClientLayout = () => {
           <h1 className="text-[15px] font-semibold text-text-primary">Client Portal</h1>
 
           <div className="ml-auto flex items-center gap-3">
-            <button
-              className="relative w-9 h-9 rounded-xl bg-surface-elevated border border-border text-text-secondary hover:text-text-primary hover:border-line-hover flex items-center justify-center transition-colors"
-              aria-label="Notifications"
-            >
-              <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
-                <path d="M9 2a4 4 0 00-4 4c0 4-1.5 5-1.5 5h11S13 10 13 6a4 4 0 00-4-4zM7.5 14.5a1.5 1.5 0 003 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-primary" />
-            </button>
             <div className="flex items-center gap-2.5 pl-1">
-              <div className="w-8 h-8 rounded-full bg-primary/15 text-primary flex items-center justify-center text-[11px] font-bold ring-1 ring-primary/20">
-                {initials(user?.name)}
-              </div>
+              <UserAvatar user={user} className="h-8 w-8" fallback="C" />
               <div className="hidden sm:block leading-tight">
                 <p className="text-[12.5px] font-semibold text-text-primary truncate max-w-[140px]">{user?.name || "Client"}</p>
                 <p className="text-[11px] text-text-muted">Client</p>

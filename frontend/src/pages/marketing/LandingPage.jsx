@@ -11,6 +11,7 @@ import {
 import { AlertFeed } from "../../components/marketing/MarketingScenes";
 import FeatureShowcase from "../../components/marketing/FeatureShowcase";
 import { ArrowRightIcon, StarIcon } from "../../components/marketing/MarketingIcons";
+import EditorialLabel from "../../components/marketing/EditorialLabel";
 
 const IMG = {
   about: "/marketing/training.jpg",
@@ -24,9 +25,7 @@ const IMG = {
 
 /* ── shared bits ─────────────────────────────────────────────── */
 const Eyebrow = ({ children }) => (
-  <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary text-[11.5px] font-semibold tracking-[0.12em] uppercase">
-    <span className="w-1.5 h-1.5 rounded-full bg-primary" /> {children}
-  </span>
+  <EditorialLabel>{children}</EditorialLabel>
 );
 
 const Chip = ({ children }) => (
@@ -172,14 +171,14 @@ const StorySection = ({ id, eyebrow, title, copy, points, visual, reverse, glow 
   </section>
 );
 
-/* ── Testimonials (infinite marquee, real photos, pause on hover) ── */
+/* ── Testimonials (illustrative demo profiles, pause on hover) ── */
 const TESTIMONIALS = [
-  { q: "FITOS revolutionized how I manage clients. Progress tracking and payments are game-changers.", n: "Sarah Miller", r: "Elite Personal Trainer", img: IMG.t2 },
-  { q: "Everything in one place. It's truly built for coaches.", n: "David Lee", r: "Online Fitness Coach", img: IMG.t1 },
-  { q: "Efficiency and client satisfaction went way up. Indispensable for our gym.", n: "Jessica Chen", r: "Studio Owner", img: IMG.t4 },
-  { q: "Building and assigning plans went from an hour to minutes.", n: "Marcus Doyle", r: "Strength Coach", img: IMG.t5 },
-  { q: "The Automated Hound keeps my clients accountable without me chasing them.", n: "Aisha Rahman", r: "Online Coach", img: IMG.t6 },
-  { q: "My team manages 400+ clients without anything slipping through the cracks.", n: "Tom Becker", r: "Gym Owner", img: IMG.t3 },
+  { q: "FITOS revolutionized how I manage clients. Progress tracking and payments are game-changers.", n: "Kavya Rao", r: "Personal Trainer", img: IMG.t2 },
+  { q: "Everything in one place. It's truly built for coaches.", n: "Arjun Mehta", r: "Online Fitness Coach", img: IMG.t1 },
+  { q: "Efficiency and client satisfaction went way up. Indispensable for our gym.", n: "Neha Kapoor", r: "Studio Owner", img: IMG.t4 },
+  { q: "Building and assigning plans went from an hour to minutes.", n: "Rohan Iyer", r: "Strength Coach", img: IMG.t5 },
+  { q: "The Automated Hound keeps my clients accountable without me chasing them.", n: "Ananya Singh", r: "Online Fitness Coach", img: IMG.t6 },
+  { q: "My team manages 400+ clients without anything slipping through the cracks.", n: "Vikram Patel", r: "Gym Owner", img: IMG.t3 },
 ];
 
 const TCard = ({ t }) => (
@@ -206,6 +205,7 @@ const Testimonials = () => {
         <Reveal>
           <Eyebrow>Testimonials</Eyebrow>
           <h2 className="mt-5 text-3xl sm:text-5xl font-bold tracking-tight text-text-primary">Hear from our successful trainers.</h2>
+          <p className="mt-3 text-xs text-text-muted">Illustrative trainer profiles · demo content</p>
         </Reveal>
       </div>
       <div className="relative group">
@@ -294,12 +294,6 @@ const LandingPage = () => (
       <FeatureShowcase />
       <Testimonials />
       <FinalCta />
-      <section className="max-w-6xl mx-auto px-5 py-20">
-        <p className="text-primary text-sm font-semibold mb-3">BYOT · BE YOUR OWN TRAINER</p>
-        <h2 className="text-3xl sm:text-4xl font-bold mb-4">Your fitness, on your terms.</h2>
-        <p className="text-text-secondary max-w-2xl mb-6">Free, self-managed fitness tracking. Set your own goals, create weekly nutrition plans and log your daily food. Workouts and progress tools are coming in later phases.</p>
-        <Link to="/byot" className="inline-flex bg-primary text-on-primary rounded-xl px-6 py-3 font-semibold">Get started with BYOT</Link>
-      </section>
     </main>
     <MarketingFooter />
   </div>

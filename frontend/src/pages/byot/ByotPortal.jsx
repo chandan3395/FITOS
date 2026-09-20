@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useLocation } from "react-router-dom";
+import FitosWordmark from "../../components/branding/FitosWordmark";
 import { useAuthContext } from "../../contexts/AuthContext";
 import api, { API_BASE_URL } from "../../lib/api";
 
@@ -184,8 +185,8 @@ export default function ByotPortal() {
     return (
       <main className="min-h-screen bg-bg text-text-primary px-5 py-16">
         <div className="max-w-2xl mx-auto">
-          <Link to="/" className="text-primary">
-            FITOS
+          <Link to="/" aria-label="FITOS home">
+            <FitosWordmark byot className="text-3xl text-primary" />
           </Link>
           <p className="text-primary mt-16 mb-3">FREE · SELF-MANAGED FITNESS</p>
           <h1 className="text-4xl sm:text-5xl font-bold">Be Your Own Trainer</h1>

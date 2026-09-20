@@ -1,11 +1,26 @@
 "use strict";
 const { User } = require("../schemas/User.schema");
 const { Client } = require("../schemas/Client.schema");
+
+function verifiedProfileImage(profile) {
+  const value = profile.photos?.[0]?.value;
+  if (typeof value !== "string" || value.length > 2048) return undefined;
+  try {
+    const url = new URL(value);
+    const googleHosted =
+      url.hostname === "googleusercontent.com" || url.hostname.endsWith(".googleusercontent.com");
+    return url.protocol === "https:" && googleHosted ? url.toString() : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 async function googleIdentity(req, _accessToken, _refreshToken, profile, done, retried = false) {
   try {
     if (!req.oauthState || !["BYOT", "TRAINER", "CLIENT"].includes(req.oauthState.intent))
       return done(new Error("Invalid OAuth state"));
     const email = profile.emails?.[0]?.value?.trim().toLowerCase();
+    const profileImage = verifiedProfileImage(profile);
     if (!email || profile._json?.email_verified !== true)
       return done(new Error("Google email must be verified"), null);
 
@@ -31,14 +46,20 @@ async function googleIdentity(req, _accessToken, _refreshToken, profile, done, r
       }
       // Link Google to the existing TRAINER/CLIENT account (same email,
       // existing role wins — no duplicate is created).
+      let changed = false;
       if (!user.googleId) {
         user.googleId = profile.id;
         user.googleLinked = true;
-        await user.save();
+        changed = true;
       } else if (!user.googleLinked) {
         user.googleLinked = true;
-        await user.save();
+        changed = true;
       }
+      if (profileImage && user.profileImage !== profileImage) {
+        user.profileImage = profileImage;
+        changed = true;
+      }
+      if (changed) await user.save();
       return done(null, user);
     }
 
@@ -54,7 +75,7 @@ async function googleIdentity(req, _accessToken, _refreshToken, profile, done, r
       email,
       googleId: profile.id,
       googleLinked: true,
-      profileImage: profile.photos?.[0]?.value,
+      profileImage,
       role,
     });
 

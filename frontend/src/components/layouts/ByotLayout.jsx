@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { HomeIcon, CheckCircleIcon, ChartBarIcon, DumbbellIcon } from "../design-system/Icons";
+import FitosWordmark from "../branding/FitosWordmark";
+import UserAvatar from "../ui/UserAvatar";
 import "../../pages/byot/portal.css";
 
 // Match Client/Trainer's 16rem sidebar, icon set and active marker without
@@ -19,8 +21,7 @@ export default function ByotLayout({ user, onSignOut, children }) {
       <aside aria-label="BYOT portal sidebar" className="shrink-0 border-b border-border bg-surface md:fixed md:inset-y-0 md:left-0 md:z-20 md:flex md:w-64 md:flex-col md:border-b-0 md:border-r">
         <div className="flex h-16 shrink-0 items-center gap-2.5 border-b border-border px-5">
           <Link to="/byot/dashboard" className="flex items-center gap-2.5 font-extrabold text-[17px]">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-on-primary">F</span>
-            FITOS <span className="text-xs font-semibold text-bronze-text">BYOT</span>
+            <FitosWordmark byot className="text-[17px] text-text-primary" />
           </Link>
           <button onClick={onSignOut} className="ml-auto min-h-11 rounded-lg px-2 text-sm md:hidden">Sign out</button>
         </div>
@@ -36,8 +37,13 @@ export default function ByotLayout({ user, onSignOut, children }) {
           ))}
         </nav>
         <div className="hidden shrink-0 border-t border-border p-4 md:block">
-          <p className="truncate text-sm font-semibold" title={user.name}>{user.name}</p>
-          <p className="mt-1 truncate text-xs text-text-secondary" title={user.email}>{user.email}</p>
+          <div className="flex items-center gap-3">
+            <UserAvatar user={user} fallback="B" />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold" title={user.name}>{user.name}</p>
+              <p className="mt-1 truncate text-xs text-text-secondary" title={user.email}>{user.email}</p>
+            </div>
+          </div>
           <button onClick={onSignOut} className="mt-3 min-h-11 w-full rounded-lg border border-border text-sm hover:bg-surface-elevated">Sign out</button>
         </div>
       </aside>
